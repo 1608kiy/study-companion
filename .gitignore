@@ -1,0 +1,44 @@
+# Java
+*.class
+*.jar
+*.war
+*.ear
+*.log
+
+# Maven
+target/
+!.mvn/wrapper/maven-wrapper.jar
+
+# IDE
+.idea/
+*.iws
+*.iml
+*.ipr
+.vscode/
+.settings/
+.classpath
+.project
+.factorypath
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Spring Boot
+*.pid
+
+# Logs
+logs/
+*.log
+
+# Upload files
+uploads/
+
+# Node.js (frontend)
+node_modules/
+dist/
+.env.local
+.env.*.local
+
+# Uniapp (miniapp)
+unpackage/
