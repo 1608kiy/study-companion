@@ -104,7 +104,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
 import { userApi } from '@/api/modules'
@@ -208,23 +208,27 @@ const handleDeleteAccount = async () => {
   }
 }
 
+// 监听 userInfo 变化，更新表单
+watch(() => userStore.userInfo, (newInfo) => {
+  if (newInfo) {
+    const savedDarkMode = localStorage.getItem('darkMode') === 'true'
+    profileForm.value = {
+      nickname: newInfo.nickname || '',
+      avatar: newInfo.avatar || '',
+      dailyGoal: newInfo.dailyGoal || 120,
+      weeklyGoal: newInfo.weeklyGoal || 840,
+      monthlyGoal: newInfo.monthlyGoal || 3600,
+      darkMode: savedDarkMode,
+      notificationEnabled: newInfo.notificationEnabled !== false,
+    }
+  }
+}, { immediate: true })
+
 onMounted(() => {
   // 从 localStorage 恢复深色模式
   const savedDarkMode = localStorage.getItem('darkMode') === 'true'
   profileForm.value.darkMode = savedDarkMode
   document.documentElement.setAttribute('data-theme', savedDarkMode ? 'dark' : '')
-  
-  if (userInfo.value) {
-    profileForm.value = {
-      nickname: userInfo.value.nickname || '',
-      avatar: userInfo.value.avatar || '',
-      dailyGoal: userInfo.value.dailyGoal || 120,
-      weeklyGoal: userInfo.value.weeklyGoal || 840,
-      monthlyGoal: userInfo.value.monthlyGoal || 3600,
-      darkMode: savedDarkMode,
-      notificationEnabled: userInfo.value.notificationEnabled !== false,
-    }
-  }
 })
 </script>
 

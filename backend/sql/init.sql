@@ -64,6 +64,8 @@ CREATE TABLE `study_record` (
   `ai_focus_level` TINYINT DEFAULT NULL COMMENT 'AI判断的专注度(1-5)',
   `interruption_count` INT DEFAULT 0 COMMENT '中断次数',
   `interruption_reason` TEXT COMMENT '中断原因',
+  `ai_allow_modify` TINYINT DEFAULT NULL COMMENT 'AI是否允许修改(0不允许 1允许)',
+  `ai_modify_reason` TEXT COMMENT 'AI修改判断原因',
   `create_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
   `update_time` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
   PRIMARY KEY (`id`),

@@ -79,6 +79,17 @@ public interface StudyRecordMapper extends BaseMapper<StudyRecord> {
                                                             @Param("endDate") LocalDate endDate);
 
     /**
+     * 获取指定日期范围内的学习统计（SQL聚合）
+     */
+    @Select("SELECT " +
+            "COUNT(DISTINCT study_date) as totalDays, " +
+            "COALESCE(SUM(duration), 0) as totalDuration " +
+            "FROM study_record WHERE user_id = #{userId} AND study_date BETWEEN #{startDate} AND #{endDate}")
+    Map<String, Object> getStudyStatsAggregatedBetween(@Param("userId") Long userId,
+                                                        @Param("startDate") LocalDate startDate,
+                                                        @Param("endDate") LocalDate endDate);
+
+    /**
      * 获取指定日期范围内的最长单日学习时长
      */
     @Select("SELECT COALESCE(MAX(daily_duration), 0) FROM (" +

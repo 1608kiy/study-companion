@@ -97,6 +97,7 @@ import { useUserStore } from '../../store/user'
 import { checkInApi, studyRecordApi, diaryApi } from '../../api/modules'
 import MainLayout from '../../components/main-layout.vue'
 import { generateCheckInShare, showShareMenu } from '../../utils/share'
+import { getCurrentMonth } from '../../utils/date'
 
 const userStore = useUserStore()
 const dailyGoal = computed(() => userStore.userInfo?.dailyGoal || 120)
@@ -157,7 +158,7 @@ const loadTodayStats = async () => {
   try {
     const [statsRes, diaryRes] = await Promise.all([
       studyRecordApi.getStats(),
-      diaryApi.getList({ month: new Date().toISOString().slice(0, 7) })
+      diaryApi.getList({ month: getCurrentMonth() })
     ])
     const diaryCount = (diaryRes.data || []).length
     todayStats.value = {

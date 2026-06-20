@@ -32,7 +32,7 @@
               </el-select>
               <div class="control-buttons">
                 <el-button 
-                  v-if="!isRunning" 
+                  v-if="!isRunning && !isPaused" 
                   type="primary" 
                   size="large" 
                   class="control-btn start-btn"

@@ -79,10 +79,11 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import { goalApi, studyRecordApi } from '../../api/modules'
 import MainLayout from '../../components/main-layout.vue'
+import { getCurrentMonth, getPrevMonth, getNextMonth } from '../../utils/date'
 
 const loading = ref(true)
 const refreshing = ref(false)
-const selectedMonth = ref(new Date().toISOString().slice(0, 7))
+const selectedMonth = ref(getCurrentMonth())
 const stats = ref({})
 const subjectData = ref([])
 
@@ -100,15 +101,11 @@ const formatDuration = (minutes) => {
 }
 
 const prevMonth = () => {
-  const [year, month] = selectedMonth.value.split('-').map(Number)
-  const date = new Date(year, month - 2, 1)
-  selectedMonth.value = date.toISOString().slice(0, 7)
+  selectedMonth.value = getPrevMonth(selectedMonth.value)
 }
 
 const nextMonth = () => {
-  const [year, month] = selectedMonth.value.split('-').map(Number)
-  const date = new Date(year, month, 1)
-  selectedMonth.value = date.toISOString().slice(0, 7)
+  selectedMonth.value = getNextMonth(selectedMonth.value)
 }
 
 const onMonthChange = (e) => {

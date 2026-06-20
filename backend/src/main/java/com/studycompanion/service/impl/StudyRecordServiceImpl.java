@@ -51,9 +51,14 @@ public class StudyRecordServiceImpl implements StudyRecordService {
 
     @Override
     public TimerStateVO startTimer(Long userId, StartTimerRequest request) {
-        // 检查是否有正在运行的计时器
+        String key = TIMER_PREFIX + userId;
+        
+        // 检查是否有正在运行或暂停的计时器
         if (isTimerRunning(userId)) {
             throw new BusinessException(ErrorCode.TIMER_ALREADY_RUNNING);
+        }
+        if ("true".equals(redisTemplate.opsForValue().get(key + TIMER_PAUSED_SUFFIX))) {
+            throw new BusinessException(ErrorCode.TIMER_ALREADY_RUNNING, "计时器已暂停，请先停止或继续");
         }
 
         // 验证科目是否存在
@@ -62,7 +67,6 @@ public class StudyRecordServiceImpl implements StudyRecordService {
             throw new BusinessException(ErrorCode.SUBJECT_NOT_FOUND);
         }
 
-        String key = TIMER_PREFIX + userId;
         redisTemplate.opsForValue().set(key + TIMER_RUNNING_SUFFIX, "true", 24, TimeUnit.HOURS);
         redisTemplate.opsForValue().set(key + TIMER_SUBJECT_SUFFIX, String.valueOf(request.getSubjectId()), 24, TimeUnit.HOURS);
         redisTemplate.opsForValue().set(key + TIMER_START_SUFFIX, String.valueOf(System.currentTimeMillis()), 24, TimeUnit.HOURS);

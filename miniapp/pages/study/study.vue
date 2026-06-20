@@ -119,6 +119,7 @@ import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useStudyStore } from '../../store/study'
 import { subjectApi, studyRecordApi } from '../../api/modules'
 import MainLayout from '../../components/main-layout.vue'
+import { getToday } from '../../utils/date'
 
 const studyStore = useStudyStore()
 
@@ -216,7 +217,7 @@ const loadSubjects = async () => {
 
 const loadTodayRecords = async () => {
   try {
-    const today = new Date().toISOString().split('T')[0]
+    const today = getToday()
     const res = await studyRecordApi.getList({ startDate: today })
     studyRecords.value = res.data || []
     todayStats.value = {

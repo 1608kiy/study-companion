@@ -208,8 +208,8 @@ public class GoalServiceImpl implements GoalService {
         StudyStatsVO stats = new StudyStatsVO();
         LocalDate today = LocalDate.now();
 
-        // 使用 SQL 聚合查询获取总统计
-        Map<String, Object> aggregated = studyRecordMapper.getStudyStatsAggregated(userId);
+        // 使用 SQL 聚合查询获取指定范围的统计
+        Map<String, Object> aggregated = studyRecordMapper.getStudyStatsAggregatedBetween(userId, startDate, endDate);
         stats.setTotalDays(((Number) aggregated.get("totalDays")).intValue());
         stats.setTotalDuration(((Number) aggregated.get("totalDuration")).intValue());
 
@@ -227,8 +227,8 @@ public class GoalServiceImpl implements GoalService {
         Integer monthDuration = studyRecordMapper.getDurationBetween(userId, monthStart, today);
         stats.setMonthDuration(monthDuration);
 
-        // 科目学习时长（SQL 聚合）
-        List<Map<String, Object>> subjectStatsList = studyRecordMapper.getSubjectStats(userId);
+        // 科目学习时长（指定范围）
+        List<Map<String, Object>> subjectStatsList = studyRecordMapper.getSubjectStatsBetween(userId, startDate, endDate);
         Map<String, Integer> subjectStats = new HashMap<>();
         for (Map<String, Object> row : subjectStatsList) {
             String subjectName = (String) row.get("subjectName");
@@ -239,14 +239,13 @@ public class GoalServiceImpl implements GoalService {
         }
         stats.setSubjectStats(subjectStats);
 
-        // 日均时长和最长单日（使用 SQL 聚合）
-        Integer totalDaysInPeriod = studyRecordMapper.getStudyStatsAggregated(userId).get("totalDays") != null ?
-                ((Number) studyRecordMapper.getStudyStatsAggregated(userId).get("totalDays")).intValue() : 0;
-        Integer totalDurationInPeriod = studyRecordMapper.getDurationBetween(userId, startDate, endDate);
-        stats.setAvgDuration(totalDaysInPeriod > 0 ? totalDurationInPeriod / totalDaysInPeriod : 0);
+        // 日均时长和最长单日
+        int totalDays = stats.getTotalDays();
+        int totalDuration = stats.getTotalDuration();
+        stats.setAvgDuration(totalDays > 0 ? totalDuration / totalDays : 0);
         stats.setMaxDuration(studyRecordMapper.getMaxDailyDuration(userId, startDate, endDate));
 
-        // 每日时长分布（SQL 聚合）
+        // 每日时长分布
         List<Map<String, Object>> dailyDurationsList = studyRecordMapper.getDailyDurationsByDateRange(userId, startDate, endDate);
         Map<Integer, Integer> dailyDurations = new HashMap<>();
         for (Map<String, Object> row : dailyDurationsList) {

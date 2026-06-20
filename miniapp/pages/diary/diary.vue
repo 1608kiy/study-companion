@@ -119,13 +119,14 @@ import { ref, onMounted, watch } from 'vue'
 import { diaryApi } from '../../api/modules'
 import { renderMarkdown } from '../../utils/markdown'
 import MainLayout from '../../components/main-layout.vue'
+import { getToday, getPrevDay, getNextDay } from '../../utils/date'
 
 const loading = ref(true)
 const refreshing = ref(false)
 const aiLoading = ref(false)
 const submitting = ref(false)
 const currentDiary = ref(null)
-const currentDate = ref(new Date().toISOString().split('T')[0])
+const currentDate = ref(getToday())
 const showWriteDialog = ref(false)
 
 const diaryForm = ref({
@@ -137,15 +138,11 @@ const diaryForm = ref({
 })
 
 const prevDay = () => {
-  const date = new Date(currentDate.value)
-  date.setDate(date.getDate() - 1)
-  currentDate.value = date.toISOString().split('T')[0]
+  currentDate.value = getPrevDay(currentDate.value)
 }
 
 const nextDay = () => {
-  const date = new Date(currentDate.value)
-  date.setDate(date.getDate() + 1)
-  currentDate.value = date.toISOString().split('T')[0]
+  currentDate.value = getNextDay(currentDate.value)
 }
 
 const onDateChange = (e) => {
@@ -192,7 +189,14 @@ const submitDiary = async () => {
 const handleAIGenerate = async () => {
   aiLoading.value = true
   try {
-    const res = await diaryApi.generate()
+    let res
+    if (currentDiary.value) {
+      // 重新生成现有日记
+      res = await diaryApi.regenerate(currentDiary.value.id)
+    } else {
+      // 生成新日记
+      res = await diaryApi.generate()
+    }
     currentDiary.value = res.data
     uni.showToast({ title: '生成成功', icon: 'success' })
   } catch (error) {
