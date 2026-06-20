@@ -123,6 +123,11 @@ const handleCommand = async (command) => {
 
 onMounted(async () => {
   window.addEventListener('resize', handleResize)
+  
+  // 初始化深色模式
+  const savedDarkMode = localStorage.getItem('darkMode') === 'true'
+  document.documentElement.setAttribute('data-theme', savedDarkMode ? 'dark' : '')
+  
   if (!userStore.userInfo) {
     try {
       await userStore.getProfile()

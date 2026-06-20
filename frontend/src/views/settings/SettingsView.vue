@@ -63,8 +63,7 @@
             <el-divider content-position="left">其他设置</el-divider>
             
             <el-form-item label="深色模式">
-              <el-switch v-model="profileForm.darkMode" disabled />
-              <span class="setting-hint">即将上线</span>
+              <el-switch v-model="profileForm.darkMode" @change="toggleDarkMode" />
             </el-form-item>
             
             <el-form-item label="消息通知">
@@ -139,6 +138,11 @@ const handleAvatarError = () => {
   ElMessage.error('头像上传失败')
 }
 
+const toggleDarkMode = (value) => {
+  document.documentElement.setAttribute('data-theme', value ? 'dark' : '')
+  localStorage.setItem('darkMode', value ? 'true' : 'false')
+}
+
 const saveProfile = async () => {
   saving.value = true
   try {
@@ -201,6 +205,11 @@ const handleDeleteAccount = async () => {
 }
 
 onMounted(() => {
+  // 从 localStorage 恢复深色模式
+  const savedDarkMode = localStorage.getItem('darkMode') === 'true'
+  profileForm.value.darkMode = savedDarkMode
+  document.documentElement.setAttribute('data-theme', savedDarkMode ? 'dark' : '')
+  
   if (userInfo.value) {
     profileForm.value = {
       nickname: userInfo.value.nickname || '',
@@ -208,7 +217,7 @@ onMounted(() => {
       dailyGoal: userInfo.value.dailyGoal || 120,
       weeklyGoal: userInfo.value.weeklyGoal || 840,
       monthlyGoal: userInfo.value.monthlyGoal || 3600,
-      darkMode: userInfo.value.darkMode || false,
+      darkMode: savedDarkMode,
       notificationEnabled: userInfo.value.notificationEnabled !== false,
     }
   }
