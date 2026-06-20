@@ -14,6 +14,7 @@ export const useStudyStore = defineStore('study', () => {
   const studyStats = ref(null)
 
   const isTimerRunning = computed(() => timerState.value.isRunning)
+  const isPaused = computed(() => !timerState.value.isRunning && timerState.value.subjectId !== null)
   const elapsedMinutes = computed(() => Math.floor(timerState.value.elapsedSeconds / 60))
   const elapsedSecondsDisplay = computed(() => timerState.value.elapsedSeconds % 60)
 
@@ -70,6 +71,7 @@ export const useStudyStore = defineStore('study', () => {
     studyRecords,
     studyStats,
     isTimerRunning,
+    isPaused,
     elapsedMinutes,
     elapsedSecondsDisplay,
     startTimer,

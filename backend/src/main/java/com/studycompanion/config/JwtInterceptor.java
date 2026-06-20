@@ -2,7 +2,6 @@ package com.studycompanion.config;
 
 import com.studycompanion.common.JwtUtil;
 import com.studycompanion.service.impl.UserServiceImpl;
-import io.jsonwebtoken.Claims;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;

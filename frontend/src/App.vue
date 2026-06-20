@@ -12,6 +12,7 @@ onMounted(() => {
   const token = localStorage.getItem('token')
   if (token) {
     userStore.setToken(token)
+    userStore.getProfile()
   }
 })
 </script>

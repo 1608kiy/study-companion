@@ -112,6 +112,7 @@ import dayjs from 'dayjs'
 
 const userStore = useUserStore()
 const userInfo = computed(() => userStore.userInfo)
+const dailyGoal = computed(() => userStore.userInfo?.dailyGoal || 120)
 
 const todayStats = ref({
   duration: 0,
@@ -131,7 +132,7 @@ const checkInStatusData = ref({
 
 const todayCheckedIn = computed(() => checkInStatusData.value.isCompleted)
 const checkInProgress = computed(() => {
-  const progress = Math.min(100, (checkInStatusData.value.totalDuration / checkInStatusData.value.dailyGoal) * 100)
+  const progress = Math.min(100, (checkInStatusData.value.totalDuration / dailyGoal.value) * 100)
   return Math.round(progress)
 })
 const checkInStatus = computed(() => todayCheckedIn.value ? 'success' : '')
@@ -204,7 +205,7 @@ const loadTodayStats = async () => {
       duration: res.data.todayDuration || 0,
       streak: res.data.currentStreak || 0,
       diaryCount: 0,
-      goalProgress: Math.min(100, Math.round(((res.data.todayDuration || 0) / 120) * 100)),
+      goalProgress: Math.min(100, Math.round(((res.data.todayDuration || 0) / dailyGoal.value) * 100)),
     }
     weeklyData.value = res.data.weeklyDurations || []
   } catch (error) {

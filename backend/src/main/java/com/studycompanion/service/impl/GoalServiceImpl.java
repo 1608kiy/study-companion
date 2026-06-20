@@ -23,7 +23,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.YearMonth;
-import java.time.format.DateTimeFormatter;
 import java.time.temporal.TemporalAdjusters;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -186,9 +185,16 @@ public class GoalServiceImpl implements GoalService {
         stats.setDailyDuration(dailyDuration);
 
         // 统计科目学习时长
+        Set<Long> subjectIds = records.stream()
+                .map(StudyRecord::getSubjectId)
+                .collect(Collectors.toSet());
+        Map<Long, Subject> subjectMap = subjectIds.isEmpty()
+                ? Collections.emptyMap()
+                : subjectMapper.selectBatchIds(subjectIds).stream()
+                        .collect(Collectors.toMap(Subject::getId, s -> s));
         Map<String, Integer> subjectDuration = new HashMap<>();
         for (StudyRecord record : records) {
-            Subject subject = subjectMapper.selectById(record.getSubjectId());
+            Subject subject = subjectMap.get(record.getSubjectId());
             if (subject != null) {
                 subjectDuration.merge(subject.getName(), record.getDuration(), Integer::sum);
             }
@@ -244,9 +250,16 @@ public class GoalServiceImpl implements GoalService {
         stats.setMonthDuration(monthDuration);
 
         // 统计科目学习时长
+        Set<Long> subjectIds = records.stream()
+                .map(StudyRecord::getSubjectId)
+                .collect(Collectors.toSet());
+        Map<Long, Subject> subjectMap = subjectIds.isEmpty()
+                ? Collections.emptyMap()
+                : subjectMapper.selectBatchIds(subjectIds).stream()
+                        .collect(Collectors.toMap(Subject::getId, s -> s));
         Map<String, Integer> subjectStats = new HashMap<>();
         for (StudyRecord record : records) {
-            Subject subject = subjectMapper.selectById(record.getSubjectId());
+            Subject subject = subjectMap.get(record.getSubjectId());
             if (subject != null) {
                 subjectStats.merge(subject.getName(), record.getDuration(), Integer::sum);
             }

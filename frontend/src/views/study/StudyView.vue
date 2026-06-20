@@ -141,10 +141,12 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useStudyStore } from '@/stores/study'
+import { useUserStore } from '@/stores/user'
 import { subjectApi } from '@/api/modules'
 import { ElMessage, ElMessageBox } from 'element-plus'
 
 const studyStore = useStudyStore()
+const userStore = useUserStore()
 
 const subjects = ref([])
 const selectedSubjectId = ref(null)
@@ -156,9 +158,10 @@ const todayStats = ref({
 })
 
 const isRunning = computed(() => studyStore.isTimerRunning)
-const isPaused = computed(() => studyStore.timerState.paused)
+const isPaused = computed(() => studyStore.isPaused)
 const elapsedSeconds = computed(() => studyStore.timerState.elapsedSeconds)
 const currentSubjectName = computed(() => studyStore.timerState.subjectName)
+const dailyGoal = computed(() => userStore.userInfo?.dailyGoal || 120)
 
 let timerInterval = null
 
@@ -243,7 +246,7 @@ const refreshRecords = async () => {
     todayStats.value = {
       duration: todayRecords.value.reduce((sum, r) => sum + (r.duration || 0), 0),
       count: todayRecords.value.length,
-      progress: Math.min(100, Math.round((todayRecords.value.reduce((sum, r) => sum + (r.duration || 0), 0) / 120) * 100)),
+      progress: Math.min(100, Math.round((todayRecords.value.reduce((sum, r) => sum + (r.duration || 0), 0) / dailyGoal.value) * 100)),
     }
   } catch (error) {
     console.error('获取学习记录失败:', error)

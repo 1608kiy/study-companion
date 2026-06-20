@@ -1,0 +1,80 @@
+package com.studycompanion.common;
+
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.*;
+import org.springframework.stereotype.Component;
+import org.springframework.web.client.RestTemplate;
+
+import java.util.List;
+import java.util.Map;
+
+@Slf4j
+@Component
+public class AiClient {
+
+    @Value("${ai.base-url}")
+    private String baseUrl;
+
+    @Value("${ai.api-key}")
+    private String apiKey;
+
+    @Value("${ai.model}")
+    private String model;
+
+    @Value("${ai.enabled}")
+    private boolean enabled;
+
+    private final RestTemplate restTemplate = new RestTemplate();
+
+    public boolean isEnabled() {
+        return enabled;
+    }
+
+    public String chat(String systemPrompt, String userMessage) {
+        if (!enabled) {
+            throw new BusinessException(ErrorCode.AI_SERVICE_ERROR, "AI服务未启用");
+        }
+
+        String url = baseUrl.endsWith("/") ? baseUrl + "chat/completions" : baseUrl + "/chat/completions";
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setBearerAuth(apiKey);
+
+        Map<String, Object> body = Map.of(
+                "model", model,
+                "messages", List.of(
+                        Map.of("role", "system", "content", systemPrompt),
+                        Map.of("role", "user", "content", userMessage)
+                ),
+                "temperature", 0.7,
+                "max_tokens", 2048
+        );
+
+        HttpEntity<Map<String, Object>> request = new HttpEntity<>(body, headers);
+
+        try {
+            ResponseEntity<Map> response = restTemplate.exchange(url, HttpMethod.POST, request, Map.class);
+            Map<String, Object> responseBody = response.getBody();
+
+            if (responseBody == null || !responseBody.containsKey("choices")) {
+                throw new BusinessException(ErrorCode.AI_REQUEST_FAILED, "AI响应格式异常");
+            }
+
+            List<Map<String, Object>> choices = (List<Map<String, Object>>) responseBody.get("choices");
+            if (choices == null || choices.isEmpty()) {
+                throw new BusinessException(ErrorCode.AI_REQUEST_FAILED, "AI响应为空");
+            }
+
+            Map<String, Object> message = (Map<String, Object>) choices.get(0).get("message");
+            return (String) message.get("content");
+
+        } catch (BusinessException e) {
+            throw e;
+        } catch (Exception e) {
+            log.error("AI调用失败: {}", e.getMessage(), e);
+            throw new BusinessException(ErrorCode.AI_REQUEST_FAILED, "AI服务请求失败: " + e.getMessage());
+        }
+    }
+}

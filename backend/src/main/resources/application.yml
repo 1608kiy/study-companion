@@ -42,9 +42,6 @@ mybatis-plus:
   global-config:
     db-config:
       id-type: auto
-      logic-delete-field: deleted
-      logic-delete-value: 1
-      logic-not-delete-value: 0
   type-aliases-package: com.studycompanion.entity
 
 jwt:
@@ -63,8 +60,6 @@ upload:
 # AI配置
 ai:
   enabled: true
-  provider: zhipu  # zhipu 或 qwen
-  zhipu:
-    api-key: your-api-key
-  qwen:
-    api-key: your-api-key
+  base-url: https://token-plan-sgp.xiaomimimo.com/v1
+  api-key: ${AI_API_KEY:your-api-key}
+  model: mimo-v2.5-pro

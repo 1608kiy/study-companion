@@ -192,8 +192,17 @@ public class StudyRecordServiceImpl implements StudyRecordService {
                .orderByDesc(StudyRecord::getStartTime);
 
         List<StudyRecord> records = studyRecordMapper.selectList(wrapper);
+
+        Set<Long> subjectIds = records.stream()
+                .map(StudyRecord::getSubjectId)
+                .collect(Collectors.toSet());
+        Map<Long, Subject> subjectMap = subjectIds.isEmpty()
+                ? Collections.emptyMap()
+                : subjectMapper.selectBatchIds(subjectIds).stream()
+                        .collect(Collectors.toMap(Subject::getId, s -> s));
+
         return records.stream()
-                .map(this::convertToVO)
+                .map(r -> convertToVO(r, subjectMap))
                 .collect(Collectors.toList());
     }
 
@@ -288,9 +297,16 @@ public class StudyRecordServiceImpl implements StudyRecordService {
         stats.setMonthDuration(monthDuration);
 
         // 统计科目学习时长
+        Set<Long> subjectIds = records.stream()
+                .map(StudyRecord::getSubjectId)
+                .collect(Collectors.toSet());
+        Map<Long, Subject> subjectMap = subjectIds.isEmpty()
+                ? Collections.emptyMap()
+                : subjectMapper.selectBatchIds(subjectIds).stream()
+                        .collect(Collectors.toMap(Subject::getId, s -> s));
         Map<String, Integer> subjectStats = new HashMap<>();
         for (StudyRecord record : records) {
-            Subject subject = subjectMapper.selectById(record.getSubjectId());
+            Subject subject = subjectMap.get(record.getSubjectId());
             if (subject != null) {
                 subjectStats.merge(subject.getName(), record.getDuration(), Integer::sum);
             }
@@ -306,6 +322,14 @@ public class StudyRecordServiceImpl implements StudyRecordService {
     }
 
     private StudyRecordVO convertToVO(StudyRecord record) {
+        Subject subject = subjectMapper.selectById(record.getSubjectId());
+        Map<Long, Subject> singleMap = subject != null
+                ? Collections.singletonMap(record.getSubjectId(), subject)
+                : Collections.emptyMap();
+        return convertToVO(record, singleMap);
+    }
+
+    private StudyRecordVO convertToVO(StudyRecord record, Map<Long, Subject> subjectMap) {
         StudyRecordVO vo = new StudyRecordVO();
         vo.setId(record.getId());
         vo.setSubjectId(record.getSubjectId());
@@ -321,7 +345,7 @@ public class StudyRecordServiceImpl implements StudyRecordService {
         vo.setInterruptionReason(record.getInterruptionReason());
         vo.setCreateTime(record.getCreateTime());
 
-        Subject subject = subjectMapper.selectById(record.getSubjectId());
+        Subject subject = subjectMap.get(record.getSubjectId());
         if (subject != null) {
             vo.setSubjectName(subject.getName());
         }
