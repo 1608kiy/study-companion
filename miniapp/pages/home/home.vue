@@ -96,6 +96,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useUserStore } from '../../store/user'
 import { checkInApi, studyRecordApi, diaryApi } from '../../api/modules'
 import MainLayout from '../../components/main-layout.vue'
+import { generateCheckInShare, showShareMenu } from '../../utils/share'
 
 const userStore = useUserStore()
 const dailyGoal = computed(() => userStore.userInfo?.dailyGoal || 120)
@@ -192,8 +193,19 @@ const onRefresh = async () => {
   }
 }
 
+// 分享给好友
+const onShareAppMessage = () => {
+  return generateCheckInShare(todayStats.value)
+}
+
+// 分享到朋友圈
+const onShareTimeline = () => {
+  return generateCheckInShare(todayStats.value)
+}
+
 onMounted(() => {
   loadData()
+  showShareMenu()
 })
 </script>
 

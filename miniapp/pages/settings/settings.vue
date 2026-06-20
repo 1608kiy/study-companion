@@ -60,6 +60,11 @@
         注销账号
       </button>
     </view>
+    
+    <!-- 版本信息 -->
+    <view class="card version-card" @click="showVersionInfo">
+      <text class="version-text">版本：v{{ currentVersion }}</text>
+    </view>
   </view>
 </template>
 
@@ -67,9 +72,11 @@
 import { ref, onMounted } from 'vue'
 import { useUserStore } from '../../store/user'
 import { userApi } from '../../api/modules'
+import { showVersionInfo, getCurrentVersion } from '../../utils/version'
 
 const userStore = useUserStore()
 const saving = ref(false)
+const currentVersion = getCurrentVersion()
 
 const form = ref({
   nickname: '',
@@ -251,5 +258,15 @@ onMounted(() => {
   font-size: 30rpx;
   font-weight: 600;
   border: 1rpx solid #ef4444;
+}
+
+.version-card {
+  text-align: center;
+  padding: 24rpx;
+}
+
+.version-text {
+  font-size: 24rpx;
+  color: #94a3b8;
 }
 </style>

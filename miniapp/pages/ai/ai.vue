@@ -84,6 +84,7 @@ import { ref, onMounted, nextTick } from 'vue'
 import { aiApi } from '../../api/modules'
 import { renderMarkdown } from '../../utils/markdown'
 import MainLayout from '../../components/main-layout.vue'
+import { generateReportShare, showShareMenu } from '../../utils/share'
 
 const CHAT_HISTORY_KEY = 'ai_chat_history'
 const MAX_HISTORY = 20
@@ -217,6 +218,22 @@ const handleFocusJudge = async () => {
   }
 }
 
+// 分享给好友
+const onShareAppMessage = () => {
+  return {
+    title: '智学伴 AI 助手 - 智能学习分析',
+    path: '/pages/ai/ai'
+  }
+}
+
+// 分享到朋友圈
+const onShareTimeline = () => {
+  return {
+    title: '智学伴 AI 助手 - 智能学习分析',
+    path: '/pages/ai/ai'
+  }
+}
+
 onMounted(() => {
   const hasHistory = loadHistory()
   if (!hasHistory) {
@@ -225,6 +242,7 @@ onMounted(() => {
       content: '你好！我是智学伴AI助手，可以帮你分析学习数据、生成报告、回答问题。有什么可以帮你的吗？'
     })
   }
+  showShareMenu()
 })
 </script>
 

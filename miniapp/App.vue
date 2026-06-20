@@ -1,10 +1,19 @@
 <script>
 import { onLaunch, onShow, onHide } from '@dcloudio/uni-app'
 import { useUserStore } from './store/user'
+import { initErrorHandler } from './utils/error-handler'
+import { initVersionCheck } from './utils/version'
 
 export default {
   onLaunch() {
     console.log('App Launch')
+    
+    // 初始化全局错误处理
+    initErrorHandler(this)
+    
+    // 初始化版本检查
+    initVersionCheck()
+    
     const userStore = useUserStore()
     // 恢复登录状态
     const token = uni.getStorageSync('token')
