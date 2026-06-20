@@ -7,7 +7,7 @@
             <span class="card-title">个人设置</span>
           </template>
           
-          <el-form :model="profileForm" label-width="120px" class="settings-form">
+          <el-form :model="profileForm" :label-width="isMobile ? '100px' : '120px'" class="settings-form">
             <div class="avatar-section">
               <el-avatar :size="80" :src="profileForm.avatar || undefined" icon="User" class="profile-avatar" />
               <div class="avatar-info">
@@ -112,6 +112,7 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 
 const router = useRouter()
 const userStore = useUserStore()
+const isMobile = computed(() => window.innerWidth < 768)
 
 const userInfo = computed(() => userStore.userInfo)
 const saving = ref(false)

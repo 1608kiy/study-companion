@@ -75,7 +75,7 @@
     <el-dialog 
       v-model="dialogVisible" 
       :title="isEdit ? '编辑日记' : '写日记'" 
-      width="600px"
+      :width="isMobile ? '95%' : '600px'"
       destroy-on-close
     >
       <el-form :model="diaryForm" label-width="80px">
@@ -117,6 +117,7 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import dayjs from 'dayjs'
 import { renderMarkdown } from '@/utils/markdown'
 
+const isMobile = computed(() => window.innerWidth < 768)
 const selectedDate = ref(new Date())
 const diaryList = ref([])
 const currentDiary = ref(null)

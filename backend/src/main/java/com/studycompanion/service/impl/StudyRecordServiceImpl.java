@@ -5,8 +5,10 @@ import com.studycompanion.common.BusinessException;
 import com.studycompanion.common.ErrorCode;
 import com.studycompanion.dto.StartTimerRequest;
 import com.studycompanion.dto.UpdateStudyRecordRequest;
+import com.studycompanion.entity.CheckIn;
 import com.studycompanion.entity.StudyRecord;
 import com.studycompanion.entity.Subject;
+import com.studycompanion.mapper.CheckInMapper;
 import com.studycompanion.mapper.StudyRecordMapper;
 import com.studycompanion.mapper.SubjectMapper;
 import com.studycompanion.service.StudyRecordService;
@@ -33,6 +35,7 @@ public class StudyRecordServiceImpl implements StudyRecordService {
 
     private final StudyRecordMapper studyRecordMapper;
     private final SubjectMapper subjectMapper;
+    private final CheckInMapper checkInMapper;
     private final StringRedisTemplate redisTemplate;
 
     private static final String TIMER_PREFIX = "timer:";
@@ -296,7 +299,7 @@ public class StudyRecordServiceImpl implements StudyRecordService {
                 .sum();
         stats.setMonthDuration(monthDuration);
 
-        // 统计科目学习时长
+        // 统计科目学习时长（批量查询避免 N+1）
         Set<Long> subjectIds = records.stream()
                 .map(StudyRecord::getSubjectId)
                 .collect(Collectors.toSet());
@@ -313,7 +316,45 @@ public class StudyRecordServiceImpl implements StudyRecordService {
         }
         stats.setSubjectStats(subjectStats);
 
+        // 新增：连续打卡天数
+        int currentStreak = calculateCurrentStreak(userId, today);
+        stats.setCurrentStreak(currentStreak);
+
+        // 新增：最近7天每日时长
+        List<Integer> weeklyDurations = new ArrayList<>();
+        for (int i = 6; i >= 0; i--) {
+            LocalDate date = today.minusDays(i);
+            int dayDuration = records.stream()
+                    .filter(r -> r.getStudyDate().equals(date))
+                    .mapToInt(StudyRecord::getDuration)
+                    .sum();
+            weeklyDurations.add(dayDuration);
+        }
+        stats.setWeeklyDurations(weeklyDurations);
+
         return stats;
+    }
+
+    private int calculateCurrentStreak(Long userId, LocalDate today) {
+        int streak = 0;
+        LocalDate checkDate = today;
+
+        while (true) {
+            LambdaQueryWrapper<CheckIn> wrapper = new LambdaQueryWrapper<>();
+            wrapper.eq(CheckIn::getUserId, userId)
+                   .eq(CheckIn::getCheckDate, checkDate)
+                   .eq(CheckIn::getIsCompleted, 1);
+            CheckIn checkIn = checkInMapper.selectOne(wrapper);
+
+            if (checkIn == null) {
+                break;
+            }
+
+            streak++;
+            checkDate = checkDate.minusDays(1);
+        }
+
+        return streak;
     }
 
     private boolean isTimerRunning(Long userId) {

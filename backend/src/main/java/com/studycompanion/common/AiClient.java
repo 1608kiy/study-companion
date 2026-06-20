@@ -32,6 +32,10 @@ public class AiClient {
     }
 
     public String chat(String systemPrompt, String userMessage) {
+        return chat(systemPrompt, List.of(Map.of("role", "user", "content", userMessage)));
+    }
+
+    public String chat(String systemPrompt, List<Map<String, String>> messages) {
         if (!enabled) {
             throw new BusinessException(ErrorCode.AI_SERVICE_ERROR, "AI服务未启用");
         }
@@ -42,12 +46,13 @@ public class AiClient {
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.setBearerAuth(apiKey);
 
+        List<Map<String, String>> allMessages = new java.util.ArrayList<>();
+        allMessages.add(Map.of("role", "system", "content", systemPrompt));
+        allMessages.addAll(messages);
+
         Map<String, Object> body = Map.of(
                 "model", model,
-                "messages", List.of(
-                        Map.of("role", "system", "content", systemPrompt),
-                        Map.of("role", "user", "content", userMessage)
-                ),
+                "messages", allMessages,
                 "temperature", 0.7,
                 "max_tokens", 2048
         );

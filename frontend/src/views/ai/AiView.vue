@@ -81,13 +81,35 @@
         <el-card class="report-card" v-if="currentReport">
           <template #header>
             <div class="card-header">
-              <span class="card-title">{{ currentReport.type === 'weekly' ? '周报' : '月报' }}</span>
-              <el-button type="primary" text @click="currentReport = null">
-                <el-icon><Close /></el-icon>
-              </el-button>
+              <span class="card-title">{{ currentReport.type === 'weekly' ? '学习周报' : '学习月报' }}</span>
+              <div>
+                <el-button type="primary" text @click="exportReportAsImage">
+                  <el-icon><Download /></el-icon>
+                  导出图片
+                </el-button>
+                <el-button type="primary" text @click="currentReport = null">
+                  <el-icon><Close /></el-icon>
+                </el-button>
+              </div>
             </div>
           </template>
-          <div class="report-content" v-html="renderMarkdown(currentReport.content)"></div>
+          <div ref="reportContentRef" class="report-content-wrapper">
+            <div class="report-stats" v-if="currentReport.stats">
+              <div class="report-stat-item">
+                <div class="report-stat-value">{{ currentReport.stats.totalDays || 0 }}</div>
+                <div class="report-stat-label">学习天数</div>
+              </div>
+              <div class="report-stat-item">
+                <div class="report-stat-value">{{ formatDuration(currentReport.stats.totalDuration) }}</div>
+                <div class="report-stat-label">总时长</div>
+              </div>
+              <div class="report-stat-item">
+                <div class="report-stat-value">{{ currentReport.stats.avgDuration || 0 }}</div>
+                <div class="report-stat-label">日均(分钟)</div>
+              </div>
+            </div>
+            <div class="report-ai-content" v-html="renderMarkdown(currentReport.content)"></div>
+          </div>
         </el-card>
       </el-col>
     </el-row>
@@ -96,12 +118,17 @@
 
 <script setup>
 import { ref, nextTick, onMounted } from 'vue'
-import { aiApi } from '@/api/modules'
+import { aiApi, studyRecordApi } from '@/api/modules'
 import { ElMessage } from 'element-plus'
 import dayjs from 'dayjs'
 import { renderMarkdown } from '@/utils/markdown'
+import html2canvas from 'html2canvas'
+
+const CHAT_HISTORY_KEY = 'ai_chat_history'
+const MAX_HISTORY = 20 // 最多保存20条消息（10轮对话）
 
 const chatContainer = ref(null)
+const reportContentRef = ref(null)
 const inputMessage = ref('')
 const loading = ref(false)
 const actionLoading = ref(false)
@@ -113,6 +140,37 @@ const scrollToBottom = async () => {
   if (chatContainer.value) {
     chatContainer.value.scrollTop = chatContainer.value.scrollHeight
   }
+}
+
+const saveHistory = () => {
+  try {
+    const historyToSave = messages.value.filter(m => m.role === 'user' || m.role === 'assistant')
+      .slice(-MAX_HISTORY)
+      .map(m => ({ role: m.role, content: m.content }))
+    localStorage.setItem(CHAT_HISTORY_KEY, JSON.stringify(historyToSave))
+  } catch (e) {
+    // localStorage 可能满了，忽略
+  }
+}
+
+const loadHistory = () => {
+  try {
+    const saved = localStorage.getItem(CHAT_HISTORY_KEY)
+    if (saved) {
+      const parsed = JSON.parse(saved)
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        messages.value = parsed.map(m => ({
+          role: m.role,
+          content: m.content,
+          time: dayjs().format('HH:mm'),
+        }))
+        return true
+      }
+    }
+  } catch (e) {
+    // 忽略解析错误
+  }
+  return false
 }
 
 const sendMessage = async () => {
@@ -127,15 +185,24 @@ const sendMessage = async () => {
   messages.value.push(userMessage)
   inputMessage.value = ''
   loading.value = true
+  saveHistory()
   
   try {
-    const res = await aiApi.chat({ question: userMessage.content })
+    // 构建历史消息（排除当前消息和欢迎消息）
+    const history = messages.value
+      .filter(m => m.role === 'user' || m.role === 'assistant')
+      .slice(0, -1) // 排除当前刚添加的用户消息
+      .slice(-MAX_HISTORY)
+      .map(m => ({ role: m.role, content: m.content }))
+    
+    const res = await aiApi.chat({ question: userMessage.content, history })
     const aiMessage = {
       role: 'assistant',
       content: res.data.answer,
       time: dayjs().format('HH:mm'),
     }
     messages.value.push(aiMessage)
+    saveHistory()
   } catch (error) {
     messages.value.push({
       role: 'assistant',
@@ -148,24 +215,49 @@ const sendMessage = async () => {
   }
 }
 
+const formatDuration = (minutes) => {
+  if (!minutes) return '0小时'
+  const hours = Math.floor(minutes / 60)
+  const mins = minutes % 60
+  if (hours === 0) return `${mins}分钟`
+  if (mins === 0) return `${hours}小时`
+  return `${hours}小时${mins}分钟`
+}
+
 const generateReport = async (type) => {
   actionLoading.value = true
   try {
-    let res
-    if (type === 'weekly') {
-      res = await aiApi.generateWeeklyReport()
-    } else {
-      res = await aiApi.generateMonthlyReport()
-    }
+    const [reportRes, statsRes] = await Promise.all([
+      type === 'weekly' ? aiApi.generateWeeklyReport() : aiApi.generateMonthlyReport(),
+      studyRecordApi.getStats(),
+    ])
     currentReport.value = {
       type,
-      content: res.data.content,
+      content: reportRes.data.content,
+      stats: statsRes.data || {},
     }
     ElMessage.success('报告生成成功')
   } catch (error) {
     ElMessage.error('报告生成失败')
   } finally {
     actionLoading.value = false
+  }
+}
+
+const exportReportAsImage = async () => {
+  if (!reportContentRef.value) return
+  try {
+    const canvas = await html2canvas(reportContentRef.value, {
+      backgroundColor: '#ffffff',
+      scale: 2,
+    })
+    const link = document.createElement('a')
+    link.download = `学习${currentReport.value.type === 'weekly' ? '周报' : '月报'}_${dayjs().format('YYYY-MM-DD')}.png`
+    link.href = canvas.toDataURL('image/png')
+    link.click()
+    ElMessage.success('图片已保存')
+  } catch (error) {
+    ElMessage.error('导出失败')
   }
 }
 
@@ -204,11 +296,14 @@ const generateShareImage = async () => {
 }
 
 onMounted(() => {
-  messages.value.push({
-    role: 'assistant',
-    content: '你好！我是智学伴AI助手，可以帮你分析学习数据、生成报告、回答问题。有什么可以帮你的吗？',
-    time: dayjs().format('HH:mm'),
-  })
+  const hasHistory = loadHistory()
+  if (!hasHistory) {
+    messages.value.push({
+      role: 'assistant',
+      content: '你好！我是智学伴AI助手，可以帮你分析学习数据、生成报告、回答问题。有什么可以帮你的吗？',
+      time: dayjs().format('HH:mm'),
+    })
+  }
 })
 </script>
 
@@ -358,21 +453,52 @@ onMounted(() => {
   margin-top: 20px;
 }
 
-.report-content {
+.report-content-wrapper {
   line-height: 1.8;
-  max-height: 400px;
+  max-height: 500px;
   overflow-y: auto;
   font-size: 14px;
 }
 
-.report-content :deep(h1) {
+.report-stats {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 20px;
+  padding: 16px;
+  background: var(--bg-page);
+  border-radius: var(--radius);
+}
+
+.report-stat-item {
+  flex: 1;
+  text-align: center;
+}
+
+.report-stat-value {
   font-size: 20px;
+  font-weight: 700;
+  color: var(--primary);
+}
+
+.report-stat-label {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+
+.report-ai-content :deep(h1) {
+  font-size: 18px;
   margin-bottom: 12px;
 }
 
-.report-content :deep(h2) {
-  font-size: 16px;
+.report-ai-content :deep(h2) {
+  font-size: 15px;
   margin-bottom: 8px;
+}
+
+.report-ai-content :deep(h3) {
+  font-size: 14px;
+  margin-bottom: 6px;
 }
 
 @media (max-width: 767px) {

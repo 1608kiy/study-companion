@@ -6,6 +6,7 @@ import com.studycompanion.dto.StartTimerRequest;
 import com.studycompanion.dto.UpdateStudyRecordRequest;
 import com.studycompanion.entity.StudyRecord;
 import com.studycompanion.entity.Subject;
+import com.studycompanion.mapper.CheckInMapper;
 import com.studycompanion.mapper.StudyRecordMapper;
 import com.studycompanion.mapper.SubjectMapper;
 import com.studycompanion.service.impl.StudyRecordServiceImpl;
@@ -37,6 +38,9 @@ class StudyRecordServiceTest {
     
     @Mock
     private SubjectMapper subjectMapper;
+    
+    @Mock
+    private CheckInMapper checkInMapper;
     
     @Mock
     private StringRedisTemplate redisTemplate;
@@ -159,6 +163,8 @@ class StudyRecordServiceTest {
             .thenReturn(Arrays.asList(testRecord));
         when(subjectMapper.selectBatchIds(anyCollection()))
             .thenReturn(Arrays.asList(testSubject));
+        when(checkInMapper.selectOne(any(LambdaQueryWrapper.class)))
+            .thenReturn(null); // No check-in for streak calculation
         
         StudyStatsVO result = studyRecordService.getStudyStats(userId);
         
@@ -167,6 +173,8 @@ class StudyRecordServiceTest {
         assertEquals(60, result.getTotalDuration());
         assertNotNull(result.getSubjectStats());
         assertEquals(60, result.getSubjectStats().get("行测"));
+        assertNotNull(result.getWeeklyDurations());
+        assertEquals(7, result.getWeeklyDurations().size());
     }
 
     @Test
@@ -196,6 +204,8 @@ class StudyRecordServiceTest {
     void getStudyStats_EmptyRecords() {
         when(studyRecordMapper.selectList(any(LambdaQueryWrapper.class)))
             .thenReturn(Collections.emptyList());
+        when(checkInMapper.selectOne(any(LambdaQueryWrapper.class)))
+            .thenReturn(null); // No check-in for streak calculation
         
         StudyStatsVO result = studyRecordService.getStudyStats(userId);
         

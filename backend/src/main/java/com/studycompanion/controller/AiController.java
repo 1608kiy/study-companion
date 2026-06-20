@@ -3,6 +3,7 @@ package com.studycompanion.controller;
 import com.studycompanion.common.JwtUtil;
 import com.studycompanion.common.Result;
 import com.studycompanion.dto.AiChatRequest;
+import com.studycompanion.dto.FocusJudgeRequest;
 import com.studycompanion.service.AiService;
 import com.studycompanion.vo.AiAnalysisVO;
 import com.studycompanion.vo.AiChatResponse;
@@ -51,8 +52,9 @@ public class AiController {
     @Operation(summary = "AI判断专注度")
     @PostMapping("/focus-judge")
     public Result<AiAnalysisVO> judgeFocusLevel(HttpServletRequest request,
-                                                @RequestParam(required = false) String studyContext) {
+                                                @RequestBody(required = false) FocusJudgeRequest body) {
         Long userId = getUserIdFromRequest(request);
+        String studyContext = body != null ? body.getStudyContext() : null;
         AiAnalysisVO result = aiService.judgeFocusLevel(userId, studyContext);
         return Result.success(result);
     }

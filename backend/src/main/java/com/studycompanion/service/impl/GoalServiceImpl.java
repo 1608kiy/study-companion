@@ -249,7 +249,7 @@ public class GoalServiceImpl implements GoalService {
                 .sum();
         stats.setMonthDuration(monthDuration);
 
-        // 统计科目学习时长
+        // 统计科目学习时长（使用批量查询避免 N+1）
         Set<Long> subjectIds = records.stream()
                 .map(StudyRecord::getSubjectId)
                 .collect(Collectors.toSet());
@@ -265,6 +265,40 @@ public class GoalServiceImpl implements GoalService {
             }
         }
         stats.setSubjectStats(subjectStats);
+
+        // 新增：日均时长和最长单日
+        if (!uniqueDays.isEmpty()) {
+            stats.setAvgDuration(totalDuration / uniqueDays.size());
+        } else {
+            stats.setAvgDuration(0);
+        }
+        int maxDuration = records.stream()
+                .collect(Collectors.groupingBy(StudyRecord::getStudyDate, Collectors.summingInt(StudyRecord::getDuration)))
+                .values().stream()
+                .mapToInt(Integer::intValue)
+                .max().orElse(0);
+        stats.setMaxDuration(maxDuration);
+
+        // 新增：每日时长分布
+        Map<Integer, Integer> dailyDurations = new HashMap<>();
+        for (StudyRecord record : records) {
+            int day = record.getStudyDate().getDayOfMonth();
+            dailyDurations.merge(day, record.getDuration(), Integer::sum);
+        }
+        stats.setDailyDurations(dailyDurations);
+
+        // 新增：最近7天每日时长
+        List<Integer> weeklyDurations = new ArrayList<>();
+        LocalDate todayDate = LocalDate.now();
+        for (int i = 6; i >= 0; i--) {
+            LocalDate date = todayDate.minusDays(i);
+            int dayDuration = records.stream()
+                    .filter(r -> r.getStudyDate().equals(date))
+                    .mapToInt(StudyRecord::getDuration)
+                    .sum();
+            weeklyDurations.add(dayDuration);
+        }
+        stats.setWeeklyDurations(weeklyDurations);
 
         return stats;
     }

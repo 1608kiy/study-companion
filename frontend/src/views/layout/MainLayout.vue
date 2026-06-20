@@ -2,7 +2,7 @@
   <el-container class="main-layout">
     <!-- 移动端遮罩 -->
     <div v-if="mobileOpen" class="mobile-overlay" @click="mobileOpen = false" />
-    <el-aside :width="asideWidth" class="sidebar" :class="{ 'mobile-open': mobileOpen }">
+    <el-aside v-if="!isMobile" :width="asideWidth" class="sidebar">
       <div class="sidebar-logo">
         <img src="@/assets/logo.svg" alt="智学伴 Logo" />
         <span v-if="!isCollapse" class="logo-text">智学伴</span>
@@ -10,6 +10,24 @@
       <el-menu
         :default-active="activeMenu"
         :collapse="isCollapse"
+        router
+        class="sidebar-menu"
+      >
+        <el-menu-item v-for="item in menuItems" :key="item.path" :index="item.path">
+          <el-icon><component :is="item.icon" /></el-icon>
+          <template #title>{{ item.title }}</template>
+        </el-menu-item>
+      </el-menu>
+    </el-aside>
+    
+    <!-- 移动端侧边栏抽屉 -->
+    <el-aside v-else width="220px" class="sidebar mobile-drawer" :class="{ 'mobile-open': mobileOpen }">
+      <div class="sidebar-logo">
+        <img src="@/assets/logo.svg" alt="智学伴 Logo" />
+        <span class="logo-text">智学伴</span>
+      </div>
+      <el-menu
+        :default-active="activeMenu"
         router
         class="sidebar-menu"
         @select="mobileOpen = false"
@@ -24,7 +42,10 @@
     <el-container>
       <el-header class="header">
         <div class="header-left">
-          <el-icon class="collapse-btn" @click="toggleCollapse">
+          <el-icon v-if="isMobile" class="menu-btn" @click="mobileOpen = !mobileOpen">
+            <Menu />
+          </el-icon>
+          <el-icon v-else class="collapse-btn" @click="isCollapse = !isCollapse">
             <Fold v-if="!isCollapse" />
             <Expand v-else />
           </el-icon>
@@ -53,10 +74,24 @@
         </div>
       </el-header>
       
-      <el-main class="main-content">
+      <el-main class="main-content" :class="{ 'has-bottom-nav': isMobile }">
         <router-view />
       </el-main>
     </el-container>
+    
+    <!-- 移动端底部导航栏 -->
+    <div v-if="isMobile" class="bottom-nav">
+      <router-link 
+        v-for="item in bottomNavItems" 
+        :key="item.path" 
+        :to="item.path" 
+        class="bottom-nav-item"
+        :class="{ active: activeMenu === item.path }"
+      >
+        <el-icon size="20"><component :is="item.icon" /></el-icon>
+        <span>{{ item.title }}</span>
+      </router-link>
+    </div>
   </el-container>
 </template>
 
@@ -94,19 +129,19 @@ const menuItems = [
   { path: '/settings', title: '设置', icon: 'Setting' },
 ]
 
+const bottomNavItems = [
+  { path: '/home', title: '首页', icon: 'House' },
+  { path: '/study', title: '学习', icon: 'Timer' },
+  { path: '/diary', title: '日记', icon: 'Notebook' },
+  { path: '/stats', title: '统计', icon: 'DataAnalysis' },
+  { path: '/ai', title: 'AI', icon: 'ChatDotRound' },
+]
+
 const activeMenu = computed(() => route.path)
 const currentPageTitle = computed(() => {
   const item = menuItems.find(item => item.path === route.path)
   return item?.title || '智学伴'
 })
-
-const toggleCollapse = () => {
-  if (isMobile.value) {
-    mobileOpen.value = !mobileOpen.value
-  } else {
-    isCollapse.value = !isCollapse.value
-  }
-}
 
 const handleCommand = async (command) => {
   if (command === 'settings') {
@@ -187,7 +222,7 @@ onUnmounted(() => {
 }
 
 .header {
-  background: white;
+  background: var(--bg-card);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -259,6 +294,10 @@ onUnmounted(() => {
   min-height: calc(100vh - 64px);
 }
 
+.main-content.has-bottom-nav {
+  padding-bottom: 70px;
+}
+
 :deep(.el-menu) {
   background: transparent;
 }
@@ -283,25 +322,67 @@ onUnmounted(() => {
   font-weight: 500;
 }
 
+/* 移动端侧边栏抽屉 */
+.mobile-drawer {
+  position: fixed;
+  left: -220px;
+  top: 0;
+  bottom: 0;
+  z-index: 1000;
+  transition: left 0.3s ease;
+}
+
+.mobile-drawer.mobile-open {
+  left: 0;
+}
+
+.mobile-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 999;
+}
+
+.menu-btn {
+  font-size: 22px;
+  cursor: pointer;
+  color: var(--text-secondary);
+}
+
+/* 底部导航栏 */
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 56px;
+  background: var(--bg-card);
+  border-top: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  z-index: 100;
+  padding-bottom: env(safe-area-inset-bottom, 0);
+}
+
+.bottom-nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 6px 12px;
+  text-decoration: none;
+  color: var(--text-muted);
+  font-size: 11px;
+  transition: color 0.2s;
+}
+
+.bottom-nav-item.active {
+  color: var(--primary);
+}
+
 /* 响应式 */
 @media (max-width: 767px) {
-  .sidebar {
-    position: fixed;
-    left: -220px;
-    top: 0;
-    bottom: 0;
-    z-index: 1000;
-    transition: left 0.3s ease;
-  }
-  .sidebar.mobile-open {
-    left: 0;
-  }
-  .mobile-overlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(0, 0, 0, 0.5);
-    z-index: 999;
-  }
   .main-content {
     padding: 16px;
   }

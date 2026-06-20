@@ -84,20 +84,9 @@
       <el-col :span="24">
         <el-card>
           <template #header>
-            <span class="card-title">月历视图</span>
+            <span class="card-title">学习热力图</span>
           </template>
-          <div class="calendar-stats">
-            <el-calendar v-model="selectedDate" class="stats-calendar">
-              <template #date-cell="{ data }">
-                <div class="calendar-day" :class="getDayClass(data.day)">
-                  <span class="day-number">{{ data.day.split('-')[2] }}</span>
-                  <span v-if="getDayDuration(data.day)" class="day-duration">
-                    {{ getDayDuration(data.day) }}分钟
-                  </span>
-                </div>
-              </template>
-            </el-calendar>
-          </div>
+          <ChartView :option="calendarHeatmapOption" :height="200" />
         </el-card>
       </el-col>
     </el-row>
@@ -106,13 +95,12 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { goalApi, subjectApi, studyRecordApi } from '@/api/modules'
 import ChartView from '@/components/ChartView.vue'
 import dayjs from 'dayjs'
 
 const selectedMonth = ref(new Date())
-const selectedDate = ref(new Date())
 const loading = ref(true)
 const stats = ref({})
 const calendarStats = ref({})
@@ -126,18 +114,58 @@ const formatDuration = (minutes) => {
   return `${hours}小时${mins}分钟`
 }
 
-const getDayDuration = (date) => {
-  const day = dayjs(date).date()
-  return calendarStats.value.dailyDuration?.[day] || 0
-}
-
-const getDayClass = (date) => {
-  const duration = getDayDuration(date)
-  if (duration === 0) return ''
-  if (duration < 60) return 'light'
-  if (duration < 120) return 'medium'
-  return 'heavy'
-}
+const calendarHeatmapOption = computed(() => {
+  const year = dayjs(selectedMonth.value).year()
+  const month = dayjs(selectedMonth.value).month() + 1
+  const daysInMonth = dayjs(selectedMonth.value).daysInMonth()
+  const monthStr = String(month).padStart(2, '0')
+  
+  const data = []
+  const dailyDuration = calendarStats.value.dailyDuration || {}
+  
+  for (let day = 1; day <= daysInMonth; day++) {
+    const dateStr = `${year}-${monthStr}-${String(day).padStart(2, '0')}`
+    const duration = dailyDuration[day] || 0
+    data.push([dateStr, duration])
+  }
+  
+  return {
+    tooltip: {
+      formatter: (params) => {
+        const date = params.data[0]
+        const value = params.data[1]
+        return `${date}<br/>学习时长: ${value} 分钟`
+      }
+    },
+    visualMap: {
+      show: false,
+      min: 0,
+      max: 180,
+      inRange: {
+        color: ['#ebedf0', '#9be9a8', '#40c463', '#30a14e', '#216e39']
+      }
+    },
+    calendar: {
+      range: `${year}-${monthStr}`,
+      cellSize: ['auto', 20],
+      itemStyle: {
+        borderWidth: 2,
+        borderColor: '#fff'
+      },
+      yearLabel: { show: false },
+      monthLabel: { show: false },
+      dayLabel: {
+        nameMap: ['日', '一', '二', '三', '四', '五', '六'],
+        color: 'var(--text-secondary)'
+      }
+    },
+    series: [{
+      type: 'heatmap',
+      coordinateSystem: 'calendar',
+      data,
+    }]
+  }
+})
 
 const dailyChartOption = computed(() => {
   const days = []
@@ -232,13 +260,19 @@ const loadSubjectStats = async () => {
 
 const loadCalendarStats = async () => {
   try {
-    const month = dayjs(selectedDate.value).format('YYYY-MM')
+    const month = dayjs(selectedMonth.value).format('YYYY-MM')
     const res = await goalApi.getCalendarStats({ month })
     calendarStats.value = res.data || {}
   } catch (error) {
-    console.error('获取月历统计失败:', error)
+    console.error('获取热力图统计失败:', error)
   }
 }
+
+// 监听月份变化，重新加载数据
+watch(selectedMonth, () => {
+  loadStats()
+  loadCalendarStats()
+})
 
 onMounted(async () => {
   try {
@@ -271,19 +305,6 @@ onMounted(async () => {
 .stat-label { font-size: 13px; opacity: 0.9; }
 
 .chart-row { margin-top: 20px; }
-.calendar-stats { height: 400px; }
-.stats-calendar { height: 100%; }
-
-.calendar-day {
-  height: 100%; padding: 8px;
-  display: flex; flex-direction: column; align-items: center;
-  border-radius: 6px;
-}
-.day-number { font-size: 14px; font-weight: 600; }
-.day-duration { font-size: 11px; color: var(--text-secondary); margin-top: 4px; }
-.calendar-day.light { background-color: var(--primary-bg); color: var(--primary); }
-.calendar-day.medium { background-color: var(--heatmap-light); color: var(--stat-green); }
-.calendar-day.heavy { background: var(--stat-green); color: white; }
 
 /* 骨架屏 */
 .skeleton-wrapper { animation: pulse 1.5s ease-in-out infinite; }

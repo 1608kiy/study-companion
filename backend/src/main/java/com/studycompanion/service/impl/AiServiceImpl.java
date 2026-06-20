@@ -25,8 +25,7 @@ import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.time.temporal.TemporalAdjusters;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -90,7 +89,19 @@ public class AiServiceImpl implements AiService {
                 "你的回答应该简洁、实用、温暖，给出具体可执行的建议。" +
                 "如果用户问学习相关问题，给出专业建议；如果是闲聊，温暖回应并引导回学习。";
 
-        String answer = aiClient.chat(systemPrompt, request.getQuestion());
+        List<Map<String, String>> messages = new java.util.ArrayList<>();
+
+        // 添加历史对话（最多保留最近10轮）
+        if (request.getHistory() != null && !request.getHistory().isEmpty()) {
+            List<Map<String, String>> history = request.getHistory();
+            int start = Math.max(0, history.size() - 20); // 最多20条消息（10轮）
+            messages.addAll(history.subList(start, history.size()));
+        }
+
+        // 添加当前问题
+        messages.add(Map.of("role", "user", "content", request.getQuestion()));
+
+        String answer = aiClient.chat(systemPrompt, messages);
 
         AiChatResponse response = new AiChatResponse();
         response.setAnswer(answer);
@@ -106,7 +117,26 @@ public class AiServiceImpl implements AiService {
 
         String result = aiClient.chat(systemPrompt, userMessage);
 
-        String content = "根据AI分析，您的专注度情况：\n\n" + result;
+        // 解析 AI 返回的 JSON，格式化为可读文本
+        String formattedResult;
+        try {
+            String trimmed = result.trim();
+            if (trimmed.startsWith("```")) {
+                trimmed = trimmed.replaceAll("```json\\s*", "").replaceAll("```\\s*", "");
+            }
+            com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+            Map<String, Object> jsonMap = mapper.readValue(trimmed, Map.class);
+            int level = jsonMap.containsKey("level") ? ((Number) jsonMap.get("level")).intValue() : 0;
+            String reason = jsonMap.containsKey("reason") ? (String) jsonMap.get("reason") : "未提供原因";
+            String[] levelDesc = {"", "非常不专注", "不太专注", "一般", "比较专注", "非常专注"};
+            String levelText = level >= 1 && level <= 5 ? levelDesc[level] : "未知";
+            formattedResult = String.format("专注度评级：%d/5（%s）\n\n%s", level, levelText, reason);
+        } catch (Exception e) {
+            log.warn("解析专注度JSON失败，使用原始结果: {}", e.getMessage());
+            formattedResult = result;
+        }
+
+        String content = "根据AI分析，您的专注度情况：\n\n" + formattedResult;
 
         AiAnalysis analysis = new AiAnalysis();
         analysis.setUserId(userId);
@@ -174,11 +204,20 @@ public class AiServiceImpl implements AiService {
         sb.append("累计学习时长：").append(totalDuration).append(" 分钟\n");
         sb.append("日均学习时长：").append(totalDuration / Math.max(totalDays, 1)).append(" 分钟\n\n");
 
+        // 批量查询科目，避免 N+1
+        Set<Long> subjectIds = records.stream()
+                .map(StudyRecord::getSubjectId)
+                .collect(Collectors.toSet());
+        Map<Long, Subject> subjectMap = subjectIds.isEmpty()
+                ? Collections.emptyMap()
+                : subjectMapper.selectBatchIds(subjectIds).stream()
+                        .collect(Collectors.toMap(Subject::getId, s -> s));
+
         sb.append("科目分布：\n");
         Map<String, Integer> subjectStats = records.stream()
                 .collect(Collectors.groupingBy(
                         r -> {
-                            Subject subject = subjectMapper.selectById(r.getSubjectId());
+                            Subject subject = subjectMap.get(r.getSubjectId());
                             return subject != null ? subject.getName() : "未知";
                         },
                         Collectors.summingInt(StudyRecord::getDuration)
