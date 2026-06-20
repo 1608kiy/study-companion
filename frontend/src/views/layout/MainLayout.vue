@@ -143,7 +143,7 @@ onUnmounted(() => {
 }
 
 .sidebar {
-  background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
+  background: #1e293b;
   transition: width 0.3s ease;
   overflow: hidden;
   display: flex;
