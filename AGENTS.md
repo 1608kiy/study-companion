@@ -98,7 +98,22 @@ DevContainer provides MySQL 8.0 and Redis 7 via docker-compose. Forwarded ports:
 | Goal | CRUD `/api/v1/goals`, daily/weekly/monthly stats, calendar stats | Goal management |
 | Diary | CRUD `/api/v1/diaries`, generate, regenerate, images | AI diary |
 | CheckIn | POST `/api/v1/check-in`, history, miss, replenish | Attendance |
-| AI | POST `/api/v1/ai/chat`, focus-judge, weekly/monthly report | AI features |
+| AI | POST `/api/v1/ai/chat`, focus-judge, weekly/monthly report, chat/history | AI features |
+
+## Data authenticity
+
+**Core principle**: Study data is immutable once created. All modifications require AI approval.
+
+- **Diaries**: Cannot be edited or deleted (only AI regeneration allowed)
+- **Study records**: Cannot be deleted. Modifications require AI approval via `POST /study-records/{id}/ai-judge`
+- **AI approval tokens**: Stored in Redis (10-minute TTL, single-use)
+- **Check-in replenish**: Requires AI judgment first (`aiAllowReplenish` field)
+
+## AI sync
+
+- **Chat history**: Stored in `ai_chat_history` table (MySQL), synced across Web and miniapp
+- **API key**: Shared via backend `AI_API_KEY` environment variable
+- **Conversation context**: Last 20 messages sent to AI for context
 
 ## CI (`.github/workflows/ci.yml`)
 
