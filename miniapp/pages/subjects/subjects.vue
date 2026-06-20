@@ -1,5 +1,5 @@
 <template>
-  <view class="subjects-container">
+  <view class="page-container">
     <view class="header">
       <text class="title">科目管理</text>
       <button class="btn-add" @click="handleAdd">添加科目</button>
@@ -15,7 +15,7 @@
       <view v-if="subjects.length === 0" class="empty-state">
         <text class="empty-icon">📚</text>
         <text class="empty-text">暂无科目</text>
-        <button class="btn-add-empty" @click="handleAdd">添加科目</button>
+        <button class="btn-primary" style="width: 240rpx; height: 80rpx; line-height: 80rpx;" @click="handleAdd">添加科目</button>
       </view>
       
       <view 
@@ -92,7 +92,7 @@ const form = ref({
 })
 
 const colors = [
-  '#6366f1', '#3b82f6', '#10b981', '#f59e0b', '#ef4444',
+  '#6366f1', '#3b82f6', '#10b981', '#d97706', '#ef4444',
   '#8b5cf6', '#ec4899', '#14b8a6', '#f97316', '#6b7280'
 ]
 
@@ -177,12 +177,6 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.subjects-container {
-  padding: 20rpx;
-  background: #f8fafc;
-  min-height: 100vh;
-}
-
 .header {
   display: flex;
   justify-content: space-between;
@@ -205,23 +199,6 @@ onMounted(() => {
   border-radius: 12rpx;
   font-size: 26rpx;
   font-weight: 600;
-}
-
-/* 骨架屏 */
-.skeleton-wrapper {
-  animation: pulse 1.5s ease-in-out infinite;
-}
-
-@keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
-}
-
-.skeleton-item {
-  height: 100rpx;
-  background: #e2e8f0;
-  border-radius: 16rpx;
-  margin-bottom: 16rpx;
 }
 
 /* 科目列表 */
@@ -261,111 +238,7 @@ onMounted(() => {
 
 .subject-actions {
   display: flex;
-  gap: 20rpx;
-}
-
-.action-btn {
-  font-size: 26rpx;
-  color: #6366f1;
-}
-
-.action-btn.delete {
-  color: #ef4444;
-}
-
-/* 空状态 */
-.empty-state {
-  text-align: center;
-  padding: 100rpx 40rpx;
-}
-
-.empty-icon {
-  display: block;
-  font-size: 80rpx;
-  margin-bottom: 20rpx;
-}
-
-.empty-text {
-  display: block;
-  font-size: 28rpx;
-  color: #94a3b8;
-  margin-bottom: 40rpx;
-}
-
-.btn-add-empty {
-  width: 240rpx;
-  height: 80rpx;
-  background: #6366f1;
-  color: #fff;
-  border-radius: 16rpx;
-  font-size: 28rpx;
-  font-weight: 600;
-}
-
-/* 弹窗 */
-.dialog-mask {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-}
-
-.dialog-content {
-  width: 90%;
-  background: #fff;
-  border-radius: 24rpx;
-  overflow: hidden;
-}
-
-.dialog-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 24rpx;
-  border-bottom: 1rpx solid #e2e8f0;
-}
-
-.dialog-title {
-  font-size: 32rpx;
-  font-weight: 600;
-  color: #1e293b;
-}
-
-.dialog-close {
-  font-size: 32rpx;
-  color: #64748b;
-  padding: 10rpx;
-}
-
-.dialog-body {
-  padding: 24rpx;
-}
-
-.form-item {
-  margin-bottom: 24rpx;
-}
-
-.form-label {
-  display: block;
-  font-size: 26rpx;
-  color: #64748b;
-  margin-bottom: 12rpx;
-}
-
-.form-input {
-  width: 100%;
-  height: 80rpx;
-  background: #f8fafc;
-  border-radius: 12rpx;
-  padding: 0 24rpx;
-  font-size: 28rpx;
-  border: 1rpx solid #e2e8f0;
+  gap: 8rpx;
 }
 
 .color-picker {
@@ -375,8 +248,8 @@ onMounted(() => {
 }
 
 .color-item {
-  width: 48rpx;
-  height: 48rpx;
+  width: 64rpx;
+  height: 64rpx;
   border-radius: 12rpx;
   border: 2rpx solid transparent;
 }
@@ -385,11 +258,8 @@ onMounted(() => {
   border-color: #1e293b;
 }
 
-.dialog-footer {
-  display: flex;
-  gap: 20rpx;
-  padding: 24rpx;
-  border-top: 1rpx solid #e2e8f0;
+.form-item {
+  margin-bottom: 24rpx;
 }
 
 .btn-cancel {
@@ -409,5 +279,13 @@ onMounted(() => {
   border-radius: 12rpx;
   font-size: 28rpx;
   font-weight: 600;
+}
+
+/* 骨架屏 */
+.skeleton-item {
+  height: 100rpx;
+  background: #e2e8f0;
+  border-radius: 16rpx;
+  margin-bottom: 16rpx;
 }
 </style>

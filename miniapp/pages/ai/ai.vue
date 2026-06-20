@@ -39,21 +39,21 @@
           :class="{ disabled: loading }" 
           @click="!loading && handleWeeklyReport()"
         >
-          周报
+          📊 周报
         </button>
         <button 
           class="action-btn" 
           :class="{ disabled: loading }" 
           @click="!loading && handleMonthlyReport()"
         >
-          月报
+          📈 月报
         </button>
         <button 
           class="action-btn" 
           :class="{ disabled: loading }" 
           @click="!loading && handleFocusJudge()"
         >
-          专注度
+          🎯 专注度
         </button>
       </view>
       
@@ -84,7 +84,7 @@ import { ref, onMounted, nextTick } from 'vue'
 import { aiApi } from '../../api/modules'
 import { renderMarkdown } from '../../utils/markdown'
 import MainLayout from '../../components/main-layout.vue'
-import { generateReportShare, showShareMenu } from '../../utils/share'
+import { showShareMenu } from '../../utils/share'
 
 const CHAT_HISTORY_KEY = 'ai_chat_history'
 const MAX_HISTORY = 20
@@ -234,7 +234,7 @@ const onShareTimeline = () => {
   }
 }
 
-onMounted(() => {
+onMounted(async () => {
   const hasHistory = loadHistory()
   if (!hasHistory) {
     messages.value.push({
@@ -242,6 +242,7 @@ onMounted(() => {
       content: '你好！我是智学伴AI助手，可以帮你分析学习数据、生成报告、回答问题。有什么可以帮你的吗？'
     })
   }
+  await scrollToBottom()
   showShareMenu()
 })
 </script>
@@ -257,6 +258,8 @@ onMounted(() => {
 .chat-messages {
   flex: 1;
   padding: 20rpx;
+  /* 为 TabBar 和输入框留出空间 */
+  padding-bottom: calc(200rpx + env(safe-area-inset-bottom, 0px));
 }
 
 .message {
@@ -325,9 +328,9 @@ onMounted(() => {
 
 .action-btn {
   flex: 1;
-  height: 64rpx;
-  line-height: 64rpx;
-  font-size: 24rpx;
+  height: 80rpx;
+  line-height: 80rpx;
+  font-size: 26rpx;
   background: #f8fafc;
   color: #6366f1;
   border-radius: 12rpx;
@@ -345,6 +348,8 @@ onMounted(() => {
   padding: 20rpx;
   background: #fff;
   border-top: 1rpx solid #e2e8f0;
+  /* 为 TabBar 留出空间 */
+  padding-bottom: calc(20rpx + env(safe-area-inset-bottom, 0px));
 }
 
 .chat-input {

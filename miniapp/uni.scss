@@ -5,15 +5,16 @@ $primary-dark: #4f46e5;
 $primary-bg: #eef2ff;
 
 $success: #10b981;
+$success-dark: #047857; // 更深的绿色，对比度更好
 $success-bg: #ecfdf5;
-$warning: #f59e0b;
+$warning: #d97706; // 加深橙色，提高对比度
 $warning-bg: #fffbeb;
 $danger: #ef4444;
 $danger-bg: #fef2f2;
 
 $text-primary: #1e293b;
 $text-secondary: #64748b;
-$text-muted: #94a3b8;
+$text-muted: #6b7280; // 加深，提高对比度 (原 #94a3b8)
 
 $bg-page: #f8fafc;
 $bg-card: #ffffff;
@@ -22,10 +23,19 @@ $border: #e2e8f0;
 
 $stat-blue: #3b82f6;
 $stat-green: #10b981;
-$stat-orange: #f59e0b;
+$stat-orange: #d97706; // 加深橙色
 $stat-purple: #8b5cf6;
 
-// 通用样式
+// 侧边栏
+$sidebar-bg: #1e293b;
+
+// 日历热力图
+$heatmap-light: #d1fae5;
+$heatmap-heavy: #10b981;
+
+// ===== 公共组件样式 =====
+
+// 卡片
 .card {
   background: $bg-card;
   border-radius: 16rpx;
@@ -34,16 +44,257 @@ $stat-purple: #8b5cf6;
   border: 1rpx solid $border;
 }
 
+.card-title {
+  display: block;
+  font-size: 30rpx;
+  font-weight: 600;
+  color: $text-primary;
+  margin-bottom: 20rpx;
+}
+
+// 统计卡片
+.stat-card {
+  background: $bg-card;
+  border-radius: 16rpx;
+  padding: 24rpx;
+  border: 1rpx solid $border;
+}
+
+.stat-value {
+  display: block;
+  font-size: 40rpx;
+  font-weight: 700;
+  color: $text-primary;
+  margin-bottom: 8rpx;
+}
+
+.stat-label {
+  display: block;
+  font-size: 22rpx;
+  color: $text-secondary;
+}
+
+.stat-blue .stat-value { color: $stat-blue; }
+.stat-green .stat-value { color: $stat-green; }
+.stat-orange .stat-value { color: $stat-orange; }
+.stat-purple .stat-value { color: $stat-purple; }
+
+// 按钮
 .btn-primary {
-  background: $primary;
-  color: #fff;
-  border-radius: 12rpx;
+  width: 100%;
   height: 88rpx;
   line-height: 88rpx;
+  background: $primary;
+  color: #fff;
+  border-radius: 16rpx;
   font-size: 30rpx;
+  font-weight: 600;
   text-align: center;
 }
 
 .btn-primary:active {
   background: $primary-dark;
+}
+
+.btn-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-secondary {
+  width: 100%;
+  height: 88rpx;
+  line-height: 88rpx;
+  background: $bg-card;
+  color: $primary;
+  border-radius: 16rpx;
+  font-size: 30rpx;
+  font-weight: 600;
+  text-align: center;
+  border: 1rpx solid $primary;
+}
+
+.btn-danger {
+  width: 100%;
+  height: 88rpx;
+  line-height: 88rpx;
+  background: $bg-card;
+  color: $danger;
+  border-radius: 16rpx;
+  font-size: 30rpx;
+  font-weight: 600;
+  text-align: center;
+  border: 1rpx solid $danger;
+}
+
+// 表单输入
+.form-input {
+  width: 100%;
+  height: 88rpx;
+  background: $bg-page;
+  border-radius: 12rpx;
+  padding: 0 24rpx;
+  font-size: 28rpx;
+  border: 1rpx solid $border;
+}
+
+.form-textarea {
+  width: 100%;
+  min-height: 200rpx;
+  max-height: 40vh;
+  background: $bg-page;
+  border-radius: 12rpx;
+  padding: 24rpx;
+  font-size: 28rpx;
+  border: 1rpx solid $border;
+}
+
+.form-label {
+  display: block;
+  font-size: 26rpx;
+  color: $text-secondary;
+  margin-bottom: 12rpx;
+}
+
+// 空状态
+.empty-state {
+  text-align: center;
+  padding: 80rpx 40rpx;
+}
+
+.empty-icon {
+  display: block;
+  font-size: 80rpx;
+  margin-bottom: 20rpx;
+}
+
+.empty-text {
+  display: block;
+  font-size: 28rpx;
+  color: $text-muted;
+  margin-bottom: 40rpx;
+}
+
+// 骨架屏动画（全局）
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.skeleton-wrapper {
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+// 弹窗
+.dialog-mask {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.dialog-content {
+  width: 90%;
+  max-height: 80vh;
+  background: $bg-card;
+  border-radius: 24rpx;
+  overflow: hidden;
+}
+
+.dialog-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 24rpx;
+  border-bottom: 1rpx solid $border;
+}
+
+.dialog-title {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: $text-primary;
+}
+
+.dialog-close {
+  font-size: 32rpx;
+  color: $text-secondary;
+  padding: 20rpx; // 增大触摸目标
+}
+
+.dialog-body {
+  padding: 24rpx;
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+.dialog-footer {
+  display: flex;
+  gap: 20rpx;
+  padding: 24rpx;
+  border-top: 1rpx solid $border;
+}
+
+// 操作按钮（编辑/删除）
+.action-btn {
+  font-size: 26rpx;
+  color: $primary;
+  padding: 16rpx; // 增大触摸目标
+}
+
+.action-btn.delete {
+  color: $danger;
+}
+
+// 日期/月份导航
+.date-nav {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 40rpx;
+  padding: 20rpx;
+  background: $bg-card;
+  border-bottom: 1rpx solid $border;
+}
+
+.date-prev, .date-next, .month-prev, .month-next {
+  font-size: 28rpx;
+  color: $primary;
+  padding: 20rpx; // 增大触摸目标
+}
+
+.date-current, .month-text {
+  font-size: 30rpx;
+  font-weight: 600;
+  color: $text-primary;
+}
+
+// 统计行
+.stats-row {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20rpx;
+  margin-bottom: 20rpx;
+}
+
+// 标签
+.tag-success {
+  display: inline-block;
+  padding: 16rpx 32rpx;
+  background: $success-bg;
+  color: $success-dark; // 使用更深的绿色
+  border-radius: 16rpx;
+  font-size: 28rpx;
+}
+
+// 页面容器
+.page-container {
+  padding: 20rpx;
+  background: $bg-page;
+  min-height: 100vh;
 }

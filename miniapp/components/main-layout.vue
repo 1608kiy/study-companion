@@ -46,7 +46,8 @@ onMounted(() => {
   min-height: 100vh;
 }
 
+/* 修复：使用 calc 动态计算安全区域 */
 .content.has-tabbar {
-  padding-bottom: 120rpx;
+  padding-bottom: calc(120rpx + env(safe-area-inset-bottom, 0px));
 }
 </style>

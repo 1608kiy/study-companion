@@ -10,16 +10,16 @@
       <!-- 骨架屏 -->
       <view v-if="loading" class="skeleton-wrapper">
         <view class="skeleton-month"></view>
-        <view class="skeleton-stats">
+        <view class="stats-row">
           <view class="skeleton-card" v-for="i in 4" :key="i"></view>
         </view>
         <view class="skeleton-chart"></view>
       </view>
       
       <!-- 实际内容 -->
-      <view v-else class="stats-container">
+      <view v-else class="page-container">
         <!-- 月份选择 -->
-        <view class="month-picker">
+        <view class="date-nav">
           <text class="month-prev" @click="prevMonth">◀</text>
           <picker mode="date" fields="month" :value="selectedMonth" @change="onMonthChange">
             <text class="month-text">{{ selectedMonth }}</text>
@@ -50,8 +50,8 @@
         <!-- 科目分布 -->
         <view class="card">
           <text class="card-title">科目分布</text>
-          <view v-if="subjectData.length === 0" class="empty-tip">
-            <text>暂无数据</text>
+          <view v-if="subjectData.length === 0" class="empty-state">
+            <text class="empty-text">暂无数据</text>
           </view>
           <view v-else class="subject-list">
             <view 
@@ -172,132 +172,6 @@ onMounted(() => {
   height: 100vh;
 }
 
-.stats-container {
-  padding: 20rpx;
-  background: #f8fafc;
-  min-height: 100vh;
-}
-
-/* 骨架屏 */
-.skeleton-wrapper {
-  padding: 20rpx;
-  animation: pulse 1.5s ease-in-out infinite;
-}
-
-@keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
-}
-
-.skeleton-month {
-  height: 80rpx;
-  background: #e2e8f0;
-  border-radius: 16rpx;
-  margin-bottom: 20rpx;
-}
-
-.skeleton-stats {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 20rpx;
-  margin-bottom: 20rpx;
-}
-
-.skeleton-card {
-  height: 120rpx;
-  background: #e2e8f0;
-  border-radius: 16rpx;
-}
-
-.skeleton-chart {
-  height: 300rpx;
-  background: #e2e8f0;
-  border-radius: 16rpx;
-}
-
-/* 月份选择 */
-.month-picker {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 40rpx;
-  background: #fff;
-  border-radius: 16rpx;
-  padding: 24rpx;
-  margin-bottom: 20rpx;
-  border: 1rpx solid #e2e8f0;
-}
-
-.month-prev, .month-next {
-  font-size: 28rpx;
-  color: #6366f1;
-  padding: 10rpx;
-}
-
-.month-text {
-  font-size: 30rpx;
-  font-weight: 600;
-  color: #1e293b;
-}
-
-/* 统计卡片 */
-.stats-row {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 20rpx;
-  margin-bottom: 20rpx;
-}
-
-.stat-card {
-  background: #fff;
-  border-radius: 16rpx;
-  padding: 24rpx;
-  border: 1rpx solid #e2e8f0;
-}
-
-.stat-value {
-  display: block;
-  font-size: 36rpx;
-  font-weight: 700;
-  color: #1e293b;
-  margin-bottom: 8rpx;
-}
-
-.stat-label {
-  display: block;
-  font-size: 22rpx;
-  color: #64748b;
-}
-
-.stat-blue .stat-value { color: #3b82f6; }
-.stat-green .stat-value { color: #10b981; }
-.stat-orange .stat-value { color: #f59e0b; }
-.stat-purple .stat-value { color: #8b5cf6; }
-
-/* 卡片 */
-.card {
-  background: #fff;
-  border-radius: 16rpx;
-  padding: 24rpx;
-  margin-bottom: 20rpx;
-  border: 1rpx solid #e2e8f0;
-}
-
-.card-title {
-  display: block;
-  font-size: 30rpx;
-  font-weight: 600;
-  color: #1e293b;
-  margin-bottom: 20rpx;
-}
-
-.empty-tip {
-  text-align: center;
-  padding: 40rpx;
-  color: #94a3b8;
-  font-size: 26rpx;
-}
-
 /* 科目分布 */
 .subject-list {
   display: flex;
@@ -312,9 +186,10 @@ onMounted(() => {
 }
 
 .subject-name {
-  width: 120rpx;
+  min-width: 100rpx;
   font-size: 26rpx;
   color: #1e293b;
+  flex-shrink: 0;
 }
 
 .subject-bar {
@@ -332,9 +207,30 @@ onMounted(() => {
 }
 
 .subject-value {
-  width: 120rpx;
+  min-width: 100rpx;
   text-align: right;
   font-size: 24rpx;
   color: #64748b;
+  flex-shrink: 0;
+}
+
+/* 骨架屏 */
+.skeleton-month {
+  height: 80rpx;
+  background: #e2e8f0;
+  border-radius: 16rpx;
+  margin-bottom: 20rpx;
+}
+
+.skeleton-card {
+  height: 120rpx;
+  background: #e2e8f0;
+  border-radius: 16rpx;
+}
+
+.skeleton-chart {
+  height: 300rpx;
+  background: #e2e8f0;
+  border-radius: 16rpx;
 }
 </style>

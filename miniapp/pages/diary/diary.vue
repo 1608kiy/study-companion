@@ -10,7 +10,9 @@
       <!-- 日期导航 -->
       <view class="date-nav">
         <text class="date-prev" @click="prevDay">◀</text>
-        <text class="date-current" @click="showDatePicker">{{ currentDate }}</text>
+        <picker mode="date" :value="currentDate" @change="onDateChange">
+          <text class="date-current">{{ currentDate }}</text>
+        </picker>
         <text class="date-next" @click="nextDay">▶</text>
       </view>
       
@@ -20,9 +22,9 @@
       </view>
       
       <!-- 实际内容 -->
-      <view v-else class="diary-container">
+      <view v-else class="page-container">
         <!-- 日记详情 -->
-        <view v-if="currentDiary" class="card diary-detail">
+        <view v-if="currentDiary" class="card">
           <view class="diary-header">
             <text class="diary-date">{{ currentDiary.diaryDate }}</text>
             <view class="diary-actions">
@@ -43,8 +45,8 @@
           <text class="empty-icon">📝</text>
           <text class="empty-text">这一天还没有日记</text>
           <view class="empty-actions">
-            <button class="btn-write" @click="handleWrite">写日记</button>
-            <button class="btn-ai" @click="handleAIGenerate" :loading="aiLoading">
+            <button class="btn-primary" style="width: 200rpx; height: 80rpx; line-height: 80rpx;" @click="handleWrite">写日记</button>
+            <button class="btn-secondary" style="width: 200rpx; height: 80rpx; line-height: 80rpx;" @click="handleAIGenerate" :loading="aiLoading">
               AI 生成
             </button>
           </view>
@@ -148,23 +150,16 @@ const nextDay = () => {
   currentDate.value = date.toISOString().split('T')[0]
 }
 
-const showDatePicker = () => {
-  uni.showModal({
-    title: '选择日期',
-    content: '日期选择功能开发中',
-    showCancel: false
-  })
+const onDateChange = (e) => {
+  currentDate.value = e.detail.value
 }
 
 const loadDiary = async (date) => {
-  loading.value = true
   try {
     const res = await diaryApi.getByDate(date)
     currentDiary.value = res.data
   } catch (error) {
     currentDiary.value = null
-  } finally {
-    loading.value = false
   }
 }
 
@@ -258,9 +253,11 @@ const handleAIGenerate = async () => {
 const onRefresh = async () => {
   refreshing.value = true
   try {
+    loading.value = true
     await loadDiary(currentDate.value)
   } finally {
     refreshing.value = false
+    loading.value = false
   }
 }
 
@@ -268,69 +265,16 @@ watch(currentDate, (newDate) => {
   loadDiary(newDate)
 })
 
-onMounted(() => {
-  loadDiary(currentDate.value)
+onMounted(async () => {
+  loading.value = true
+  await loadDiary(currentDate.value)
+  loading.value = false
 })
 </script>
 
 <style scoped>
 .diary-scroll {
   height: 100vh;
-}
-
-.diary-container {
-  padding: 20rpx;
-  background: #f8fafc;
-  min-height: 100vh;
-}
-
-/* 日期导航 */
-.date-nav {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 40rpx;
-  padding: 20rpx;
-  background: #fff;
-  border-bottom: 1rpx solid #e2e8f0;
-}
-
-.date-prev, .date-next {
-  font-size: 28rpx;
-  color: #6366f1;
-  padding: 10rpx;
-}
-
-.date-current {
-  font-size: 30rpx;
-  font-weight: 600;
-  color: #1e293b;
-}
-
-/* 骨架屏 */
-.skeleton-wrapper {
-  padding: 20rpx;
-  animation: pulse 1.5s ease-in-out infinite;
-}
-
-@keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
-}
-
-.skeleton-card {
-  height: 400rpx;
-  background: #e2e8f0;
-  border-radius: 16rpx;
-}
-
-/* 卡片 */
-.card {
-  background: #fff;
-  border-radius: 16rpx;
-  padding: 24rpx;
-  margin-bottom: 20rpx;
-  border: 1rpx solid #e2e8f0;
 }
 
 .diary-header {
@@ -348,16 +292,7 @@ onMounted(() => {
 
 .diary-actions {
   display: flex;
-  gap: 20rpx;
-}
-
-.action-btn {
-  font-size: 26rpx;
-  color: #6366f1;
-}
-
-.action-btn.delete {
-  color: #ef4444;
+  gap: 8rpx;
 }
 
 .diary-content {
@@ -379,136 +314,14 @@ onMounted(() => {
   color: #6366f1;
 }
 
-/* 空状态 */
-.empty-state {
-  text-align: center;
-  padding: 100rpx 40rpx;
-}
-
-.empty-icon {
-  display: block;
-  font-size: 80rpx;
-  margin-bottom: 20rpx;
-}
-
-.empty-text {
-  display: block;
-  font-size: 28rpx;
-  color: #94a3b8;
-  margin-bottom: 40rpx;
-}
-
 .empty-actions {
   display: flex;
   gap: 20rpx;
   justify-content: center;
 }
 
-.btn-write {
-  width: 200rpx;
-  height: 80rpx;
-  background: #6366f1;
-  color: #fff;
-  border-radius: 16rpx;
-  font-size: 28rpx;
-  font-weight: 600;
-}
-
-.btn-ai {
-  width: 200rpx;
-  height: 80rpx;
-  background: #fff;
-  color: #6366f1;
-  border-radius: 16rpx;
-  font-size: 28rpx;
-  font-weight: 600;
-  border: 1rpx solid #6366f1;
-}
-
-/* 弹窗 */
-.dialog-mask {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-}
-
-.dialog-content {
-  width: 90%;
-  max-height: 80vh;
-  background: #fff;
-  border-radius: 24rpx;
-  overflow: hidden;
-}
-
-.dialog-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 24rpx;
-  border-bottom: 1rpx solid #e2e8f0;
-}
-
-.dialog-title {
-  font-size: 32rpx;
-  font-weight: 600;
-  color: #1e293b;
-}
-
-.dialog-close {
-  font-size: 32rpx;
-  color: #64748b;
-  padding: 10rpx;
-}
-
-.dialog-body {
-  padding: 24rpx;
-  max-height: 60vh;
-  overflow-y: auto;
-}
-
 .form-item {
   margin-bottom: 24rpx;
-}
-
-.form-label {
-  display: block;
-  font-size: 26rpx;
-  color: #64748b;
-  margin-bottom: 12rpx;
-}
-
-.form-input {
-  width: 100%;
-  height: 80rpx;
-  background: #f8fafc;
-  border-radius: 12rpx;
-  padding: 0 24rpx;
-  font-size: 28rpx;
-  border: 1rpx solid #e2e8f0;
-}
-
-.form-textarea {
-  width: 100%;
-  height: 200rpx;
-  background: #f8fafc;
-  border-radius: 12rpx;
-  padding: 24rpx;
-  font-size: 28rpx;
-  border: 1rpx solid #e2e8f0;
-}
-
-.dialog-footer {
-  display: flex;
-  gap: 20rpx;
-  padding: 24rpx;
-  border-top: 1rpx solid #e2e8f0;
 }
 
 .btn-cancel {
@@ -528,5 +341,12 @@ onMounted(() => {
   border-radius: 12rpx;
   font-size: 28rpx;
   font-weight: 600;
+}
+
+/* 骨架屏 */
+.skeleton-card {
+  height: 400rpx;
+  background: #e2e8f0;
+  border-radius: 16rpx;
 }
 </style>

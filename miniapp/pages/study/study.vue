@@ -15,9 +15,9 @@
       </view>
       
       <!-- 实际内容 -->
-      <view v-else class="study-container">
+      <view v-else class="page-container">
         <!-- 计时器区域 -->
-        <view class="timer-card">
+        <view class="card timer-card">
           <view class="timer-display">
             <text class="timer-value">{{ studyStore.elapsedDisplay }}</text>
             <text class="timer-subject">{{ studyStore.timerState.subjectName || '选择科目开始学习' }}</text>
@@ -36,9 +36,10 @@
           <view class="timer-controls">
             <button 
               v-if="!studyStore.isTimerRunning && !studyStore.isPaused"
-              class="btn-start" 
-              @click="handleStart"
+              class="btn-primary" 
+              :class="{ 'btn-disabled': !selectedSubject }"
               :disabled="!selectedSubject"
+              @click="handleStart"
             >
               开始学习
             </button>
@@ -64,10 +65,14 @@
               停止
             </button>
           </view>
+          
+          <text v-if="!selectedSubject && !studyStore.isTimerRunning" class="hint-text">
+            请先选择科目
+          </text>
         </view>
         
         <!-- 今日统计 -->
-        <view class="card stats-card">
+        <view class="card">
           <text class="card-title">今日统计</text>
           <view class="stats-row">
             <view class="stat-item">
@@ -82,13 +87,13 @@
         </view>
         
         <!-- 今日记录 -->
-        <view class="card records-card">
+        <view class="card">
           <view class="card-header">
             <text class="card-title">今日记录</text>
             <text class="manage-subjects" @click="goSubjects">管理科目</text>
           </view>
-          <view v-if="studyRecords.length === 0" class="empty-tip">
-            <text>暂无学习记录</text>
+          <view v-if="studyRecords.length === 0" class="empty-state">
+            <text class="empty-text">暂无学习记录</text>
           </view>
           <view v-else class="record-list">
             <view 
@@ -263,54 +268,12 @@ onUnmounted(() => {
   height: 100vh;
 }
 
-.study-container {
-  padding: 20rpx;
-  background: #f8fafc;
-  min-height: 100vh;
-}
-
-/* 骨架屏 */
-.skeleton-wrapper {
-  padding: 20rpx;
-  animation: pulse 1.5s ease-in-out infinite;
-}
-
-@keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
-}
-
-.skeleton-timer {
-  height: 400rpx;
-  background: #e2e8f0;
-  border-radius: 24rpx;
-  margin-bottom: 20rpx;
-}
-
-.skeleton-stats {
-  height: 150rpx;
-  background: #e2e8f0;
-  border-radius: 16rpx;
-  margin-bottom: 20rpx;
-}
-
-.skeleton-records {
-  height: 300rpx;
-  background: #e2e8f0;
-  border-radius: 16rpx;
-}
-
 /* 计时器 */
 .timer-card {
-  background: #fff;
-  border-radius: 24rpx;
-  padding: 40rpx;
-  margin-bottom: 20rpx;
-  border: 1rpx solid #e2e8f0;
+  text-align: center;
 }
 
 .timer-display {
-  text-align: center;
   margin-bottom: 40rpx;
 }
 
@@ -349,41 +312,58 @@ onUnmounted(() => {
   gap: 20rpx;
 }
 
-.btn-start, .btn-pause, .btn-resume, .btn-stop {
+.btn-primary {
+  flex: 1;
+}
+
+.btn-disabled {
+  opacity: 0.5;
+}
+
+.btn-pause {
   flex: 1;
   height: 88rpx;
+  background: #f59e0b;
+  color: #fff;
   border-radius: 16rpx;
   font-size: 28rpx;
   font-weight: 600;
 }
 
-.btn-start {
-  background: #6366f1;
-  color: #fff;
-}
-
-.btn-pause {
-  background: #f59e0b;
-  color: #fff;
-}
-
 .btn-resume {
+  flex: 1;
+  height: 88rpx;
   background: #10b981;
   color: #fff;
+  border-radius: 16rpx;
+  font-size: 28rpx;
+  font-weight: 600;
 }
 
 .btn-stop {
+  flex: 1;
+  height: 88rpx;
   background: #ef4444;
   color: #fff;
+  border-radius: 16rpx;
+  font-size: 28rpx;
+  font-weight: 600;
 }
 
-/* 卡片 */
-.card {
-  background: #fff;
-  border-radius: 16rpx;
-  padding: 24rpx;
-  margin-bottom: 20rpx;
-  border: 1rpx solid #e2e8f0;
+.hint-text {
+  display: block;
+  font-size: 24rpx;
+  color: #6b7280;
+  margin-top: 16rpx;
+}
+
+/* 统计 */
+.stat-item {
+  flex: 1;
+  text-align: center;
+  padding: 20rpx;
+  background: #f8fafc;
+  border-radius: 12rpx;
 }
 
 .card-header {
@@ -393,51 +373,13 @@ onUnmounted(() => {
   margin-bottom: 20rpx;
 }
 
-.card-title {
-  font-size: 30rpx;
-  font-weight: 600;
-  color: #1e293b;
-}
-
 .manage-subjects {
   font-size: 24rpx;
   color: #6366f1;
+  padding: 16rpx;
 }
 
-.stats-row {
-  display: flex;
-  gap: 20rpx;
-}
-
-.stat-item {
-  flex: 1;
-  text-align: center;
-  padding: 20rpx;
-  background: #f8fafc;
-  border-radius: 12rpx;
-}
-
-.stat-value {
-  display: block;
-  font-size: 40rpx;
-  font-weight: 700;
-  color: #6366f1;
-}
-
-.stat-label {
-  display: block;
-  font-size: 22rpx;
-  color: #64748b;
-  margin-top: 8rpx;
-}
-
-.empty-tip {
-  text-align: center;
-  padding: 40rpx;
-  color: #94a3b8;
-  font-size: 26rpx;
-}
-
+/* 记录列表 */
 .record-list {
   display: flex;
   flex-direction: column;
@@ -475,5 +417,26 @@ onUnmounted(() => {
   font-size: 28rpx;
   font-weight: 600;
   color: #6366f1;
+}
+
+/* 骨架屏 */
+.skeleton-timer {
+  height: 400rpx;
+  background: #e2e8f0;
+  border-radius: 16rpx;
+  margin-bottom: 20rpx;
+}
+
+.skeleton-stats {
+  height: 150rpx;
+  background: #e2e8f0;
+  border-radius: 16rpx;
+  margin-bottom: 20rpx;
+}
+
+.skeleton-records {
+  height: 300rpx;
+  background: #e2e8f0;
+  border-radius: 16rpx;
 }
 </style>

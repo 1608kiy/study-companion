@@ -1,5 +1,5 @@
 <template>
-  <view class="settings-container">
+  <view class="page-container">
     <!-- 个人信息 -->
     <view class="card">
       <text class="card-title">个人信息</text>
@@ -46,17 +46,17 @@
     </view>
     
     <!-- 保存按钮 -->
-    <button class="btn-save" @click="handleSave" :loading="saving">
+    <button class="btn-primary" @click="handleSave" :loading="saving">
       保存设置
     </button>
     
     <!-- 账号操作 -->
     <view class="card">
       <text class="card-title">账号操作</text>
-      <button class="btn-logout" @click="handleLogout">
+      <button class="btn-secondary" style="margin-bottom: 16rpx;" @click="handleLogout">
         退出登录
       </button>
-      <button class="btn-delete" @click="handleDeleteAccount">
+      <button class="btn-danger" @click="handleDeleteAccount">
         注销账号
       </button>
     </view>
@@ -183,81 +183,8 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.settings-container {
-  padding: 20rpx;
-  background: #f8fafc;
-  min-height: 100vh;
-}
-
-.card {
-  background: #fff;
-  border-radius: 16rpx;
-  padding: 24rpx;
-  margin-bottom: 20rpx;
-  border: 1rpx solid #e2e8f0;
-}
-
-.card-title {
-  display: block;
-  font-size: 30rpx;
-  font-weight: 600;
-  color: #1e293b;
-  margin-bottom: 20rpx;
-}
-
 .form-item {
   margin-bottom: 24rpx;
-}
-
-.form-label {
-  display: block;
-  font-size: 26rpx;
-  color: #64748b;
-  margin-bottom: 12rpx;
-}
-
-.form-input {
-  width: 100%;
-  height: 80rpx;
-  background: #f8fafc;
-  border-radius: 12rpx;
-  padding: 0 24rpx;
-  font-size: 28rpx;
-  border: 1rpx solid #e2e8f0;
-}
-
-.btn-save {
-  width: 100%;
-  height: 88rpx;
-  background: #6366f1;
-  color: #fff;
-  border-radius: 16rpx;
-  font-size: 30rpx;
-  font-weight: 600;
-  margin-bottom: 20rpx;
-}
-
-.btn-logout {
-  width: 100%;
-  height: 88rpx;
-  background: #fff;
-  color: #6366f1;
-  border-radius: 16rpx;
-  font-size: 30rpx;
-  font-weight: 600;
-  border: 1rpx solid #6366f1;
-  margin-bottom: 16rpx;
-}
-
-.btn-delete {
-  width: 100%;
-  height: 88rpx;
-  background: #fff;
-  color: #ef4444;
-  border-radius: 16rpx;
-  font-size: 30rpx;
-  font-weight: 600;
-  border: 1rpx solid #ef4444;
 }
 
 .version-card {
@@ -267,6 +194,6 @@ onMounted(() => {
 
 .version-text {
   font-size: 24rpx;
-  color: #94a3b8;
+  color: #6b7280;
 }
 </style>
