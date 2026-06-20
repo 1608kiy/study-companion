@@ -10,14 +10,14 @@ spring:
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
     url: jdbc:mysql://localhost:3306/study_companion?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
-    username: root
-    password: root
+    username: ${DB_USERNAME:root}
+    password: ${DB_PASSWORD:root}
 
   data:
     redis:
       host: localhost
       port: 6379
-      password:
+      password: ${REDIS_PASSWORD:}
       database: 0
       lettuce:
         pool:
@@ -38,19 +38,18 @@ spring:
 mybatis-plus:
   configuration:
     map-underscore-to-camel-case: true
-    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
   global-config:
     db-config:
       id-type: auto
   type-aliases-package: com.studycompanion.entity
 
 jwt:
-  secret: study-companion-jwt-secret-key-2024
+  secret: ${JWT_SECRET:study-companion-default-secret-change-in-production}
   expiration: 86400000  # 24小时
 
 logging:
   level:
-    com.studycompanion: debug
+    com.studycompanion: info
     org.springframework: info
 
 # 文件上传路径

@@ -131,10 +131,10 @@ public class UserServiceImpl implements UserService {
             user.setMonthlyGoal(request.getMonthlyGoal());
         }
         if (request.getDarkMode() != null) {
-            user.setDarkMode(request.getDarkMode());
+            user.setDarkMode(request.getDarkMode() ? 1 : 0);
         }
         if (request.getNotificationEnabled() != null) {
-            user.setNotificationEnabled(request.getNotificationEnabled());
+            user.setNotificationEnabled(request.getNotificationEnabled() ? 1 : 0);
         }
 
         userMapper.updateById(user);

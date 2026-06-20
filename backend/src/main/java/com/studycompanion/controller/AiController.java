@@ -16,12 +16,14 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Tag(name = "AI与分享", description = "AI建议、周报/月报、AI问答、分享图片")
 @RestController
 @RequestMapping("/api/v1/ai")
@@ -143,7 +145,7 @@ public class AiController {
             }
         } catch (Exception e) {
             // 保存历史失败不影响主流程
-            e.printStackTrace();
+            log.warn("保存聊天历史失败: {}", e.getMessage());
         }
     }
 

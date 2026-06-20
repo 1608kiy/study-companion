@@ -7,8 +7,8 @@ import './assets/main.css'
 
 import {
   Aim, ArrowDown, Calendar, ChatDotRound, Check, CircleCheck, CircleClose, Close,
-  DataAnalysis, Delete, Document, Expand, Finished, Fold, House,
-  MagicStick, MoreFilled, Notebook, Plus, Promotion, Refresh, Setting,
+  DataAnalysis, Delete, Document, Download, Expand, Finished, Fold, House,
+  MagicStick, Menu, MoreFilled, Notebook, Plus, Promotion, Refresh, Setting,
   Share, SwitchButton, Timer, TrendCharts, Trophy, User,
   VideoPause, VideoPlay
 } from '@element-plus/icons-vue'
@@ -17,8 +17,8 @@ const app = createApp(App)
 
 const icons = {
   Aim, ArrowDown, Calendar, ChatDotRound, Check, CircleCheck, CircleClose, Close,
-  DataAnalysis, Delete, Document, Expand, Finished, Fold, House,
-  MagicStick, MoreFilled, Notebook, Plus, Promotion, Refresh, Setting,
+  DataAnalysis, Delete, Document, Download, Expand, Finished, Fold, House,
+  MagicStick, Menu, MoreFilled, Notebook, Plus, Promotion, Refresh, Setting,
   Share, SwitchButton, Timer, TrendCharts, Trophy, User,
   VideoPause, VideoPlay
 }

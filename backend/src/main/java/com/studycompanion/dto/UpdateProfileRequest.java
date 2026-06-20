@@ -22,9 +22,9 @@ public class UpdateProfileRequest {
     @Schema(description = "每月目标时长(分钟)")
     private Integer monthlyGoal;
 
-    @Schema(description = "深色模式(0关闭 1开启)")
-    private Integer darkMode;
+    @Schema(description = "深色模式")
+    private Boolean darkMode;
 
-    @Schema(description = "通知开关(0关闭 1开启)")
-    private Integer notificationEnabled;
+    @Schema(description = "通知开关")
+    private Boolean notificationEnabled;
 }

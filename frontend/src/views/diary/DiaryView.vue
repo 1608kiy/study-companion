@@ -109,13 +109,17 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { diaryApi } from '@/api/modules'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import dayjs from 'dayjs'
 import { renderMarkdown } from '@/utils/markdown'
 
-const isMobile = computed(() => window.innerWidth < 768)
+const isMobile = ref(window.innerWidth < 768)
+const handleResize = () => { isMobile.value = window.innerWidth < 768 }
+onMounted(() => window.addEventListener('resize', handleResize))
+onUnmounted(() => window.removeEventListener('resize', handleResize))
+
 const selectedDate = ref(new Date())
 const diaryList = ref([])
 const currentDiary = ref(null)
