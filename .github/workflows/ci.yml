@@ -1,0 +1,52 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  backend:
+    name: 后端构建与测试
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: 'maven'
+
+      - name: 编译后端
+        run: mvn compile -f backend/pom.xml
+
+      - name: 运行后端测试
+        run: mvn test -f backend/pom.xml
+
+  frontend:
+    name: 前端构建与测试
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: 安装前端依赖
+        working-directory: frontend
+        run: npm ci --legacy-peer-deps
+
+      - name: 运行前端测试
+        working-directory: frontend
+        run: npm test
+
+      - name: 构建前端
+        working-directory: frontend
+        run: npm run build
