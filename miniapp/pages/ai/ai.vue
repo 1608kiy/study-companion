@@ -89,35 +89,17 @@ import { renderMarkdown } from '../../utils/markdown'
 import MainLayout from '../../components/main-layout.vue'
 import { showShareMenu } from '../../utils/share'
 
-const CHAT_HISTORY_KEY = 'ai_chat_history'
-const MAX_HISTORY = 20
-
 const messages = ref([])
 const inputMessage = ref('')
 const loading = ref(false)
 const scrollToView = ref('')
 
-const saveHistory = () => {
+const loadHistory = async () => {
   try {
-    const historyToSave = messages.value
-      .filter(m => m.role === 'user' || m.role === 'assistant')
-      .slice(-MAX_HISTORY)
-      .map(m => ({ role: m.role, content: m.content }))
-    uni.setStorageSync(CHAT_HISTORY_KEY, JSON.stringify(historyToSave))
-  } catch (e) {
-    console.error('保存聊天记录失败:', e)
-  }
-}
-
-const loadHistory = () => {
-  try {
-    const saved = uni.getStorageSync(CHAT_HISTORY_KEY)
-    if (saved) {
-      const parsed = JSON.parse(saved)
-      if (Array.isArray(parsed) && parsed.length > 0) {
-        messages.value = parsed
-        return true
-      }
+    const res = await aiApi.getChatHistory(20)
+    if (res.data && res.data.length > 0) {
+      messages.value = res.data
+      return true
     }
   } catch (e) {
     console.error('加载聊天记录失败:', e)
@@ -143,14 +125,13 @@ const sendMessage = async () => {
   messages.value.push(userMessage)
   inputMessage.value = ''
   loading.value = true
-  saveHistory()
   await scrollToBottom()
   
   try {
     const history = messages.value
       .filter(m => m.role === 'user' || m.role === 'assistant')
       .slice(0, -1)
-      .slice(-MAX_HISTORY)
+      .slice(-20)
       .map(m => ({ role: m.role, content: m.content }))
     
     const res = await aiApi.chat({ question: userMessage.content, history })
@@ -158,7 +139,6 @@ const sendMessage = async () => {
       role: 'assistant',
       content: res.data.answer
     })
-    saveHistory()
   } catch (error) {
     messages.value.push({
       role: 'assistant',
@@ -236,7 +216,7 @@ const onShareTimeline = () => {
 }
 
 onMounted(async () => {
-  const hasHistory = loadHistory()
+  const hasHistory = await loadHistory()
   if (!hasHistory) {
     messages.value.push({
       role: 'assistant',

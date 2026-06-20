@@ -124,9 +124,6 @@ import dayjs from 'dayjs'
 import { renderMarkdown } from '@/utils/markdown'
 import html2canvas from 'html2canvas'
 
-const CHAT_HISTORY_KEY = 'ai_chat_history'
-const MAX_HISTORY = 20 // 最多保存20条消息（10轮对话）
-
 const chatContainer = ref(null)
 const reportContentRef = ref(null)
 const inputMessage = ref('')
@@ -142,33 +139,19 @@ const scrollToBottom = async () => {
   }
 }
 
-const saveHistory = () => {
+const loadHistory = async () => {
   try {
-    const historyToSave = messages.value.filter(m => m.role === 'user' || m.role === 'assistant')
-      .slice(-MAX_HISTORY)
-      .map(m => ({ role: m.role, content: m.content }))
-    localStorage.setItem(CHAT_HISTORY_KEY, JSON.stringify(historyToSave))
-  } catch (e) {
-    // localStorage 可能满了，忽略
-  }
-}
-
-const loadHistory = () => {
-  try {
-    const saved = localStorage.getItem(CHAT_HISTORY_KEY)
-    if (saved) {
-      const parsed = JSON.parse(saved)
-      if (Array.isArray(parsed) && parsed.length > 0) {
-        messages.value = parsed.map(m => ({
-          role: m.role,
-          content: m.content,
-          time: dayjs().format('HH:mm'),
-        }))
-        return true
-      }
+    const res = await aiApi.getChatHistory(20)
+    if (res.data && res.data.length > 0) {
+      messages.value = res.data.map(m => ({
+        role: m.role,
+        content: m.content,
+        time: dayjs().format('HH:mm'),
+      }))
+      return true
     }
   } catch (e) {
-    // 忽略解析错误
+    console.error('加载聊天历史失败:', e)
   }
   return false
 }
@@ -185,10 +168,9 @@ const sendMessage = async () => {
   messages.value.push(userMessage)
   inputMessage.value = ''
   loading.value = true
-  saveHistory()
   
   try {
-    // 构建历史消息（排除当前消息和欢迎消息）
+    // 构建历史消息（排除当前消息）
     const history = messages.value
       .filter(m => m.role === 'user' || m.role === 'assistant')
       .slice(0, -1) // 排除当前刚添加的用户消息
@@ -202,7 +184,6 @@ const sendMessage = async () => {
       time: dayjs().format('HH:mm'),
     }
     messages.value.push(aiMessage)
-    saveHistory()
   } catch (error) {
     messages.value.push({
       role: 'assistant',
@@ -295,8 +276,8 @@ const generateShareImage = async () => {
   }
 }
 
-onMounted(() => {
-  const hasHistory = loadHistory()
+onMounted(async () => {
+  const hasHistory = await loadHistory()
   if (!hasHistory) {
     messages.value.push({
       role: 'assistant',

@@ -79,5 +79,7 @@ export const aiApi = {
   generateMonthlyReport: () => post('/ai/monthly-report'),
   chat: (data) => post('/ai/chat', data),
   judgeFocus: (studyContext) => post('/ai/focus-judge', { studyContext }),
-  getShareImage: () => get('/ai/share')
+  getShareImage: () => get('/ai/share'),
+  getChatHistory: (limit = 20) => get('/ai/chat/history', { limit }),
+  clearChatHistory: () => del('/ai/chat/history')
 }

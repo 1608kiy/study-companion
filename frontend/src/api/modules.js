@@ -88,4 +88,6 @@ export const aiApi = {
   chat: (data) => api.post('/ai/chat', data),
   judgeFocus: (studyContext) => api.post('/ai/focus-judge', { studyContext }),
   getShareImage: () => api.get('/ai/share'),
+  getChatHistory: (limit = 20) => api.get('/ai/chat/history', { params: { limit } }),
+  clearChatHistory: () => api.delete('/ai/chat/history'),
 }
