@@ -108,11 +108,14 @@ class StudyRecordServiceTest {
     void updateStudyRecord_Success() {
         when(studyRecordMapper.selectById(recordId)).thenReturn(testRecord);
         when(subjectMapper.selectById(subjectId)).thenReturn(testSubject);
+        when(redisTemplate.opsForValue()).thenReturn(valueOperations);
+        when(valueOperations.get("ai_approve:" + userId + ":" + recordId)).thenReturn("test-token");
         
         UpdateStudyRecordRequest request = new UpdateStudyRecordRequest();
         request.setMood("开心");
         request.setFocusLevel(4);
         request.setRemark("今天状态不错");
+        request.setApproveToken("test-token");
         
         StudyRecordVO result = studyRecordService.updateStudyRecord(userId, recordId, request);
         
@@ -126,10 +129,13 @@ class StudyRecordServiceTest {
     @Test
     void deleteStudyRecord_Success() {
         when(studyRecordMapper.selectById(recordId)).thenReturn(testRecord);
+        when(redisTemplate.opsForValue()).thenReturn(valueOperations);
+        when(valueOperations.get("ai_approve:" + userId + ":" + recordId)).thenReturn("test-token");
         
-        studyRecordService.deleteStudyRecord(userId, recordId);
+        studyRecordService.deleteStudyRecord(userId, recordId, "test-token");
         
         verify(studyRecordMapper).deleteById(recordId);
+        verify(valueOperations).get("ai_approve:" + userId + ":" + recordId);
     }
 
     @Test
@@ -137,7 +143,17 @@ class StudyRecordServiceTest {
         when(studyRecordMapper.selectById(recordId)).thenReturn(null);
         
         assertThrows(BusinessException.class, 
-            () -> studyRecordService.deleteStudyRecord(userId, recordId));
+            () -> studyRecordService.deleteStudyRecord(userId, recordId, "test-token"));
+    }
+
+    @Test
+    void deleteStudyRecord_NoApproval_ThrowsException() {
+        when(studyRecordMapper.selectById(recordId)).thenReturn(testRecord);
+        when(redisTemplate.opsForValue()).thenReturn(valueOperations);
+        when(valueOperations.get("ai_approve:" + userId + ":" + recordId)).thenReturn(null);
+        
+        assertThrows(BusinessException.class, 
+            () -> studyRecordService.deleteStudyRecord(userId, recordId, "test-token"));
     }
 
     @Test

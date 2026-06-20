@@ -52,7 +52,7 @@ public class StudyRecordServiceImpl implements StudyRecordService {
     public TimerStateVO startTimer(Long userId, StartTimerRequest request) {
         // 检查是否有正在运行的计时器
         if (isTimerRunning(userId)) {
-            throw new BusinessException(ErrorCode.CHECKIN_ALREADY_COMPLETED);
+            throw new BusinessException(ErrorCode.TIMER_ALREADY_RUNNING);
         }
 
         // 验证科目是否存在
@@ -81,12 +81,19 @@ public class StudyRecordServiceImpl implements StudyRecordService {
     @Override
     public TimerStateVO pauseTimer(Long userId) {
         if (!isTimerRunning(userId)) {
-            throw new BusinessException(ErrorCode.CHECKIN_NOT_COMPLETED);
+            throw new BusinessException(ErrorCode.TIMER_NOT_RUNNING);
         }
 
         String key = TIMER_PREFIX + userId;
-        long startTime = Long.parseLong(redisTemplate.opsForValue().get(key + TIMER_START_SUFFIX));
-        long elapsed = Long.parseLong(redisTemplate.opsForValue().get(key + TIMER_ELAPSED_SUFFIX));
+        String startStr = redisTemplate.opsForValue().get(key + TIMER_START_SUFFIX);
+        String elapsedStr = redisTemplate.opsForValue().get(key + TIMER_ELAPSED_SUFFIX);
+        
+        if (startStr == null || elapsedStr == null) {
+            throw new BusinessException(ErrorCode.TIMER_NOT_RUNNING, "计时器状态异常");
+        }
+        
+        long startTime = Long.parseLong(startStr);
+        long elapsed = Long.parseLong(elapsedStr);
         elapsed += (System.currentTimeMillis() - startTime) / 1000;
 
         redisTemplate.opsForValue().set(key + TIMER_RUNNING_SUFFIX, "false", 24, TimeUnit.HOURS);
@@ -100,7 +107,7 @@ public class StudyRecordServiceImpl implements StudyRecordService {
     public TimerStateVO resumeTimer(Long userId) {
         String key = TIMER_PREFIX + userId;
         if (!"true".equals(redisTemplate.opsForValue().get(key + TIMER_PAUSED_SUFFIX))) {
-            throw new BusinessException(ErrorCode.CHECKIN_NOT_COMPLETED);
+            throw new BusinessException(ErrorCode.TIMER_NOT_PAUSED);
         }
 
         redisTemplate.opsForValue().set(key + TIMER_RUNNING_SUFFIX, "true", 24, TimeUnit.HOURS);
@@ -112,17 +119,30 @@ public class StudyRecordServiceImpl implements StudyRecordService {
 
     @Override
     public StudyRecordVO stopTimer(Long userId) {
-        if (!isTimerRunning(userId) && !"true".equals(redisTemplate.opsForValue().get(TIMER_PREFIX + userId + TIMER_PAUSED_SUFFIX))) {
-            throw new BusinessException(ErrorCode.CHECKIN_NOT_COMPLETED);
+        String key = TIMER_PREFIX + userId;
+        boolean isRunning = "true".equals(redisTemplate.opsForValue().get(key + TIMER_RUNNING_SUFFIX));
+        boolean isPaused = "true".equals(redisTemplate.opsForValue().get(key + TIMER_PAUSED_SUFFIX));
+        
+        if (!isRunning && !isPaused) {
+            throw new BusinessException(ErrorCode.TIMER_NOT_RUNNING);
         }
 
-        String key = TIMER_PREFIX + userId;
-        Long subjectId = Long.parseLong(Objects.requireNonNull(redisTemplate.opsForValue().get(key + TIMER_SUBJECT_SUFFIX)));
-        long elapsed = Long.parseLong(Objects.requireNonNull(redisTemplate.opsForValue().get(key + TIMER_ELAPSED_SUFFIX)));
+        String subjectIdStr = redisTemplate.opsForValue().get(key + TIMER_SUBJECT_SUFFIX);
+        String elapsedStr = redisTemplate.opsForValue().get(key + TIMER_ELAPSED_SUFFIX);
+        
+        if (subjectIdStr == null || elapsedStr == null) {
+            throw new BusinessException(ErrorCode.TIMER_NOT_RUNNING, "计时器状态异常");
+        }
+        
+        Long subjectId = Long.parseLong(subjectIdStr);
+        long elapsed = Long.parseLong(elapsedStr);
 
-        if ("true".equals(redisTemplate.opsForValue().get(key + TIMER_RUNNING_SUFFIX))) {
-            long startTime = Long.parseLong(Objects.requireNonNull(redisTemplate.opsForValue().get(key + TIMER_START_SUFFIX)));
-            elapsed += (System.currentTimeMillis() - startTime) / 1000;
+        if (isRunning) {
+            String startTimeStr = redisTemplate.opsForValue().get(key + TIMER_START_SUFFIX);
+            if (startTimeStr != null) {
+                long startTime = Long.parseLong(startTimeStr);
+                elapsed += (System.currentTimeMillis() - startTime) / 1000;
+            }
         }
 
         int duration = (int) (elapsed / 60);
@@ -155,15 +175,23 @@ public class StudyRecordServiceImpl implements StudyRecordService {
     public TimerStateVO getTimerState(Long userId) {
         String key = TIMER_PREFIX + userId;
         String isRunning = redisTemplate.opsForValue().get(key + TIMER_RUNNING_SUFFIX);
+        String isPaused = redisTemplate.opsForValue().get(key + TIMER_PAUSED_SUFFIX);
 
         TimerStateVO state = new TimerStateVO();
-        if (!"true".equals(isRunning) && !"true".equals(redisTemplate.opsForValue().get(key + TIMER_PAUSED_SUFFIX))) {
+        if (!"true".equals(isRunning) && !"true".equals(isPaused)) {
             state.setIsRunning(false);
             return state;
         }
 
         state.setIsRunning("true".equals(isRunning));
-        Long subjectId = Long.parseLong(Objects.requireNonNull(redisTemplate.opsForValue().get(key + TIMER_SUBJECT_SUFFIX)));
+        
+        String subjectIdStr = redisTemplate.opsForValue().get(key + TIMER_SUBJECT_SUFFIX);
+        if (subjectIdStr == null) {
+            state.setIsRunning(false);
+            return state;
+        }
+        
+        Long subjectId = Long.parseLong(subjectIdStr);
         state.setSubjectId(subjectId);
 
         Subject subject = subjectMapper.selectById(subjectId);
@@ -171,11 +199,20 @@ public class StudyRecordServiceImpl implements StudyRecordService {
             state.setSubjectName(subject.getName());
         }
 
-        long elapsed = Long.parseLong(Objects.requireNonNull(redisTemplate.opsForValue().get(key + TIMER_ELAPSED_SUFFIX)));
+        String elapsedStr = redisTemplate.opsForValue().get(key + TIMER_ELAPSED_SUFFIX);
+        if (elapsedStr == null) {
+            state.setIsRunning(false);
+            return state;
+        }
+        
+        long elapsed = Long.parseLong(elapsedStr);
         if ("true".equals(isRunning)) {
-            long startTime = Long.parseLong(Objects.requireNonNull(redisTemplate.opsForValue().get(key + TIMER_START_SUFFIX)));
-            elapsed += (System.currentTimeMillis() - startTime) / 1000;
-            state.setStartTime(LocalDateTime.now().minusSeconds(elapsed));
+            String startTimeStr = redisTemplate.opsForValue().get(key + TIMER_START_SUFFIX);
+            if (startTimeStr != null) {
+                long startTime = Long.parseLong(startTimeStr);
+                elapsed += (System.currentTimeMillis() - startTime) / 1000;
+                state.setStartTime(LocalDateTime.now().minusSeconds(elapsed));
+            }
         }
         state.setElapsedSeconds(elapsed);
 

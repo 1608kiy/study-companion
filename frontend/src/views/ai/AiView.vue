@@ -124,6 +124,7 @@ import dayjs from 'dayjs'
 import { renderMarkdown } from '@/utils/markdown'
 import html2canvas from 'html2canvas'
 
+const MAX_HISTORY = 20
 const chatContainer = ref(null)
 const reportContentRef = ref(null)
 const inputMessage = ref('')

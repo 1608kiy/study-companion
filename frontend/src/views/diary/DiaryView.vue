@@ -193,13 +193,8 @@ const submitDiary = async () => {
   
   submitting.value = true
   try {
-    if (isEdit.value && currentDiary.value) {
-      await diaryApi.update(currentDiary.value.id, diaryForm.value)
-      ElMessage.success('保存成功')
-    } else {
-      await diaryApi.create(diaryForm.value)
-      ElMessage.success('创建成功')
-    }
+    await diaryApi.create(diaryForm.value)
+    ElMessage.success('创建成功')
     dialogVisible.value = false
     await loadDiaryList()
     await loadDiary(dayjs(selectedDate.value).format('YYYY-MM-DD'))

@@ -158,7 +158,6 @@ const handleWeeklyReport = async () => {
       role: 'assistant',
       content: res.data.content
     })
-    saveHistory()
     await scrollToBottom()
   } catch (error) {
     uni.showToast({ title: error.message || '生成周报失败', icon: 'none' })
@@ -175,7 +174,6 @@ const handleMonthlyReport = async () => {
       role: 'assistant',
       content: res.data.content
     })
-    saveHistory()
     await scrollToBottom()
   } catch (error) {
     uni.showToast({ title: error.message || '生成月报失败', icon: 'none' })
@@ -192,7 +190,6 @@ const handleFocusJudge = async () => {
       role: 'assistant',
       content: res.data.content
     })
-    saveHistory()
     await scrollToBottom()
   } catch (error) {
     uni.showToast({ title: error.message || '专注度评估失败', icon: 'none' })

@@ -30,6 +30,9 @@ public enum ErrorCode {
     RECORD_NOT_FOUND(3001, "学习记录不存在"),
     RECORD_MODIFY_NOT_ALLOWED(3002, "AI判断不允许修改"),
     RECORD_DELETE_NOT_ALLOWED(3003, "AI判断不允许删除"),
+    TIMER_ALREADY_RUNNING(3004, "计时器已在运行中"),
+    TIMER_NOT_RUNNING(3005, "计时器未运行"),
+    TIMER_NOT_PAUSED(3006, "计时器未暂停"),
 
     // 打卡模块 4xxx
     CHECKIN_ALREADY_COMPLETED(4001, "今日已打卡"),

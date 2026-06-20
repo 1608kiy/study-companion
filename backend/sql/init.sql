@@ -206,6 +206,22 @@ CREATE TABLE `ai_analysis` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='AI分析记录表';
 
 -- ================================================
+-- 11. AI聊天历史表 (ai_chat_history)
+-- ================================================
+CREATE TABLE `ai_chat_history` (
+  `id` BIGINT NOT NULL AUTO_INCREMENT,
+  `user_id` BIGINT NOT NULL COMMENT '用户ID',
+  `role` VARCHAR(20) NOT NULL COMMENT '消息角色(user/assistant)',
+  `content` TEXT NOT NULL COMMENT '消息内容',
+  `create_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `update_time` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  PRIMARY KEY (`id`),
+  KEY `idx_user_id` (`user_id`),
+  KEY `idx_create_time` (`create_time`),
+  FOREIGN KEY (`user_id`) REFERENCES `user`(`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='AI聊天历史表';
+
+-- ================================================
 -- 初始化数据：预设科目模板
 -- ================================================
 -- 注意：预设科目在用户注册时自动创建，这里只是记录预设模板
