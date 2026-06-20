@@ -3,6 +3,11 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { studyRecordApi } from '../api/modules'
 
+// 安全的补零函数（兼容旧版小程序）
+const padZero = (num) => {
+  return num < 10 ? '0' + num : String(num)
+}
+
 export const useStudyStore = defineStore('study', () => {
   // 状态
   const timerState = ref({
@@ -21,8 +26,8 @@ export const useStudyStore = defineStore('study', () => {
   const elapsedMinutes = computed(() => Math.floor(timerState.value.elapsedSeconds / 60))
   const elapsedSecondsDisplay = computed(() => timerState.value.elapsedSeconds % 60)
   const elapsedDisplay = computed(() => {
-    const m = String(elapsedMinutes.value).padStart(2, '0')
-    const s = String(elapsedSecondsDisplay.value).padStart(2, '0')
+    const m = padZero(elapsedMinutes.value)
+    const s = padZero(elapsedSecondsDisplay.value)
     return `${m}:${s}`
   })
 

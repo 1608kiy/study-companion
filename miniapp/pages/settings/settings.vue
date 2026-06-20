@@ -184,8 +184,11 @@ const handleDeleteAccount = () => {
         try {
           await userApi.deleteAccount()
           await userStore.logout()
-          uni.reLaunch({ url: '/pages/login/login' })
-          uni.showToast({ title: '账号已注销', icon: 'success' })
+          // 先显示提示，再跳转
+          uni.showToast({ title: '账号已注销', icon: 'success', duration: 1500 })
+          setTimeout(() => {
+            uni.reLaunch({ url: '/pages/login/login' })
+          }, 1500)
         } catch (error) {
           uni.showToast({ title: error.message || '注销失败', icon: 'none' })
         }

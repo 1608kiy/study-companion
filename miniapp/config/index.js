@@ -19,7 +19,6 @@ const getEnv = () => {
   // #ifdef MP-WEIXIN || MP-ALIPAY || MP-BAIDU || MP-TOUTIAO || MP-QQ
   return 'production'
   // #endif
-  return 'development'
 }
 
 export const getConfig = () => {

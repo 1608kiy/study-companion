@@ -1,5 +1,4 @@
 <script>
-import { onLaunch, onShow, onHide } from '@dcloudio/uni-app'
 import { useUserStore } from './store/user'
 import { initErrorHandler } from './utils/error-handler'
 import { initVersionCheck } from './utils/version'
@@ -8,8 +7,10 @@ export default {
   onLaunch() {
     console.log('App Launch')
     
-    // 初始化全局错误处理
-    initErrorHandler(this)
+    // 初始化全局错误处理（传入 app 实例通过 getApp() 获取）
+    // 注意：在 onLaunch 中，this.$getAppWebview() 或 getApp() 可用
+    // 但最简单的方式是直接设置错误处理器
+    initErrorHandler(getApp())
     
     // 初始化版本检查
     initVersionCheck()
@@ -21,14 +22,12 @@ export default {
       userStore.setToken(token)
       userStore.getProfile().catch(err => {
         console.error('获取用户信息失败:', err)
-        // Token 可能过期，清除
         userStore.clearToken()
       })
     }
   },
   onShow() {
     console.log('App Show')
-    // 隐藏原生 tabBar（使用自定义组件）
     uni.hideTabBar()
   },
   onHide() {

@@ -207,7 +207,7 @@ const handleMonthlyReport = async () => {
 const handleFocusJudge = async () => {
   loading.value = true
   try {
-    const res = await aiApi.judgeFocus()
+    const res = await aiApi.judgeFocus('用户请求专注度评估')
     messages.value.push({
       role: 'assistant',
       content: res.data.content
