@@ -10,19 +10,21 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-@Tag(name = "科目管理", description = "科目CRUD、预设科目")
+@Tag(name = "科目模块", description = "科目CRUD")
 @RestController
 @RequestMapping("/api/v1/subjects")
-@RequiredArgsConstructor
-public class SubjectController {
+public class SubjectController extends BaseController {
 
     private final SubjectService subjectService;
-    private final JwtUtil jwtUtil;
+
+    public SubjectController(JwtUtil jwtUtil, SubjectService subjectService) {
+        super(jwtUtil);
+        this.subjectService = subjectService;
+    }
 
     @Operation(summary = "获取科目列表")
     @GetMapping
@@ -66,13 +68,5 @@ public class SubjectController {
         Long userId = getUserIdFromRequest(request);
         subjectService.deleteSubject(userId, subjectId);
         return Result.success("删除成功", null);
-    }
-
-    private Long getUserIdFromRequest(HttpServletRequest request) {
-        String token = request.getHeader("Authorization");
-        if (token != null && token.startsWith("Bearer ")) {
-            token = token.substring(7);
-        }
-        return jwtUtil.getUserIdFromToken(token);
     }
 }

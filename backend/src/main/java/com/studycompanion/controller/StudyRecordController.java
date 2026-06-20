@@ -13,7 +13,6 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -22,11 +21,14 @@ import java.util.Map;
 @Tag(name = "学习记录", description = "番茄钟计时、学习记录CRUD、学习统计")
 @RestController
 @RequestMapping("/api/v1/study-records")
-@RequiredArgsConstructor
-public class StudyRecordController {
+public class StudyRecordController extends BaseController {
 
     private final StudyRecordService studyRecordService;
-    private final JwtUtil jwtUtil;
+
+    public StudyRecordController(JwtUtil jwtUtil, StudyRecordService studyRecordService) {
+        super(jwtUtil);
+        this.studyRecordService = studyRecordService;
+    }
 
     @Operation(summary = "开始计时")
     @PostMapping("/timer/start")
@@ -137,13 +139,5 @@ public class StudyRecordController {
         Long userId = getUserIdFromRequest(request);
         StudyStatsVO stats = studyRecordService.getStudyStats(userId);
         return Result.success(stats);
-    }
-
-    private Long getUserIdFromRequest(HttpServletRequest request) {
-        String token = request.getHeader("Authorization");
-        if (token != null && token.startsWith("Bearer ")) {
-            token = token.substring(7);
-        }
-        return jwtUtil.getUserIdFromToken(token);
     }
 }

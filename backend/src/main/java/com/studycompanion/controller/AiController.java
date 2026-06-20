@@ -15,7 +15,6 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
@@ -27,12 +26,16 @@ import java.util.stream.Collectors;
 @Tag(name = "AI与分享", description = "AI建议、周报/月报、AI问答、分享图片")
 @RestController
 @RequestMapping("/api/v1/ai")
-@RequiredArgsConstructor
-public class AiController {
+public class AiController extends BaseController {
 
     private final AiService aiService;
     private final AiChatHistoryMapper chatHistoryMapper;
-    private final JwtUtil jwtUtil;
+
+    public AiController(JwtUtil jwtUtil, AiService aiService, AiChatHistoryMapper chatHistoryMapper) {
+        super(jwtUtil);
+        this.aiService = aiService;
+        this.chatHistoryMapper = chatHistoryMapper;
+    }
 
     @Operation(summary = "生成周报")
     @PostMapping("/weekly-report")
@@ -94,7 +97,7 @@ public class AiController {
         LambdaQueryWrapper<AiChatHistory> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(AiChatHistory::getUserId, userId)
                .orderByDesc(AiChatHistory::getCreateTime)
-               .last("LIMIT " + limit);
+               .last("LIMIT " + Math.min(limit, 100));
         
         List<AiChatHistory> history = chatHistoryMapper.selectList(wrapper);
         
@@ -147,13 +150,5 @@ public class AiController {
             // 保存历史失败不影响主流程
             log.warn("保存聊天历史失败: {}", e.getMessage());
         }
-    }
-
-    private Long getUserIdFromRequest(HttpServletRequest request) {
-        String token = request.getHeader("Authorization");
-        if (token != null && token.startsWith("Bearer ")) {
-            token = token.substring(7);
-        }
-        return jwtUtil.getUserIdFromToken(token);
     }
 }

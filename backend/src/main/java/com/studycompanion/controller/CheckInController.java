@@ -11,7 +11,6 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -19,12 +18,16 @@ import java.util.List;
 @Tag(name = "打卡与断签", description = "打卡、连续天数、断签记录、补签")
 @RestController
 @RequestMapping("/api/v1/check-in")
-@RequiredArgsConstructor
-public class CheckInController {
+public class CheckInController extends BaseController {
 
     private final CheckInService checkInService;
     private final MissRecordService missRecordService;
-    private final JwtUtil jwtUtil;
+
+    public CheckInController(JwtUtil jwtUtil, CheckInService checkInService, MissRecordService missRecordService) {
+        super(jwtUtil);
+        this.checkInService = checkInService;
+        this.missRecordService = missRecordService;
+    }
 
     @Operation(summary = "获取今日打卡状态")
     @GetMapping("/today")
@@ -63,7 +66,7 @@ public class CheckInController {
     @Operation(summary = "AI判断补签")
     @PostMapping("/miss/{missRecordId}/ai-judge")
     public Result<MissRecordVO> aiJudgeReplenish(HttpServletRequest request,
-                                                 @PathVariable Long missRecordId) {
+                                                  @PathVariable Long missRecordId) {
         Long userId = getUserIdFromRequest(request);
         MissRecordVO record = missRecordService.aiJudgeReplenish(userId, missRecordId);
         return Result.success(record);
@@ -84,13 +87,5 @@ public class CheckInController {
         Long userId = getUserIdFromRequest(request);
         List<MissRecordVO> records = missRecordService.getMissRecords(userId);
         return Result.success(records);
-    }
-
-    private Long getUserIdFromRequest(HttpServletRequest request) {
-        String token = request.getHeader("Authorization");
-        if (token != null && token.startsWith("Bearer ")) {
-            token = token.substring(7);
-        }
-        return jwtUtil.getUserIdFromToken(token);
     }
 }

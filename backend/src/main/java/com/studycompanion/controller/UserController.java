@@ -8,17 +8,19 @@ import com.studycompanion.vo.UserProfileVO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
-import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 @Tag(name = "用户模块", description = "获取/更新用户信息、注销")
 @RestController
 @RequestMapping("/api/v1/user")
-@RequiredArgsConstructor
-public class UserController {
+public class UserController extends BaseController {
 
     private final UserService userService;
-    private final JwtUtil jwtUtil;
+
+    public UserController(JwtUtil jwtUtil, UserService userService) {
+        super(jwtUtil);
+        this.userService = userService;
+    }
 
     @Operation(summary = "获取用户信息")
     @GetMapping("/profile")
@@ -51,13 +53,5 @@ public class UserController {
         String token = request.getHeader("Authorization");
         userService.logout(token);
         return Result.success("注销成功", null);
-    }
-
-    private Long getUserIdFromRequest(HttpServletRequest request) {
-        String token = request.getHeader("Authorization");
-        if (token != null && token.startsWith("Bearer ")) {
-            token = token.substring(7);
-        }
-        return jwtUtil.getUserIdFromToken(token);
     }
 }

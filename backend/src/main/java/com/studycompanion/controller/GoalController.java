@@ -12,19 +12,21 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-@Tag(name = "目标与统计", description = "目标CRUD、AI推荐目标、学习统计")
+@Tag(name = "目标模块", description = "目标CRUD、统计")
 @RestController
 @RequestMapping("/api/v1/goals")
-@RequiredArgsConstructor
-public class GoalController {
+public class GoalController extends BaseController {
 
     private final GoalService goalService;
-    private final JwtUtil jwtUtil;
+
+    public GoalController(JwtUtil jwtUtil, GoalService goalService) {
+        super(jwtUtil);
+        this.goalService = goalService;
+    }
 
     @Operation(summary = "获取目标列表")
     @GetMapping
@@ -72,7 +74,7 @@ public class GoalController {
         return Result.success(goal);
     }
 
-    @Operation(summary = "获取每日统计")
+    @Operation(summary = "每日统计")
     @GetMapping("/stats/daily")
     public Result<StudyStatsVO> getDailyStats(HttpServletRequest request,
                                               @RequestParam(required = false) String date) {
@@ -81,7 +83,7 @@ public class GoalController {
         return Result.success(stats);
     }
 
-    @Operation(summary = "获取每周统计")
+    @Operation(summary = "每周统计")
     @GetMapping("/stats/weekly")
     public Result<StudyStatsVO> getWeeklyStats(HttpServletRequest request,
                                                @RequestParam(required = false) String week) {
@@ -90,7 +92,7 @@ public class GoalController {
         return Result.success(stats);
     }
 
-    @Operation(summary = "获取每月统计")
+    @Operation(summary = "每月统计")
     @GetMapping("/stats/monthly")
     public Result<StudyStatsVO> getMonthlyStats(HttpServletRequest request,
                                                 @RequestParam(required = false) String month) {
@@ -99,20 +101,12 @@ public class GoalController {
         return Result.success(stats);
     }
 
-    @Operation(summary = "获取月历统计")
+    @Operation(summary = "月历统计")
     @GetMapping("/stats/calendar")
     public Result<MonthlyStatsVO> getMonthlyCalendarStats(HttpServletRequest request,
                                                           @RequestParam(required = false) String month) {
         Long userId = getUserIdFromRequest(request);
         MonthlyStatsVO stats = goalService.getMonthlyCalendarStats(userId, month);
         return Result.success(stats);
-    }
-
-    private Long getUserIdFromRequest(HttpServletRequest request) {
-        String token = request.getHeader("Authorization");
-        if (token != null && token.startsWith("Bearer ")) {
-            token = token.substring(7);
-        }
-        return jwtUtil.getUserIdFromToken(token);
     }
 }

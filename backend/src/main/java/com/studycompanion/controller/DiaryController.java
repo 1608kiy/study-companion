@@ -1,7 +1,5 @@
 package com.studycompanion.controller;
 
-import com.studycompanion.common.BusinessException;
-import com.studycompanion.common.ErrorCode;
 import com.studycompanion.common.JwtUtil;
 import com.studycompanion.common.Result;
 import com.studycompanion.dto.CreateDiaryRequest;
@@ -11,25 +9,30 @@ import com.studycompanion.service.DiaryImageService;
 import com.studycompanion.vo.DiaryImageVO;
 import com.studycompanion.vo.DiaryVO;
 import com.studycompanion.vo.PageResponse;
+import com.studycompanion.common.BusinessException;
+import com.studycompanion.common.ErrorCode;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
-@Tag(name = "日记", description = "日记CRUD、图片上传、AI生成日记")
+@Tag(name = "日记模块", description = "日记CRUD、图片上传、AI生成日记")
 @RestController
 @RequestMapping("/api/v1/diaries")
-@RequiredArgsConstructor
-public class DiaryController {
+public class DiaryController extends BaseController {
 
     private final DiaryService diaryService;
     private final DiaryImageService diaryImageService;
-    private final JwtUtil jwtUtil;
+
+    public DiaryController(JwtUtil jwtUtil, DiaryService diaryService, DiaryImageService diaryImageService) {
+        super(jwtUtil);
+        this.diaryService = diaryService;
+        this.diaryImageService = diaryImageService;
+    }
 
     @Operation(summary = "获取日记列表")
     @GetMapping
@@ -95,7 +98,7 @@ public class DiaryController {
     @Operation(summary = "重新生成日记")
     @PostMapping("/{diaryId}/regenerate")
     public Result<DiaryVO> regenerateDiary(HttpServletRequest request,
-                                           @PathVariable Long diaryId) {
+                                            @PathVariable Long diaryId) {
         Long userId = getUserIdFromRequest(request);
         DiaryVO diary = diaryService.regenerateDiary(userId, diaryId);
         return Result.success("重新生成成功", diary);
@@ -123,17 +126,9 @@ public class DiaryController {
     @Operation(summary = "获取日记图片列表")
     @GetMapping("/{diaryId}/images")
     public Result<List<DiaryImageVO>> getDiaryImages(HttpServletRequest request,
-                                                     @PathVariable Long diaryId) {
+                                                      @PathVariable Long diaryId) {
         Long userId = getUserIdFromRequest(request);
         List<DiaryImageVO> images = diaryImageService.getDiaryImages(userId, diaryId);
         return Result.success(images);
-    }
-
-    private Long getUserIdFromRequest(HttpServletRequest request) {
-        String token = request.getHeader("Authorization");
-        if (token != null && token.startsWith("Bearer ")) {
-            token = token.substring(7);
-        }
-        return jwtUtil.getUserIdFromToken(token);
     }
 }
