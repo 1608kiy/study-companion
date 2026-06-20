@@ -24,6 +24,19 @@
   --radius: 8px;
   --radius-lg: 12px;
   --radius-xl: 16px;
+
+  /* 统计卡片四色 */
+  --stat-blue: #3b82f6;
+  --stat-green: #10b981;
+  --stat-orange: #f59e0b;
+  --stat-purple: #8b5cf6;
+
+  /* 侧边栏 */
+  --sidebar-bg: #1e293b;
+
+  /* 日历热力图 */
+  --heatmap-light: #d1fae5;
+  --heatmap-heavy: #10b981;
 }
 
 * {

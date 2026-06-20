@@ -260,6 +260,6 @@ onMounted(async () => {
 .day-number { font-size: 14px; font-weight: 600; }
 .day-duration { font-size: 11px; color: var(--text-secondary); margin-top: 4px; }
 .calendar-day.light { background-color: var(--primary-bg); color: var(--primary); }
-.calendar-day.medium { background-color: #d1fae5; color: #059669; }
+.calendar-day.medium { background-color: var(--heatmap-light); color: var(--stat-green); }
 .calendar-day.heavy { background: var(--stat-green); color: white; }
 </style>

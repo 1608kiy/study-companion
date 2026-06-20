@@ -143,7 +143,7 @@ onUnmounted(() => {
 }
 
 .sidebar {
-  background: #1e293b;
+  background: var(--sidebar-bg);
   transition: width 0.3s ease;
   overflow: hidden;
   display: flex;
