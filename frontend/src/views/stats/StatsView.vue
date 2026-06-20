@@ -1,5 +1,21 @@
 <template>
   <div class="stats-container">
+    <!-- 骨架屏 -->
+    <div v-if="loading" class="skeleton-wrapper">
+      <div class="skeleton-stats"></div>
+      <el-row :gutter="20" class="chart-row">
+        <el-col :xs="24" :md="12">
+          <div class="skeleton-chart"></div>
+        </el-col>
+        <el-col :xs="24" :md="12">
+          <div class="skeleton-chart"></div>
+        </el-col>
+      </el-row>
+      <div class="skeleton-calendar"></div>
+    </div>
+
+    <!-- 实际内容 -->
+    <div v-else>
     <el-row :gutter="20">
       <el-col :span="24">
         <el-card>
@@ -85,6 +101,7 @@
         </el-card>
       </el-col>
     </el-row>
+    </div>
   </div>
 </template>
 
@@ -96,6 +113,7 @@ import dayjs from 'dayjs'
 
 const selectedMonth = ref(new Date())
 const selectedDate = ref(new Date())
+const loading = ref(true)
 const stats = ref({})
 const calendarStats = ref({})
 const dailyData = ref([])
@@ -223,11 +241,15 @@ const loadCalendarStats = async () => {
 }
 
 onMounted(async () => {
-  await Promise.all([
-    loadStats(),
-    loadCalendarStats(),
-    loadSubjectStats(),
-  ])
+  try {
+    await Promise.all([
+      loadStats(),
+      loadCalendarStats(),
+      loadSubjectStats(),
+    ])
+  } finally {
+    loading.value = false
+  }
 })
 </script>
 
@@ -262,4 +284,22 @@ onMounted(async () => {
 .calendar-day.light { background-color: var(--primary-bg); color: var(--primary); }
 .calendar-day.medium { background-color: var(--heatmap-light); color: var(--stat-green); }
 .calendar-day.heavy { background: var(--stat-green); color: white; }
+
+/* 骨架屏 */
+.skeleton-wrapper { animation: pulse 1.5s ease-in-out infinite; }
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+.skeleton-stats {
+  height: 120px; background: var(--border); border-radius: var(--radius-lg);
+  margin-bottom: 20px;
+}
+.skeleton-chart {
+  height: 360px; background: var(--border); border-radius: var(--radius-lg);
+}
+.skeleton-calendar {
+  height: 460px; background: var(--border); border-radius: var(--radius-lg);
+  margin-top: 20px;
+}
 </style>

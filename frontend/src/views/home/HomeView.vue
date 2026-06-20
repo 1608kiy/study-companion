@@ -1,9 +1,29 @@
 <template>
   <div class="home-container">
-    <div class="welcome-section">
-      <h2>欢迎回来，{{ userInfo?.nickname || '学习者' }} 👋</h2>
-      <p class="welcome-sub">今天也要加油学习哦</p>
+    <!-- 骨架屏 -->
+    <div v-if="loading" class="skeleton-wrapper">
+      <div class="skeleton-welcome"></div>
+      <el-row :gutter="20" class="stats-row">
+        <el-col v-for="i in 4" :key="i" :xs="12" :sm="12" :md="6">
+          <div class="skeleton-stat"></div>
+        </el-col>
+      </el-row>
+      <el-row :gutter="20" class="content-row">
+        <el-col :xs="24" :md="16">
+          <div class="skeleton-chart"></div>
+        </el-col>
+        <el-col :xs="24" :md="8">
+          <div class="skeleton-checkin"></div>
+        </el-col>
+      </el-row>
     </div>
+
+    <!-- 实际内容 -->
+    <div v-else>
+      <div class="welcome-section">
+        <h2>欢迎回来，{{ userInfo?.nickname || '学习者' }} 👋</h2>
+        <p class="welcome-sub">今天也要加油学习哦</p>
+      </div>
     
     <el-row :gutter="20" class="stats-row">
       <el-col :xs="12" :sm="12" :md="6">
@@ -99,6 +119,7 @@
         </el-card>
       </el-col>
     </el-row>
+    </div>
   </div>
 </template>
 
@@ -113,6 +134,7 @@ import dayjs from 'dayjs'
 const userStore = useUserStore()
 const userInfo = computed(() => userStore.userInfo)
 const dailyGoal = computed(() => userStore.userInfo?.dailyGoal || 120)
+const loading = ref(true)
 
 const todayStats = ref({
   duration: 0,
@@ -212,10 +234,14 @@ const loadTodayStats = async () => {
 }
 
 onMounted(async () => {
-  await Promise.all([
-    loadCheckInStatus(),
-    loadTodayStats(),
-  ])
+  try {
+    await Promise.all([
+      loadCheckInStatus(),
+      loadTodayStats(),
+    ])
+  } finally {
+    loading.value = false
+  }
 })
 </script>
 
@@ -270,4 +296,24 @@ onMounted(async () => {
 
 .checkin-btn { width: 120px; height: 40px; border-radius: 10px; font-weight: 600; }
 .checked-tag { height: 40px; padding: 0 20px; font-size: 14px; border-radius: 10px; }
+
+/* 骨架屏 */
+.skeleton-wrapper { animation: pulse 1.5s ease-in-out infinite; }
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+.skeleton-welcome {
+  height: 60px; background: var(--border); border-radius: var(--radius);
+  margin-bottom: 24px;
+}
+.skeleton-stat {
+  height: 84px; background: var(--border); border-radius: var(--radius-lg);
+}
+.skeleton-chart {
+  height: 380px; background: var(--border); border-radius: var(--radius-lg);
+}
+.skeleton-checkin {
+  height: 380px; background: var(--border); border-radius: var(--radius-lg);
+}
 </style>
