@@ -159,12 +159,17 @@ class StudyRecordServiceTest {
 
     @Test
     void getStudyStats_Success() {
-        when(studyRecordMapper.selectList(any(LambdaQueryWrapper.class)))
-            .thenReturn(Arrays.asList(testRecord));
-        when(subjectMapper.selectBatchIds(anyCollection()))
-            .thenReturn(Arrays.asList(testSubject));
-        when(checkInMapper.selectOne(any(LambdaQueryWrapper.class)))
-            .thenReturn(null); // No check-in for streak calculation
+        // Mock SQL aggregation methods
+        Map<String, Object> aggregated = new HashMap<>();
+        aggregated.put("totalDays", 1L);
+        aggregated.put("totalDuration", 60);
+        when(studyRecordMapper.getStudyStatsAggregated(userId)).thenReturn(aggregated);
+        when(studyRecordMapper.getDurationBetween(eq(userId), any(), any())).thenReturn(60);
+        when(studyRecordMapper.getSubjectStats(userId)).thenReturn(Arrays.asList(
+            Map.of("subjectName", "行测", "totalDuration", 60)
+        ));
+        when(studyRecordMapper.getDailyDurationsBetween(eq(userId), any(), any())).thenReturn(Collections.emptyList());
+        when(checkInMapper.selectOne(any(LambdaQueryWrapper.class))).thenReturn(null);
         
         StudyStatsVO result = studyRecordService.getStudyStats(userId);
         
@@ -202,10 +207,15 @@ class StudyRecordServiceTest {
 
     @Test
     void getStudyStats_EmptyRecords() {
-        when(studyRecordMapper.selectList(any(LambdaQueryWrapper.class)))
-            .thenReturn(Collections.emptyList());
-        when(checkInMapper.selectOne(any(LambdaQueryWrapper.class)))
-            .thenReturn(null); // No check-in for streak calculation
+        // Mock SQL aggregation methods for empty result
+        Map<String, Object> aggregated = new HashMap<>();
+        aggregated.put("totalDays", 0L);
+        aggregated.put("totalDuration", 0);
+        when(studyRecordMapper.getStudyStatsAggregated(userId)).thenReturn(aggregated);
+        when(studyRecordMapper.getDurationBetween(eq(userId), any(), any())).thenReturn(0);
+        when(studyRecordMapper.getSubjectStats(userId)).thenReturn(Collections.emptyList());
+        when(studyRecordMapper.getDailyDurationsBetween(eq(userId), any(), any())).thenReturn(Collections.emptyList());
+        when(checkInMapper.selectOne(any(LambdaQueryWrapper.class))).thenReturn(null);
         
         StudyStatsVO result = studyRecordService.getStudyStats(userId);
         

@@ -8,6 +8,7 @@ import com.studycompanion.service.DiaryService;
 import com.studycompanion.service.DiaryImageService;
 import com.studycompanion.vo.DiaryImageVO;
 import com.studycompanion.vo.DiaryVO;
+import com.studycompanion.vo.PageResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
@@ -34,6 +35,17 @@ public class DiaryController {
                                               @RequestParam(required = false) String month) {
         Long userId = getUserIdFromRequest(request);
         List<DiaryVO> diaries = diaryService.getDiaryList(userId, month);
+        return Result.success(diaries);
+    }
+
+    @Operation(summary = "获取日记列表（分页）")
+    @GetMapping("/paged")
+    public Result<PageResponse<DiaryVO>> getDiaryListPaged(HttpServletRequest request,
+                                                            @RequestParam(required = false) String month,
+                                                            @RequestParam(defaultValue = "1") int page,
+                                                            @RequestParam(defaultValue = "10") int size) {
+        Long userId = getUserIdFromRequest(request);
+        PageResponse<DiaryVO> diaries = diaryService.getDiaryListPaged(userId, month, page, size);
         return Result.success(diaries);
     }
 

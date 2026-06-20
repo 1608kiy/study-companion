@@ -2,6 +2,7 @@ package com.studycompanion.service;
 
 import com.studycompanion.dto.StartTimerRequest;
 import com.studycompanion.dto.UpdateStudyRecordRequest;
+import com.studycompanion.vo.PageResponse;
 import com.studycompanion.vo.StudyRecordVO;
 import com.studycompanion.vo.StudyStatsVO;
 import com.studycompanion.vo.TimerStateVO;
@@ -21,6 +22,8 @@ public interface StudyRecordService {
     TimerStateVO getTimerState(Long userId);
 
     List<StudyRecordVO> getStudyRecords(Long userId, String startDate, String endDate);
+
+    PageResponse<StudyRecordVO> getStudyRecordsPaged(Long userId, String startDate, String endDate, int page, int size);
 
     StudyRecordVO getStudyRecordById(Long userId, Long recordId);
 

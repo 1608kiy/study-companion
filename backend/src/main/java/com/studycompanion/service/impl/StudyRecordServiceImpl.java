@@ -12,6 +12,7 @@ import com.studycompanion.mapper.CheckInMapper;
 import com.studycompanion.mapper.StudyRecordMapper;
 import com.studycompanion.mapper.SubjectMapper;
 import com.studycompanion.service.StudyRecordService;
+import com.studycompanion.vo.PageResponse;
 import com.studycompanion.vo.StudyRecordVO;
 import com.studycompanion.vo.StudyStatsVO;
 import com.studycompanion.vo.TimerStateVO;
@@ -210,6 +211,44 @@ public class StudyRecordServiceImpl implements StudyRecordService {
     }
 
     @Override
+    public PageResponse<StudyRecordVO> getStudyRecordsPaged(Long userId, String startDate, String endDate, int page, int size) {
+        LambdaQueryWrapper<StudyRecord> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(StudyRecord::getUserId, userId);
+
+        if (startDate != null) {
+            wrapper.ge(StudyRecord::getStudyDate, LocalDate.parse(startDate));
+        }
+        if (endDate != null) {
+            wrapper.le(StudyRecord::getStudyDate, LocalDate.parse(endDate));
+        }
+
+        wrapper.orderByDesc(StudyRecord::getStudyDate)
+               .orderByDesc(StudyRecord::getStartTime);
+
+        // 获取总数
+        long total = studyRecordMapper.selectCount(wrapper);
+
+        // 分页查询
+        int offset = (page - 1) * size;
+        wrapper.last("LIMIT " + size + " OFFSET " + offset);
+        List<StudyRecord> records = studyRecordMapper.selectList(wrapper);
+
+        Set<Long> subjectIds = records.stream()
+                .map(StudyRecord::getSubjectId)
+                .collect(Collectors.toSet());
+        Map<Long, Subject> subjectMap = subjectIds.isEmpty()
+                ? Collections.emptyMap()
+                : subjectMapper.selectBatchIds(subjectIds).stream()
+                        .collect(Collectors.toMap(Subject::getId, s -> s));
+
+        List<StudyRecordVO> voList = records.stream()
+                .map(r -> convertToVO(r, subjectMap))
+                .collect(Collectors.toList());
+
+        return new PageResponse<>(voList, total, page, size);
+    }
+
+    @Override
     public StudyRecordVO getStudyRecordById(Long userId, Long recordId) {
         StudyRecord record = studyRecordMapper.selectById(recordId);
         if (record == null || !record.getUserId().equals(userId)) {
@@ -259,76 +298,54 @@ public class StudyRecordServiceImpl implements StudyRecordService {
         StudyStatsVO stats = new StudyStatsVO();
         LocalDate today = LocalDate.now();
 
-        // 查询所有学习记录
-        LambdaQueryWrapper<StudyRecord> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(StudyRecord::getUserId, userId);
-        List<StudyRecord> records = studyRecordMapper.selectList(wrapper);
+        // 使用 SQL 聚合查询获取总统计
+        Map<String, Object> aggregated = studyRecordMapper.getStudyStatsAggregated(userId);
+        stats.setTotalDays(((Number) aggregated.get("totalDays")).intValue());
+        stats.setTotalDuration(((Number) aggregated.get("totalDuration")).intValue());
 
-        // 统计总学习天数
-        Set<LocalDate> uniqueDays = records.stream()
-                .map(StudyRecord::getStudyDate)
-                .collect(Collectors.toSet());
-        stats.setTotalDays(uniqueDays.size());
-
-        // 统计总学习时长
-        int totalDuration = records.stream()
-                .mapToInt(StudyRecord::getDuration)
-                .sum();
-        stats.setTotalDuration(totalDuration);
-
-        // 统计今日学习时长
-        int todayDuration = records.stream()
-                .filter(r -> r.getStudyDate().equals(today))
-                .mapToInt(StudyRecord::getDuration)
-                .sum();
+        // 今日学习时长
+        Integer todayDuration = studyRecordMapper.getDurationBetween(userId, today, today);
         stats.setTodayDuration(todayDuration);
 
-        // 统计本周学习时长
+        // 本周学习时长
         LocalDate weekStart = today.minusDays(today.getDayOfWeek().getValue() - 1);
-        int weekDuration = records.stream()
-                .filter(r -> !r.getStudyDate().isBefore(weekStart))
-                .mapToInt(StudyRecord::getDuration)
-                .sum();
+        Integer weekDuration = studyRecordMapper.getDurationBetween(userId, weekStart, today);
         stats.setWeekDuration(weekDuration);
 
-        // 统计本月学习时长
+        // 本月学习时长
         LocalDate monthStart = today.withDayOfMonth(1);
-        int monthDuration = records.stream()
-                .filter(r -> !r.getStudyDate().isBefore(monthStart))
-                .mapToInt(StudyRecord::getDuration)
-                .sum();
+        Integer monthDuration = studyRecordMapper.getDurationBetween(userId, monthStart, today);
         stats.setMonthDuration(monthDuration);
 
-        // 统计科目学习时长（批量查询避免 N+1）
-        Set<Long> subjectIds = records.stream()
-                .map(StudyRecord::getSubjectId)
-                .collect(Collectors.toSet());
-        Map<Long, Subject> subjectMap = subjectIds.isEmpty()
-                ? Collections.emptyMap()
-                : subjectMapper.selectBatchIds(subjectIds).stream()
-                        .collect(Collectors.toMap(Subject::getId, s -> s));
+        // 科目学习时长（SQL 聚合）
+        List<Map<String, Object>> subjectStatsList = studyRecordMapper.getSubjectStats(userId);
         Map<String, Integer> subjectStats = new HashMap<>();
-        for (StudyRecord record : records) {
-            Subject subject = subjectMap.get(record.getSubjectId());
-            if (subject != null) {
-                subjectStats.merge(subject.getName(), record.getDuration(), Integer::sum);
+        for (Map<String, Object> row : subjectStatsList) {
+            String subjectName = (String) row.get("subjectName");
+            int duration = ((Number) row.get("totalDuration")).intValue();
+            if (subjectName != null) {
+                subjectStats.put(subjectName, duration);
             }
         }
         stats.setSubjectStats(subjectStats);
 
-        // 新增：连续打卡天数
+        // 连续打卡天数
         int currentStreak = calculateCurrentStreak(userId, today);
         stats.setCurrentStreak(currentStreak);
 
-        // 新增：最近7天每日时长
+        // 最近7天每日时长（SQL 聚合）
+        List<Map<String, Object>> dailyDurationsList = studyRecordMapper.getDailyDurationsBetween(
+                userId, today.minusDays(6), today);
+        Map<LocalDate, Integer> dailyDurationMap = new HashMap<>();
+        for (Map<String, Object> row : dailyDurationsList) {
+            LocalDate date = ((java.sql.Date) row.get("studyDate")).toLocalDate();
+            int duration = ((Number) row.get("totalDuration")).intValue();
+            dailyDurationMap.put(date, duration);
+        }
         List<Integer> weeklyDurations = new ArrayList<>();
         for (int i = 6; i >= 0; i--) {
             LocalDate date = today.minusDays(i);
-            int dayDuration = records.stream()
-                    .filter(r -> r.getStudyDate().equals(date))
-                    .mapToInt(StudyRecord::getDuration)
-                    .sum();
-            weeklyDurations.add(dayDuration);
+            weeklyDurations.add(dailyDurationMap.getOrDefault(date, 0));
         }
         stats.setWeeklyDurations(weeklyDurations);
 

@@ -5,6 +5,7 @@ import com.studycompanion.common.Result;
 import com.studycompanion.dto.StartTimerRequest;
 import com.studycompanion.dto.UpdateStudyRecordRequest;
 import com.studycompanion.service.StudyRecordService;
+import com.studycompanion.vo.PageResponse;
 import com.studycompanion.vo.StudyRecordVO;
 import com.studycompanion.vo.StudyStatsVO;
 import com.studycompanion.vo.TimerStateVO;
@@ -74,6 +75,18 @@ public class StudyRecordController {
                                                        @RequestParam(required = false) String endDate) {
         Long userId = getUserIdFromRequest(request);
         List<StudyRecordVO> records = studyRecordService.getStudyRecords(userId, startDate, endDate);
+        return Result.success(records);
+    }
+
+    @Operation(summary = "获取学习记录列表（分页）")
+    @GetMapping("/paged")
+    public Result<PageResponse<StudyRecordVO>> getStudyRecordsPaged(HttpServletRequest request,
+                                                                     @RequestParam(required = false) String startDate,
+                                                                     @RequestParam(required = false) String endDate,
+                                                                     @RequestParam(defaultValue = "1") int page,
+                                                                     @RequestParam(defaultValue = "10") int size) {
+        Long userId = getUserIdFromRequest(request);
+        PageResponse<StudyRecordVO> records = studyRecordService.getStudyRecordsPaged(userId, startDate, endDate, page, size);
         return Result.success(records);
     }
 

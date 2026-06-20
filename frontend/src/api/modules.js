@@ -31,6 +31,7 @@ export const studyRecordApi = {
   stopTimer: () => api.post('/study-records/timer/stop'),
   getTimerState: () => api.get('/study-records/timer/state'),
   getList: (params) => api.get('/study-records', { params }),
+  getPagedList: (params) => api.get('/study-records/paged', { params }),
   getById: (id) => api.get(`/study-records/${id}`),
   update: (id, data) => api.put(`/study-records/${id}`, data),
   delete: (id) => api.delete(`/study-records/${id}`),
@@ -51,6 +52,7 @@ export const checkInApi = {
 // 日记相关API
 export const diaryApi = {
   getList: (params) => api.get('/diaries', { params }),
+  getPagedList: (params) => api.get('/diaries/paged', { params }),
   getByDate: (date) => api.get(`/diaries/date/${date}`),
   create: (data) => api.post('/diaries', data),
   update: (id, data) => api.put(`/diaries/${id}`, data),

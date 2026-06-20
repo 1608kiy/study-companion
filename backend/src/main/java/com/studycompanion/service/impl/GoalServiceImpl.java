@@ -205,100 +205,56 @@ public class GoalServiceImpl implements GoalService {
     }
 
     private StudyStatsVO calculateStats(Long userId, LocalDate startDate, LocalDate endDate) {
-        LambdaQueryWrapper<StudyRecord> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(StudyRecord::getUserId, userId)
-               .ge(StudyRecord::getStudyDate, startDate)
-               .le(StudyRecord::getStudyDate, endDate);
-        List<StudyRecord> records = studyRecordMapper.selectList(wrapper);
-
         StudyStatsVO stats = new StudyStatsVO();
-
-        // 统计总学习天数
-        Set<LocalDate> uniqueDays = records.stream()
-                .map(StudyRecord::getStudyDate)
-                .collect(Collectors.toSet());
-        stats.setTotalDays(uniqueDays.size());
-
-        // 统计总学习时长
-        int totalDuration = records.stream()
-                .mapToInt(StudyRecord::getDuration)
-                .sum();
-        stats.setTotalDuration(totalDuration);
-
-        // 统计今日学习时长
         LocalDate today = LocalDate.now();
-        int todayDuration = records.stream()
-                .filter(r -> r.getStudyDate().equals(today))
-                .mapToInt(StudyRecord::getDuration)
-                .sum();
+
+        // 使用 SQL 聚合查询获取总统计
+        Map<String, Object> aggregated = studyRecordMapper.getStudyStatsAggregated(userId);
+        stats.setTotalDays(((Number) aggregated.get("totalDays")).intValue());
+        stats.setTotalDuration(((Number) aggregated.get("totalDuration")).intValue());
+
+        // 今日学习时长
+        Integer todayDuration = studyRecordMapper.getDurationBetween(userId, today, today);
         stats.setTodayDuration(todayDuration);
 
-        // 统计本周学习时长
+        // 本周学习时长
         LocalDate weekStart = today.minusDays(today.getDayOfWeek().getValue() - 1);
-        int weekDuration = records.stream()
-                .filter(r -> !r.getStudyDate().isBefore(weekStart))
-                .mapToInt(StudyRecord::getDuration)
-                .sum();
+        Integer weekDuration = studyRecordMapper.getDurationBetween(userId, weekStart, today);
         stats.setWeekDuration(weekDuration);
 
-        // 统计本月学习时长
+        // 本月学习时长
         LocalDate monthStart = today.withDayOfMonth(1);
-        int monthDuration = records.stream()
-                .filter(r -> !r.getStudyDate().isBefore(monthStart))
-                .mapToInt(StudyRecord::getDuration)
-                .sum();
+        Integer monthDuration = studyRecordMapper.getDurationBetween(userId, monthStart, today);
         stats.setMonthDuration(monthDuration);
 
-        // 统计科目学习时长（使用批量查询避免 N+1）
-        Set<Long> subjectIds = records.stream()
-                .map(StudyRecord::getSubjectId)
-                .collect(Collectors.toSet());
-        Map<Long, Subject> subjectMap = subjectIds.isEmpty()
-                ? Collections.emptyMap()
-                : subjectMapper.selectBatchIds(subjectIds).stream()
-                        .collect(Collectors.toMap(Subject::getId, s -> s));
+        // 科目学习时长（SQL 聚合）
+        List<Map<String, Object>> subjectStatsList = studyRecordMapper.getSubjectStats(userId);
         Map<String, Integer> subjectStats = new HashMap<>();
-        for (StudyRecord record : records) {
-            Subject subject = subjectMap.get(record.getSubjectId());
-            if (subject != null) {
-                subjectStats.merge(subject.getName(), record.getDuration(), Integer::sum);
+        for (Map<String, Object> row : subjectStatsList) {
+            String subjectName = (String) row.get("subjectName");
+            int duration = ((Number) row.get("totalDuration")).intValue();
+            if (subjectName != null) {
+                subjectStats.put(subjectName, duration);
             }
         }
         stats.setSubjectStats(subjectStats);
 
-        // 新增：日均时长和最长单日
-        if (!uniqueDays.isEmpty()) {
-            stats.setAvgDuration(totalDuration / uniqueDays.size());
-        } else {
-            stats.setAvgDuration(0);
-        }
-        int maxDuration = records.stream()
-                .collect(Collectors.groupingBy(StudyRecord::getStudyDate, Collectors.summingInt(StudyRecord::getDuration)))
-                .values().stream()
-                .mapToInt(Integer::intValue)
-                .max().orElse(0);
-        stats.setMaxDuration(maxDuration);
+        // 日均时长和最长单日（使用 SQL 聚合）
+        Integer totalDaysInPeriod = studyRecordMapper.getStudyStatsAggregated(userId).get("totalDays") != null ?
+                ((Number) studyRecordMapper.getStudyStatsAggregated(userId).get("totalDays")).intValue() : 0;
+        Integer totalDurationInPeriod = studyRecordMapper.getDurationBetween(userId, startDate, endDate);
+        stats.setAvgDuration(totalDaysInPeriod > 0 ? totalDurationInPeriod / totalDaysInPeriod : 0);
+        stats.setMaxDuration(studyRecordMapper.getMaxDailyDuration(userId, startDate, endDate));
 
-        // 新增：每日时长分布
+        // 每日时长分布（SQL 聚合）
+        List<Map<String, Object>> dailyDurationsList = studyRecordMapper.getDailyDurationsByDateRange(userId, startDate, endDate);
         Map<Integer, Integer> dailyDurations = new HashMap<>();
-        for (StudyRecord record : records) {
-            int day = record.getStudyDate().getDayOfMonth();
-            dailyDurations.merge(day, record.getDuration(), Integer::sum);
+        for (Map<String, Object> row : dailyDurationsList) {
+            LocalDate date = ((java.sql.Date) row.get("studyDate")).toLocalDate();
+            int duration = ((Number) row.get("totalDuration")).intValue();
+            dailyDurations.put(date.getDayOfMonth(), duration);
         }
         stats.setDailyDurations(dailyDurations);
-
-        // 新增：最近7天每日时长
-        List<Integer> weeklyDurations = new ArrayList<>();
-        LocalDate todayDate = LocalDate.now();
-        for (int i = 6; i >= 0; i--) {
-            LocalDate date = todayDate.minusDays(i);
-            int dayDuration = records.stream()
-                    .filter(r -> r.getStudyDate().equals(date))
-                    .mapToInt(StudyRecord::getDuration)
-                    .sum();
-            weeklyDurations.add(dayDuration);
-        }
-        stats.setWeeklyDurations(weeklyDurations);
 
         return stats;
     }

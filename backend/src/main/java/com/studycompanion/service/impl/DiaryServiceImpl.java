@@ -15,6 +15,7 @@ import com.studycompanion.service.DiaryService;
 import com.studycompanion.service.DiaryImageService;
 import com.studycompanion.vo.DiaryImageVO;
 import com.studycompanion.vo.DiaryVO;
+import com.studycompanion.vo.PageResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -53,6 +54,33 @@ public class DiaryServiceImpl implements DiaryService {
         return diaries.stream()
                 .map(d -> convertToVO(d, userId))
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public PageResponse<DiaryVO> getDiaryListPaged(Long userId, String month, int page, int size) {
+        YearMonth yearMonth = month != null ? YearMonth.parse(month) : YearMonth.now();
+        LocalDate startDate = yearMonth.atDay(1);
+        LocalDate endDate = yearMonth.atEndOfMonth();
+
+        LambdaQueryWrapper<Diary> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(Diary::getUserId, userId)
+               .ge(Diary::getDiaryDate, startDate)
+               .le(Diary::getDiaryDate, endDate)
+               .orderByDesc(Diary::getDiaryDate);
+
+        // 获取总数
+        long total = diaryMapper.selectCount(wrapper);
+
+        // 分页查询
+        int offset = (page - 1) * size;
+        wrapper.last("LIMIT " + size + " OFFSET " + offset);
+        List<Diary> diaries = diaryMapper.selectList(wrapper);
+
+        List<DiaryVO> voList = diaries.stream()
+                .map(d -> convertToVO(d, userId))
+                .collect(Collectors.toList());
+
+        return new PageResponse<>(voList, total, page, size);
     }
 
     @Override
