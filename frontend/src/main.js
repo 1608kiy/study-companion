@@ -1,21 +1,32 @@
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
-import ElementPlus from 'element-plus'
 import 'element-plus/dist/index.css'
-import * as ElementPlusIconsVue from '@element-plus/icons-vue'
 import App from './App.vue'
 import router from './router'
 import './assets/main.css'
 
+import {
+  Aim, ArrowDown, Calendar, ChatDotRound, Check, CircleCheck, CircleClose, Close,
+  DataAnalysis, Delete, Document, Expand, Finished, Fold, House,
+  MagicStick, MoreFilled, Notebook, Plus, Promotion, Refresh, Setting,
+  Share, SwitchButton, Timer, TrendCharts, Trophy, User,
+  VideoPause, VideoPlay
+} from '@element-plus/icons-vue'
+
 const app = createApp(App)
 
-// 注册所有图标
-for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
+const icons = {
+  Aim, ArrowDown, Calendar, ChatDotRound, Check, CircleCheck, CircleClose, Close,
+  DataAnalysis, Delete, Document, Expand, Finished, Fold, House,
+  MagicStick, MoreFilled, Notebook, Plus, Promotion, Refresh, Setting,
+  Share, SwitchButton, Timer, TrendCharts, Trophy, User,
+  VideoPause, VideoPlay
+}
+for (const [key, component] of Object.entries(icons)) {
   app.component(key, component)
 }
 
 app.use(createPinia())
 app.use(router)
-app.use(ElementPlus, { size: 'default', zIndex: 3000 })
 
 app.mount('#app')

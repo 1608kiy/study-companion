@@ -66,6 +66,10 @@ export const useStudyStore = defineStore('study', () => {
     return res
   }
 
+  const incrementElapsed = () => {
+    timerState.value.elapsedSeconds++
+  }
+
   return {
     timerState,
     studyRecords,
@@ -81,5 +85,6 @@ export const useStudyStore = defineStore('study', () => {
     getTimerState,
     getStudyRecords,
     getStudyStats,
+    incrementElapsed,
   }
 })

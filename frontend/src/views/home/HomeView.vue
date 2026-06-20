@@ -6,7 +6,7 @@
     </div>
     
     <el-row :gutter="20" class="stats-row">
-      <el-col :span="6">
+      <el-col :xs="12" :sm="12" :md="6">
         <div class="stat-card stat-blue">
           <div class="stat-icon">
             <el-icon size="24"><Timer /></el-icon>
@@ -17,7 +17,7 @@
           </div>
         </div>
       </el-col>
-      <el-col :span="6">
+      <el-col :xs="12" :sm="12" :md="6">
         <div class="stat-card stat-green">
           <div class="stat-icon">
             <el-icon size="24"><Calendar /></el-icon>
@@ -28,7 +28,7 @@
           </div>
         </div>
       </el-col>
-      <el-col :span="6">
+      <el-col :xs="12" :sm="12" :md="6">
         <div class="stat-card stat-orange">
           <div class="stat-icon">
             <el-icon size="24"><Notebook /></el-icon>
@@ -39,7 +39,7 @@
           </div>
         </div>
       </el-col>
-      <el-col :span="6">
+      <el-col :xs="12" :sm="12" :md="6">
         <div class="stat-card stat-purple">
           <div class="stat-icon">
             <el-icon size="24"><Trophy /></el-icon>
@@ -53,7 +53,7 @@
     </el-row>
     
     <el-row :gutter="20" class="content-row">
-      <el-col :span="16">
+      <el-col :xs="24" :md="16">
         <el-card class="chart-card">
           <template #header>
             <span class="card-title">学习趋势</span>
@@ -61,7 +61,7 @@
           <ChartView :option="trendChartOption" :height="320" />
         </el-card>
       </el-col>
-      <el-col :span="8">
+      <el-col :xs="24" :md="8">
         <el-card class="checkin-card">
           <template #header>
             <span class="card-title">今日打卡</span>
@@ -105,7 +105,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useUserStore } from '@/stores/user'
-import { checkInApi, studyRecordApi } from '@/api/modules'
+import { checkInApi, studyRecordApi, diaryApi } from '@/api/modules'
 import { ElMessage } from 'element-plus'
 import ChartView from '@/components/ChartView.vue'
 import dayjs from 'dayjs'
@@ -200,14 +200,18 @@ const loadCheckInStatus = async () => {
 
 const loadTodayStats = async () => {
   try {
-    const res = await studyRecordApi.getStats()
+    const [statsRes, diaryRes] = await Promise.all([
+      studyRecordApi.getStats(),
+      diaryApi.getList(),
+    ])
+    const diaryCount = (diaryRes.data || []).length
     todayStats.value = {
-      duration: res.data.todayDuration || 0,
-      streak: res.data.currentStreak || 0,
-      diaryCount: 0,
-      goalProgress: Math.min(100, Math.round(((res.data.todayDuration || 0) / dailyGoal.value) * 100)),
+      duration: statsRes.data.todayDuration || 0,
+      streak: statsRes.data.currentStreak || 0,
+      diaryCount,
+      goalProgress: Math.min(100, Math.round(((statsRes.data.todayDuration || 0) / dailyGoal.value) * 100)),
     }
-    weeklyData.value = res.data.weeklyDurations || []
+    weeklyData.value = statsRes.data.weeklyDurations || []
   } catch (error) {
     console.error('获取今日统计失败:', error)
   }
@@ -225,40 +229,38 @@ onMounted(async () => {
 .home-container { padding: 0; }
 
 .welcome-section { margin-bottom: 24px; }
-.welcome-section h2 { font-size: 24px; font-weight: 700; color: #1e293b; margin-bottom: 4px; }
-.welcome-sub { color: #64748b; font-size: 14px; }
+.welcome-section h2 { font-size: 24px; font-weight: 700; color: var(--text-primary); margin-bottom: 4px; }
+.welcome-sub { color: var(--text-secondary); font-size: 14px; }
 
 .stats-row { margin-bottom: 20px; }
 
 .stat-card {
   background: white;
-  border-radius: 12px;
+  border-radius: var(--radius-lg);
   padding: 20px;
   display: flex;
   align-items: center;
   gap: 16px;
-  border: 1px solid #e2e8f0;
-  transition: transform 0.2s, box-shadow 0.2s;
+  border: 1px solid var(--border);
 }
-.stat-card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
 
 .stat-icon {
-  width: 52px; height: 52px; border-radius: 12px;
+  width: 44px; height: 44px; border-radius: var(--radius);
   display: flex; align-items: center; justify-content: center;
   color: white; flex-shrink: 0;
 }
 
-.stat-blue .stat-icon { background: linear-gradient(135deg, #3b82f6, #2563eb); }
-.stat-green .stat-icon { background: linear-gradient(135deg, #10b981, #059669); }
-.stat-orange .stat-icon { background: linear-gradient(135deg, #f59e0b, #d97706); }
-.stat-purple .stat-icon { background: linear-gradient(135deg, #8b5cf6, #7c3aed); }
+.stat-blue .stat-icon { background: #3b82f6; }
+.stat-green .stat-icon { background: #10b981; }
+.stat-orange .stat-icon { background: #f59e0b; }
+.stat-purple .stat-icon { background: #8b5cf6; }
 
 .stat-info { flex: 1; }
-.stat-value { font-size: 28px; font-weight: 700; color: #1e293b; line-height: 1.2; }
-.stat-label { font-size: 13px; color: #64748b; margin-top: 2px; }
+.stat-value { font-size: 28px; font-weight: 700; color: var(--text-primary); line-height: 1.2; }
+.stat-label { font-size: 13px; color: var(--text-secondary); margin-top: 2px; }
 
 .content-row { margin-bottom: 20px; }
-.card-title { font-weight: 600; color: #1e293b; }
+.card-title { font-weight: 600; color: var(--text-primary); }
 
 .chart-card { height: 100%; }
 
@@ -269,8 +271,8 @@ onMounted(async () => {
 }
 
 .progress-text { display: flex; flex-direction: column; align-items: center; }
-.progress-value { font-size: 28px; font-weight: 700; color: #1e293b; }
-.progress-label { font-size: 12px; color: #94a3b8; margin-top: 4px; }
+.progress-value { font-size: 28px; font-weight: 700; color: var(--text-primary); }
+.progress-label { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
 
 .checkin-btn { width: 120px; height: 40px; border-radius: 10px; font-weight: 600; }
 .checked-tag { height: 40px; padding: 0 20px; font-size: 14px; border-radius: 10px; }

@@ -1,7 +1,7 @@
 <template>
   <div class="settings-container">
     <el-row :gutter="20">
-      <el-col :span="16">
+      <el-col :xs="24" :md="16">
         <el-card>
           <template #header>
             <span class="card-title">个人设置</span>
@@ -15,6 +15,8 @@
                   action="/api/v1/upload/avatar"
                   :show-file-list="false"
                   :on-success="handleAvatarSuccess"
+                  :on-error="handleAvatarError"
+                  :headers="uploadHeaders"
                 >
                   <el-button type="primary" size="small">更换头像</el-button>
                 </el-upload>
@@ -61,11 +63,13 @@
             <el-divider content-position="left">其他设置</el-divider>
             
             <el-form-item label="深色模式">
-              <el-switch v-model="profileForm.darkMode" />
+              <el-switch v-model="profileForm.darkMode" disabled />
+              <span class="setting-hint">即将上线</span>
             </el-form-item>
             
             <el-form-item label="消息通知">
-              <el-switch v-model="profileForm.notificationEnabled" />
+              <el-switch v-model="profileForm.notificationEnabled" disabled />
+              <span class="setting-hint">即将上线</span>
             </el-form-item>
             
             <el-form-item>
@@ -77,7 +81,7 @@
         </el-card>
       </el-col>
       
-      <el-col :span="8">
+      <el-col :xs="24" :md="8">
         <el-card>
           <template #header>
             <span class="card-title">账号操作</span>
@@ -104,6 +108,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
+import { userApi } from '@/api/modules'
 import { ElMessage, ElMessageBox } from 'element-plus'
 
 const router = useRouter()
@@ -111,6 +116,9 @@ const userStore = useUserStore()
 
 const userInfo = computed(() => userStore.userInfo)
 const saving = ref(false)
+const uploadHeaders = computed(() => ({
+  Authorization: `Bearer ${localStorage.getItem('token') || ''}`,
+}))
 
 const profileForm = ref({
   nickname: '',
@@ -125,6 +133,10 @@ const profileForm = ref({
 const handleAvatarSuccess = (response) => {
   profileForm.value.avatar = response.data.url
   ElMessage.success('头像更新成功')
+}
+
+const handleAvatarError = () => {
+  ElMessage.error('头像上传失败')
 }
 
 const saveProfile = async () => {
@@ -177,6 +189,7 @@ const handleDeleteAccount = async () => {
       inputErrorMessage: '请输入"确认注销"',
     })
     
+    await userApi.deleteAccount()
     await userStore.logout()
     router.push('/login')
     ElMessage.success('账号已注销')
@@ -209,7 +222,7 @@ onMounted(() => {
 
 .card-title {
   font-weight: 600;
-  color: #1e293b;
+  color: var(--text-primary);
 }
 
 .settings-form {
@@ -226,7 +239,7 @@ onMounted(() => {
 }
 
 .profile-avatar {
-  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  background: var(--primary);
 }
 
 .avatar-info {
@@ -237,16 +250,16 @@ onMounted(() => {
 
 .avatar-tip {
   font-size: 12px;
-  color: #94a3b8;
+  color: var(--text-muted);
 }
 
 .save-btn {
-  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  background: var(--primary);
   border-color: transparent;
 }
 
 .save-btn:hover {
-  background: linear-gradient(135deg, #5558e6, #7c4fdb);
+  background: var(--primary-dark);
   border-color: transparent;
 }
 
@@ -259,5 +272,11 @@ onMounted(() => {
 .action-btn {
   width: 100%;
   height: 44px;
+}
+
+.setting-hint {
+  margin-left: 8px;
+  font-size: 12px;
+  color: var(--text-muted);
 }
 </style>

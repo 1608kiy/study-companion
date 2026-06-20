@@ -1,7 +1,7 @@
 <template>
   <div class="study-container">
     <el-row :gutter="20">
-      <el-col :span="16">
+      <el-col :xs="24" :md="16">
         <el-card class="timer-card">
           <template #header>
             <span class="card-title">番茄钟计时</span>
@@ -64,7 +64,7 @@
                     继续
                   </el-button>
                   <el-button type="danger" size="large" class="control-btn" @click="stopTimer">
-                    <el-icon><VideoDel /></el-icon>
+                    <el-icon><CircleClose /></el-icon>
                     停止
                   </el-button>
                 </template>
@@ -88,9 +88,8 @@
             <el-table-column prop="duration" label="时长(分钟)" width="100" />
             <el-table-column prop="startTime" label="开始时间" width="180" />
             <el-table-column prop="endTime" label="结束时间" width="180" />
-            <el-table-column label="操作" width="120">
+            <el-table-column label="操作" width="80">
               <template #default="{ row }">
-                <el-button type="primary" text size="small" @click="editRecord(row)">编辑</el-button>
                 <el-button type="danger" text size="small" @click="deleteRecord(row)">删除</el-button>
               </template>
             </el-table-column>
@@ -98,7 +97,7 @@
         </el-card>
       </el-col>
       
-      <el-col :span="8">
+      <el-col :xs="24" :md="8">
         <el-card class="stats-card">
           <template #header>
             <span class="card-title">今日统计</span>
@@ -142,7 +141,7 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useStudyStore } from '@/stores/study'
 import { useUserStore } from '@/stores/user'
-import { subjectApi } from '@/api/modules'
+import { subjectApi, studyRecordApi } from '@/api/modules'
 import { ElMessage, ElMessageBox } from 'element-plus'
 
 const studyStore = useStudyStore()
@@ -228,7 +227,7 @@ const stopTimer = async () => {
 const startTimerInterval = () => {
   stopTimerInterval()
   timerInterval = setInterval(() => {
-    studyStore.timerState.elapsedSeconds++
+    studyStore.incrementElapsed()
   }, 1000)
 }
 
@@ -262,10 +261,6 @@ const loadSubjects = async () => {
   }
 }
 
-const editRecord = (record) => {
-  console.log('编辑记录:', record)
-}
-
 const deleteRecord = async (record) => {
   try {
     await ElMessageBox.confirm('确定要删除这条记录吗？', '确认', {
@@ -274,10 +269,12 @@ const deleteRecord = async (record) => {
       type: 'warning',
     })
     
+    await studyRecordApi.delete(record.id)
     ElMessage.success('删除成功')
     await refreshRecords()
   } catch (error) {
     if (error !== 'cancel') {
+      ElMessage.error('删除失败')
       console.error('删除失败:', error)
     }
   }
@@ -307,7 +304,7 @@ onUnmounted(() => {
 
 .card-title {
   font-weight: 600;
-  color: #1e293b;
+  color: var(--text-primary);
 }
 
 .timer-card {
@@ -329,11 +326,10 @@ onUnmounted(() => {
   width: 220px;
   height: 220px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  background: var(--primary);
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 8px 32px rgba(99, 102, 241, 0.3);
 }
 
 .timer-inner {
@@ -350,13 +346,13 @@ onUnmounted(() => {
 .timer-time {
   font-size: 48px;
   font-weight: 700;
-  color: #1e293b;
+  color: var(--text-primary);
   font-variant-numeric: tabular-nums;
 }
 
 .timer-subject {
   font-size: 14px;
-  color: #64748b;
+  color: var(--text-secondary);
   margin-top: 4px;
 }
 
@@ -384,12 +380,8 @@ onUnmounted(() => {
 }
 
 .start-btn {
-  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
-  border: none;
-}
-
-.start-btn:hover {
-  background: linear-gradient(135deg, #5558e6 0%, #7c4fdb 100%);
+  background: var(--primary);
+  border-color: var(--primary);
 }
 
 .card-header {
@@ -413,13 +405,13 @@ onUnmounted(() => {
   align-items: center;
   gap: 14px;
   padding: 14px;
-  background: #f8fafc;
+  background: var(--bg-page);
   border-radius: 10px;
 }
 
 .stat-item-icon {
-  width: 42px;
-  height: 42px;
+  width: 44px;
+  height: 44px;
   border-radius: 10px;
   display: flex;
   align-items: center;
@@ -429,9 +421,9 @@ onUnmounted(() => {
   flex-shrink: 0;
 }
 
-.stat-item-icon.blue { background: linear-gradient(135deg, #3b82f6, #2563eb); }
-.stat-item-icon.green { background: linear-gradient(135deg, #10b981, #059669); }
-.stat-item-icon.purple { background: linear-gradient(135deg, #8b5cf6, #7c3aed); }
+.stat-item-icon.blue { background: #3b82f6; }
+.stat-item-icon.green { background: #10b981; }
+.stat-item-icon.purple { background: #8b5cf6; }
 
 .stat-item-info {
   display: flex;
@@ -441,11 +433,18 @@ onUnmounted(() => {
 .stat-item-value {
   font-size: 16px;
   font-weight: 600;
-  color: #1e293b;
+  color: var(--text-primary);
 }
 
 .stat-item-label {
   font-size: 12px;
-  color: #94a3b8;
+  color: var(--text-muted);
+}
+
+@media (max-width: 767px) {
+  .timer-ring { width: 180px; height: 180px; }
+  .timer-inner { width: 156px; height: 156px; }
+  .timer-time { font-size: 36px; }
+  .control-buttons { flex-wrap: wrap; }
 }
 </style>

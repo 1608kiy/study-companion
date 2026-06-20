@@ -16,25 +16,25 @@
           </template>
           
           <el-row :gutter="16" class="stats-summary">
-            <el-col :span="6">
+            <el-col :xs="12" :sm="12" :md="6">
               <div class="stat-item stat-blue">
                 <div class="stat-value">{{ stats.totalDays || 0 }}</div>
                 <div class="stat-label">学习天数</div>
               </div>
             </el-col>
-            <el-col :span="6">
+            <el-col :xs="12" :sm="12" :md="6">
               <div class="stat-item stat-green">
                 <div class="stat-value">{{ formatDuration(stats.totalDuration) }}</div>
                 <div class="stat-label">总学习时长</div>
               </div>
             </el-col>
-            <el-col :span="6">
+            <el-col :xs="12" :sm="12" :md="6">
               <div class="stat-item stat-orange">
                 <div class="stat-value">{{ stats.avgDuration || 0 }}</div>
                 <div class="stat-label">日均时长(分钟)</div>
               </div>
             </el-col>
-            <el-col :span="6">
+            <el-col :xs="12" :sm="12" :md="6">
               <div class="stat-item stat-purple">
                 <div class="stat-value">{{ stats.maxDuration || 0 }}</div>
                 <div class="stat-label">最长单日(分钟)</div>
@@ -46,7 +46,7 @@
     </el-row>
     
     <el-row :gutter="20" class="chart-row">
-      <el-col :span="12">
+      <el-col :xs="24" :md="12">
         <el-card>
           <template #header>
             <span class="card-title">每日学习时长</span>
@@ -54,7 +54,7 @@
           <ChartView :option="dailyChartOption" :height="300" />
         </el-card>
       </el-col>
-      <el-col :span="12">
+      <el-col :xs="24" :md="12">
         <el-card>
           <template #header>
             <span class="card-title">科目分布</span>
@@ -90,7 +90,7 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import { goalApi, subjectApi } from '@/api/modules'
+import { goalApi, subjectApi, studyRecordApi } from '@/api/modules'
 import ChartView from '@/components/ChartView.vue'
 import dayjs from 'dayjs'
 
@@ -130,7 +130,7 @@ const dailyChartOption = computed(() => {
 
   const values = dailyData.value.length
     ? dailyData.value
-    : days.map(() => Math.floor(Math.random() * 120))
+    : days.map(() => 0)
 
   return {
     tooltip: { trigger: 'axis' },
@@ -167,15 +167,7 @@ const dailyChartOption = computed(() => {
 })
 
 const pieChartOption = computed(() => {
-  const defaultData = [
-    { value: 40, name: '行测' },
-    { value: 25, name: '申论' },
-    { value: 15, name: '数量关系' },
-    { value: 12, name: '判断推理' },
-    { value: 8, name: '资料分析' },
-  ]
-
-  const data = subjectData.value.length ? subjectData.value : defaultData
+  const data = subjectData.value.length ? subjectData.value : [{ value: 0, name: '暂无数据' }]
   const colors = ['#6366f1', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6']
 
   return {
@@ -215,10 +207,11 @@ const loadStats = async () => {
 
 const loadSubjectStats = async () => {
   try {
-    const res = await subjectApi.getList()
-    subjectData.value = (res.data || []).map((s, i) => ({
-      value: Math.floor(Math.random() * 60) + 10,
-      name: s.name,
+    const res = await studyRecordApi.getStats()
+    const subjectStats = res.data?.subjectStats || {}
+    subjectData.value = Object.entries(subjectStats).map(([name, value]) => ({
+      name,
+      value,
     }))
   } catch (error) {
     console.error('获取科目统计失败:', error)
@@ -246,7 +239,7 @@ onMounted(async () => {
 
 <style scoped>
 .stats-container { padding: 0; }
-.card-title { font-weight: 600; color: #1e293b; }
+.card-title { font-weight: 600; color: var(--text-primary); }
 .card-header { display: flex; justify-content: space-between; align-items: center; }
 .stats-summary { margin-bottom: 16px; }
 
@@ -254,10 +247,10 @@ onMounted(async () => {
   text-align: center; padding: 24px 16px;
   border-radius: 12px; color: white;
 }
-.stat-blue { background: linear-gradient(135deg, #3b82f6, #2563eb); }
-.stat-green { background: linear-gradient(135deg, #10b981, #059669); }
-.stat-orange { background: linear-gradient(135deg, #f59e0b, #d97706); }
-.stat-purple { background: linear-gradient(135deg, #8b5cf6, #7c3aed); }
+.stat-blue { background: #3b82f6; }
+.stat-green { background: #10b981; }
+.stat-orange { background: #f59e0b; }
+.stat-purple { background: #8b5cf6; }
 .stat-value { font-size: 32px; font-weight: 700; margin-bottom: 6px; }
 .stat-label { font-size: 13px; opacity: 0.9; }
 
@@ -271,8 +264,8 @@ onMounted(async () => {
   border-radius: 6px;
 }
 .day-number { font-size: 14px; font-weight: 600; }
-.day-duration { font-size: 11px; color: #64748b; margin-top: 4px; }
-.calendar-day.light { background-color: #eef2ff; color: #6366f1; }
+.day-duration { font-size: 11px; color: var(--text-secondary); margin-top: 4px; }
+.calendar-day.light { background-color: var(--primary-bg); color: var(--primary); }
 .calendar-day.medium { background-color: #d1fae5; color: #059669; }
-.calendar-day.heavy { background: linear-gradient(135deg, #10b981, #059669); color: white; }
+.calendar-day.heavy { background: #10b981; color: white; }
 </style>

@@ -61,12 +61,7 @@ body {
 .el-card {
   border-radius: var(--radius-lg);
   border: 1px solid var(--border);
-  box-shadow: var(--shadow-sm);
-  transition: box-shadow 0.2s ease;
-}
-
-.el-card:hover {
-  box-shadow: var(--shadow);
+  box-shadow: none;
 }
 
 .el-card__header {
@@ -82,8 +77,8 @@ body {
 
 .el-button--primary:hover,
 .el-button--primary:focus {
-  background: var(--primary-light);
-  border-color: var(--primary-light);
+  background: var(--primary-dark);
+  border-color: var(--primary-dark);
 }
 
 .fade-enter-active,
@@ -110,3 +105,20 @@ body {
   transform: translateX(16px);
   opacity: 0;
 }
+
+/* 公共组件样式 */
+.card-title {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.stat-blue .stat-icon { background: #3b82f6; }
+.stat-green .stat-icon { background: #10b981; }
+.stat-orange .stat-icon { background: #f59e0b; }
+.stat-purple .stat-icon { background: #8b5cf6; }

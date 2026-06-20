@@ -1,10 +1,5 @@
 <template>
   <div class="auth-container">
-    <div class="auth-bg">
-      <div class="auth-bg-circle circle-1"></div>
-      <div class="auth-bg-circle circle-2"></div>
-      <div class="auth-bg-circle circle-3"></div>
-    </div>
     <div class="auth-card">
       <div class="auth-header">
         <div class="auth-logo">
@@ -87,53 +82,24 @@ const handleLogin = async () => {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  position: relative;
-  overflow: hidden;
-}
-
-.auth-bg {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-}
-
-.auth-bg-circle {
-  position: absolute;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.08);
-}
-
-.circle-1 {
-  width: 400px;
-  height: 400px;
-  top: -100px;
-  right: -100px;
-}
-
-.circle-2 {
-  width: 300px;
-  height: 300px;
-  bottom: -80px;
-  left: -80px;
-}
-
-.circle-3 {
-  width: 200px;
-  height: 200px;
-  top: 50%;
-  left: 10%;
+  background: var(--bg-page);
 }
 
 .auth-card {
-  width: 400px;
+  max-width: 400px;
+  width: 100%;
   padding: 40px;
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(20px);
-  border-radius: 20px;
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-  position: relative;
-  z-index: 1;
+  background: white;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
+}
+
+@media (max-width: 480px) {
+  .auth-card {
+    padding: 24px;
+    margin: 0 16px;
+    border: none;
+  }
 }
 
 .auth-header {
@@ -155,12 +121,12 @@ const handleLogin = async () => {
 .auth-header h1 {
   font-size: 26px;
   font-weight: 700;
-  color: #1e293b;
+  color: var(--text-primary);
   margin-bottom: 6px;
 }
 
 .auth-header p {
-  color: #64748b;
+  color: var(--text-secondary);
   font-size: 14px;
 }
 
@@ -169,24 +135,17 @@ const handleLogin = async () => {
   height: 44px;
   font-size: 15px;
   font-weight: 600;
-  border-radius: 10px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border: none;
-}
-
-.auth-btn:hover {
-  background: linear-gradient(135deg, #5a6fd6 0%, #6a4292 100%);
 }
 
 .auth-footer {
   text-align: center;
   margin-top: 24px;
-  color: #64748b;
+  color: var(--text-secondary);
   font-size: 14px;
 }
 
 .auth-footer a {
-  color: #6366f1;
+  color: var(--primary);
   text-decoration: none;
   font-weight: 500;
 }

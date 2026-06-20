@@ -1,7 +1,7 @@
 <template>
   <div class="ai-container">
     <el-row :gutter="20">
-      <el-col :span="16">
+      <el-col :xs="24" :md="16">
         <el-card class="chat-card">
           <template #header>
             <span class="card-title">AI学习助手</span>
@@ -44,32 +44,32 @@
         </el-card>
       </el-col>
       
-      <el-col :span="8">
+      <el-col :xs="24" :md="8">
         <el-card>
           <template #header>
             <span class="card-title">快捷功能</span>
           </template>
           
           <div class="quick-actions">
-            <div class="action-card" @click="generateReport('weekly')">
+            <div class="action-card" :class="{ disabled: actionLoading }" @click="!actionLoading && generateReport('weekly')">
               <div class="action-icon blue">
                 <el-icon size="20"><Document /></el-icon>
               </div>
               <span class="action-text">生成周报</span>
             </div>
-            <div class="action-card" @click="generateReport('monthly')">
+            <div class="action-card" :class="{ disabled: actionLoading }" @click="!actionLoading && generateReport('monthly')">
               <div class="action-icon green">
                 <el-icon size="20"><Document /></el-icon>
               </div>
               <span class="action-text">生成月报</span>
             </div>
-            <div class="action-card" @click="judgeFocus">
+            <div class="action-card" :class="{ disabled: actionLoading }" @click="!actionLoading && judgeFocus()">
               <div class="action-icon orange">
                 <el-icon size="20"><Aim /></el-icon>
               </div>
               <span class="action-text">专注度评估</span>
             </div>
-            <div class="action-card" @click="generateShareImage">
+            <div class="action-card" :class="{ disabled: actionLoading }" @click="!actionLoading && generateShareImage()">
               <div class="action-icon purple">
                 <el-icon size="20"><Share /></el-icon>
               </div>
@@ -99,22 +99,14 @@ import { ref, nextTick, onMounted } from 'vue'
 import { aiApi } from '@/api/modules'
 import { ElMessage } from 'element-plus'
 import dayjs from 'dayjs'
+import { renderMarkdown } from '@/utils/markdown'
 
 const chatContainer = ref(null)
 const inputMessage = ref('')
 const loading = ref(false)
+const actionLoading = ref(false)
 const messages = ref([])
 const currentReport = ref(null)
-
-const renderMarkdown = (content) => {
-  if (!content) return ''
-  return content
-    .replace(/### (.*)/g, '<h3>$1</h3>')
-    .replace(/## (.*)/g, '<h2>$1</h2>')
-    .replace(/# (.*)/g, '<h1>$1</h1>')
-    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-    .replace(/\n/g, '<br>')
-}
 
 const scrollToBottom = async () => {
   await nextTick()
@@ -157,7 +149,7 @@ const sendMessage = async () => {
 }
 
 const generateReport = async (type) => {
-  loading.value = true
+  actionLoading.value = true
   try {
     let res
     if (type === 'weekly') {
@@ -173,12 +165,12 @@ const generateReport = async (type) => {
   } catch (error) {
     ElMessage.error('报告生成失败')
   } finally {
-    loading.value = false
+    actionLoading.value = false
   }
 }
 
 const judgeFocus = async () => {
-  loading.value = true
+  actionLoading.value = true
   try {
     const res = await aiApi.judgeFocus()
     messages.value.push({
@@ -190,12 +182,12 @@ const judgeFocus = async () => {
   } catch (error) {
     ElMessage.error('专注度评估失败')
   } finally {
-    loading.value = false
+    actionLoading.value = false
   }
 }
 
 const generateShareImage = async () => {
-  loading.value = true
+  actionLoading.value = true
   try {
     const res = await aiApi.getShareImage()
     messages.value.push({
@@ -207,7 +199,7 @@ const generateShareImage = async () => {
   } catch (error) {
     ElMessage.error('分享图片生成失败')
   } finally {
-    loading.value = false
+    actionLoading.value = false
   }
 }
 
@@ -227,7 +219,7 @@ onMounted(() => {
 
 .card-title {
   font-weight: 600;
-  color: #1e293b;
+  color: var(--text-primary);
 }
 
 .card-header {
@@ -246,7 +238,7 @@ onMounted(() => {
   flex: 1;
   overflow-y: auto;
   padding: 20px;
-  background-color: #f8fafc;
+  background-color: var(--bg-page);
   border-radius: 10px;
   margin-bottom: 16px;
 }
@@ -266,11 +258,11 @@ onMounted(() => {
 }
 
 .user-avatar {
-  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  background: var(--primary);
 }
 
 .ai-avatar {
-  background: linear-gradient(135deg, #10b981, #059669);
+  background: var(--success);
 }
 
 .message-content {
@@ -285,20 +277,21 @@ onMounted(() => {
   padding: 12px 16px;
   border-radius: 12px;
   background-color: white;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  border: 1px solid var(--border);
   text-align: left;
   font-size: 14px;
   line-height: 1.6;
 }
 
 .message.user .message-bubble {
-  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  background: var(--primary);
   color: white;
+  border-color: var(--primary);
 }
 
 .message-time {
   font-size: 11px;
-  color: #94a3b8;
+  color: var(--text-muted);
   margin-top: 4px;
 }
 
@@ -307,8 +300,8 @@ onMounted(() => {
 }
 
 .send-btn {
-  background: linear-gradient(135deg, #6366f1, #8b5cf6) !important;
-  border-color: transparent !important;
+  background: var(--primary) !important;
+  border-color: var(--primary) !important;
 }
 
 .quick-actions {
@@ -323,7 +316,7 @@ onMounted(() => {
   align-items: center;
   gap: 10px;
   padding: 20px 12px;
-  background: #f8fafc;
+  background: var(--bg-page);
   border-radius: 10px;
   cursor: pointer;
   transition: all 0.2s;
@@ -332,6 +325,12 @@ onMounted(() => {
 .action-card:hover {
   background: #f1f5f9;
   transform: translateY(-1px);
+}
+
+.action-card.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
 }
 
 .action-icon {
@@ -344,10 +343,10 @@ onMounted(() => {
   color: white;
 }
 
-.action-icon.blue { background: linear-gradient(135deg, #3b82f6, #2563eb); }
-.action-icon.green { background: linear-gradient(135deg, #10b981, #059669); }
-.action-icon.orange { background: linear-gradient(135deg, #f59e0b, #d97706); }
-.action-icon.purple { background: linear-gradient(135deg, #8b5cf6, #7c3aed); }
+.action-icon.blue { background: #3b82f6; }
+.action-icon.green { background: #10b981; }
+.action-icon.orange { background: #f59e0b; }
+.action-icon.purple { background: #8b5cf6; }
 
 .action-text {
   font-size: 13px;
@@ -374,5 +373,17 @@ onMounted(() => {
 .report-content :deep(h2) {
   font-size: 16px;
   margin-bottom: 8px;
+}
+
+@media (max-width: 767px) {
+  .chat-card {
+    height: calc(100vh - 100px);
+  }
+  .message-content {
+    max-width: 85%;
+  }
+  .quick-actions {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
 </style>

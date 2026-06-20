@@ -1,8 +1,10 @@
 <template>
   <el-container class="main-layout">
-    <el-aside :width="isCollapse ? '64px' : '220px'" class="sidebar">
+    <!-- 移动端遮罩 -->
+    <div v-if="mobileOpen" class="mobile-overlay" @click="mobileOpen = false" />
+    <el-aside :width="asideWidth" class="sidebar" :class="{ 'mobile-open': mobileOpen }">
       <div class="sidebar-logo">
-        <img src="@/assets/logo.svg" alt="Logo" />
+        <img src="@/assets/logo.svg" alt="智学伴 Logo" />
         <span v-if="!isCollapse" class="logo-text">智学伴</span>
       </div>
       <el-menu
@@ -10,6 +12,7 @@
         :collapse="isCollapse"
         router
         class="sidebar-menu"
+        @select="mobileOpen = false"
       >
         <el-menu-item v-for="item in menuItems" :key="item.path" :index="item.path">
           <el-icon><component :is="item.icon" /></el-icon>
@@ -58,16 +61,29 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
+import { ElMessage } from 'element-plus'
 
 const route = useRoute()
 const router = useRouter()
 const userStore = useUserStore()
 
 const isCollapse = ref(false)
+const mobileOpen = ref(false)
+const isMobile = ref(window.innerWidth < 768)
 const userInfo = computed(() => userStore.userInfo)
+
+const asideWidth = computed(() => {
+  if (isMobile.value) return '220px'
+  return isCollapse.value ? '64px' : '220px'
+})
+
+const handleResize = () => {
+  isMobile.value = window.innerWidth < 768
+  if (!isMobile.value) mobileOpen.value = false
+}
 
 const menuItems = [
   { path: '/home', title: '首页', icon: 'House' },
@@ -85,19 +101,28 @@ const currentPageTitle = computed(() => {
 })
 
 const toggleCollapse = () => {
-  isCollapse.value = !isCollapse.value
+  if (isMobile.value) {
+    mobileOpen.value = !mobileOpen.value
+  } else {
+    isCollapse.value = !isCollapse.value
+  }
 }
 
 const handleCommand = async (command) => {
   if (command === 'settings') {
     router.push('/settings')
   } else if (command === 'logout') {
-    await userStore.logout()
-    router.push('/login')
+    try {
+      await userStore.logout()
+      router.push('/login')
+    } catch (error) {
+      ElMessage.error('退出失败')
+    }
   }
 }
 
 onMounted(async () => {
+  window.addEventListener('resize', handleResize)
   if (!userStore.userInfo) {
     try {
       await userStore.getProfile()
@@ -105,6 +130,10 @@ onMounted(async () => {
       console.error('获取用户信息失败:', error)
     }
   }
+})
+
+onUnmounted(() => {
+  window.removeEventListener('resize', handleResize)
 })
 </script>
 
@@ -171,18 +200,18 @@ onMounted(async () => {
 .collapse-btn {
   font-size: 20px;
   cursor: pointer;
-  color: #64748b;
+  color: var(--text-secondary);
   transition: color 0.2s;
 }
 
 .collapse-btn:hover {
-  color: #1e293b;
+  color: var(--text-primary);
 }
 
 .page-title {
   font-size: 18px;
   font-weight: 600;
-  color: #1e293b;
+  color: var(--text-primary);
 }
 
 .header-right {
@@ -205,22 +234,22 @@ onMounted(async () => {
 }
 
 .user-avatar {
-  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  background: var(--primary);
 }
 
 .username {
-  color: #1e293b;
+  color: var(--text-primary);
   font-weight: 500;
   font-size: 14px;
 }
 
 .user-arrow {
-  color: #94a3b8;
+  color: var(--text-muted);
   font-size: 12px;
 }
 
 .main-content {
-  background-color: #f8fafc;
+  background-color: var(--bg-page);
   padding: 24px;
   min-height: calc(100vh - 64px);
 }
@@ -230,7 +259,7 @@ onMounted(async () => {
 }
 
 :deep(.el-menu-item) {
-  color: #94a3b8;
+  color: var(--text-muted);
   height: 48px;
   line-height: 48px;
   margin: 2px 8px;
@@ -244,8 +273,41 @@ onMounted(async () => {
 }
 
 :deep(.el-menu-item.is-active) {
-  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  background: var(--primary);
   color: white;
   font-weight: 500;
+}
+
+/* 响应式 */
+@media (max-width: 767px) {
+  .sidebar {
+    position: fixed;
+    left: -220px;
+    top: 0;
+    bottom: 0;
+    z-index: 1000;
+    transition: left 0.3s ease;
+  }
+  .sidebar.mobile-open {
+    left: 0;
+  }
+  .mobile-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 999;
+  }
+  .main-content {
+    padding: 16px;
+  }
+  .header {
+    padding: 0 16px;
+  }
+  .page-title {
+    font-size: 16px;
+  }
+  .username {
+    display: none;
+  }
 }
 </style>

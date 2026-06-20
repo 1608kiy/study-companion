@@ -1,7 +1,7 @@
 <template>
   <div class="diary-container">
     <el-row :gutter="20">
-      <el-col :span="16">
+      <el-col :xs="24" :md="16">
         <el-card>
           <template #header>
             <div class="card-header">
@@ -27,7 +27,7 @@
         </el-card>
       </el-col>
       
-      <el-col :span="8">
+      <el-col :xs="24" :md="8">
         <el-card v-if="currentDiary" class="diary-detail">
           <template #header>
             <div class="card-header">
@@ -111,10 +111,11 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { diaryApi } from '@/api/modules'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import dayjs from 'dayjs'
+import { renderMarkdown } from '@/utils/markdown'
 
 const selectedDate = ref(new Date())
 const diaryList = ref([])
@@ -143,16 +144,6 @@ const formatDiaryDate = (date) => {
   return dayjs(date).format('YYYY年MM月DD日')
 }
 
-const renderMarkdown = (content) => {
-  if (!content) return ''
-  return content
-    .replace(/### (.*)/g, '<h3>$1</h3>')
-    .replace(/## (.*)/g, '<h2>$1</h2>')
-    .replace(/# (.*)/g, '<h1>$1</h1>')
-    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-    .replace(/\n/g, '<br>')
-}
-
 const selectDate = async (date) => {
   selectedDate.value = new Date(date)
   await loadDiary(date)
@@ -167,6 +158,12 @@ const loadDiaryList = async () => {
     console.error('获取日记列表失败:', error)
   }
 }
+
+watch(selectedDate, (newDate, oldDate) => {
+  if (dayjs(newDate).month() !== dayjs(oldDate).month()) {
+    loadDiaryList()
+  }
+})
 
 const loadDiary = async (date) => {
   try {
@@ -266,7 +263,7 @@ onMounted(async () => {
 
 .card-title {
   font-weight: 600;
-  color: #1e293b;
+  color: var(--text-primary);
 }
 
 .card-header {
@@ -292,9 +289,9 @@ onMounted(async () => {
 }
 
 .calendar-day.has-diary {
-  background-color: #eef2ff;
+  background-color: var(--primary-bg);
   font-weight: 600;
-  color: #6366f1;
+  color: var(--primary);
 }
 
 .diary-detail {
@@ -304,12 +301,12 @@ onMounted(async () => {
 .more-btn {
   cursor: pointer;
   font-size: 18px;
-  color: #64748b;
+  color: var(--text-secondary);
   transition: color 0.2s;
 }
 
 .more-btn:hover {
-  color: #1e293b;
+  color: var(--text-primary);
 }
 
 .diary-content {
@@ -322,19 +319,19 @@ onMounted(async () => {
 .diary-content :deep(h1) {
   font-size: 22px;
   margin-bottom: 14px;
-  color: #1e293b;
+  color: var(--text-primary);
 }
 
 .diary-content :deep(h2) {
   font-size: 18px;
   margin-bottom: 10px;
-  color: #1e293b;
+  color: var(--text-primary);
 }
 
 .diary-content :deep(h3) {
   font-size: 15px;
   margin-bottom: 8px;
-  color: #1e293b;
+  color: var(--text-primary);
 }
 
 .diary-images {
@@ -365,7 +362,7 @@ onMounted(async () => {
 
 .generate-count {
   font-size: 12px;
-  color: #94a3b8;
+  color: var(--text-muted);
 }
 
 .empty-card {

@@ -58,6 +58,10 @@ const routes = [
       },
     ],
   },
+  {
+    path: '/:pathMatch(.*)*',
+    redirect: '/home',
+  },
 ]
 
 export { routes }
@@ -71,13 +75,18 @@ const router = createRouter({
 router.beforeEach((to, from, next) => {
   const token = localStorage.getItem('token')
   
-  if (to.meta.requiresAuth && !token) {
+  if (to.matched.some(record => record.meta.requiresAuth) && !token) {
     next('/login')
   } else if ((to.path === '/login' || to.path === '/register') && token) {
     next('/')
   } else {
     next()
   }
+})
+
+router.afterEach((to) => {
+  const title = to.meta.title ? `${to.meta.title} - 智学伴` : '智学伴'
+  document.title = title
 })
 
 export default router
