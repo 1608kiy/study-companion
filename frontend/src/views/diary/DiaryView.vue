@@ -285,7 +285,7 @@ onMounted(async () => {
 }
 
 .calendar-day:hover {
-  background-color: #f1f5f9;
+  background-color: var(--bg-page);
 }
 
 .calendar-day.has-diary {
@@ -311,7 +311,7 @@ onMounted(async () => {
 
 .diary-content {
   line-height: 1.8;
-  color: #334155;
+  color: var(--text-primary);
   margin-bottom: 20px;
   font-size: 14px;
 }
@@ -354,7 +354,7 @@ onMounted(async () => {
 .diary-footer {
   margin-top: 20px;
   padding-top: 16px;
-  border-top: 1px solid #e2e8f0;
+  border-top: 1px solid var(--border);
   display: flex;
   justify-content: space-between;
   align-items: center;

@@ -421,9 +421,9 @@ onUnmounted(() => {
   flex-shrink: 0;
 }
 
-.stat-item-icon.blue { background: #3b82f6; }
-.stat-item-icon.green { background: #10b981; }
-.stat-item-icon.purple { background: #8b5cf6; }
+.stat-item-icon.blue { background: var(--stat-blue); }
+.stat-item-icon.green { background: var(--stat-green); }
+.stat-item-icon.purple { background: var(--stat-purple); }
 
 .stat-item-info {
   display: flex;

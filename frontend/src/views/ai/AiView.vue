@@ -299,9 +299,9 @@ onMounted(() => {
   padding: 0;
 }
 
-.send-btn {
-  background: var(--primary) !important;
-  border-color: var(--primary) !important;
+.chat-input :deep(.send-btn) {
+  background: var(--primary);
+  border-color: var(--primary);
 }
 
 .quick-actions {
@@ -323,7 +323,7 @@ onMounted(() => {
 }
 
 .action-card:hover {
-  background: #f1f5f9;
+  background: var(--bg-page);
   transform: translateY(-1px);
 }
 
@@ -343,15 +343,15 @@ onMounted(() => {
   color: white;
 }
 
-.action-icon.blue { background: #3b82f6; }
-.action-icon.green { background: #10b981; }
-.action-icon.orange { background: #f59e0b; }
-.action-icon.purple { background: #8b5cf6; }
+.action-icon.blue { background: var(--stat-blue); }
+.action-icon.green { background: var(--stat-green); }
+.action-icon.orange { background: var(--stat-orange); }
+.action-icon.purple { background: var(--stat-purple); }
 
 .action-text {
   font-size: 13px;
   font-weight: 500;
-  color: #475569;
+  color: var(--text-secondary);
 }
 
 .report-card {

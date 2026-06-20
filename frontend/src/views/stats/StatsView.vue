@@ -154,13 +154,7 @@ const dailyChartOption = computed(() => {
       barWidth: 12,
       itemStyle: {
         borderRadius: [3, 3, 0, 0],
-        color: {
-          type: 'linear', x: 0, y: 0, x2: 0, y2: 1,
-          colorStops: [
-            { offset: 0, color: '#818cf8' },
-            { offset: 1, color: '#6366f1' },
-          ],
-        },
+        color: '#6366f1',
       },
     }],
   }
@@ -244,13 +238,13 @@ onMounted(async () => {
 .stats-summary { margin-bottom: 16px; }
 
 .stat-item {
-  text-align: center; padding: 24px 16px;
-  border-radius: 12px; color: white;
+  text-align: center; padding: 20px;
+  border-radius: var(--radius-lg); color: white;
 }
-.stat-blue { background: #3b82f6; }
-.stat-green { background: #10b981; }
-.stat-orange { background: #f59e0b; }
-.stat-purple { background: #8b5cf6; }
+.stat-blue { background: var(--stat-blue); }
+.stat-green { background: var(--stat-green); }
+.stat-orange { background: var(--stat-orange); }
+.stat-purple { background: var(--stat-purple); }
 .stat-value { font-size: 32px; font-weight: 700; margin-bottom: 6px; }
 .stat-label { font-size: 13px; opacity: 0.9; }
 
@@ -267,5 +261,5 @@ onMounted(async () => {
 .day-duration { font-size: 11px; color: var(--text-secondary); margin-top: 4px; }
 .calendar-day.light { background-color: var(--primary-bg); color: var(--primary); }
 .calendar-day.medium { background-color: #d1fae5; color: #059669; }
-.calendar-day.heavy { background: #10b981; color: white; }
+.calendar-day.heavy { background: var(--stat-green); color: white; }
 </style>

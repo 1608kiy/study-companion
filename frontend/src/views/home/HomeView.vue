@@ -167,13 +167,7 @@ const trendChartOption = computed(() => {
       barWidth: 24,
       itemStyle: {
         borderRadius: [4, 4, 0, 0],
-        color: {
-          type: 'linear', x: 0, y: 0, x2: 0, y2: 1,
-          colorStops: [
-            { offset: 0, color: '#818cf8' },
-            { offset: 1, color: '#6366f1' },
-          ],
-        },
+        color: '#6366f1',
       },
     }],
   }
@@ -250,10 +244,10 @@ onMounted(async () => {
   color: white; flex-shrink: 0;
 }
 
-.stat-blue .stat-icon { background: #3b82f6; }
-.stat-green .stat-icon { background: #10b981; }
-.stat-orange .stat-icon { background: #f59e0b; }
-.stat-purple .stat-icon { background: #8b5cf6; }
+.stat-blue .stat-icon { background: var(--stat-blue); }
+.stat-green .stat-icon { background: var(--stat-green); }
+.stat-orange .stat-icon { background: var(--stat-orange); }
+.stat-purple .stat-icon { background: var(--stat-purple); }
 
 .stat-info { flex: 1; }
 .stat-value { font-size: 28px; font-weight: 700; color: var(--text-primary); line-height: 1.2; }

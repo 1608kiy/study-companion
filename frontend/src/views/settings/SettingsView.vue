@@ -235,7 +235,7 @@ onMounted(() => {
   gap: 20px;
   margin-bottom: 24px;
   padding-bottom: 24px;
-  border-bottom: 1px solid #e2e8f0;
+  border-bottom: 1px solid var(--border);
 }
 
 .profile-avatar {

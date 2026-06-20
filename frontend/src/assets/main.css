@@ -107,18 +107,7 @@ body {
 }
 
 /* 公共组件样式 */
-.card-title {
-  font-weight: 600;
-  color: var(--text-primary);
-}
-
-.card-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.stat-blue .stat-icon { background: #3b82f6; }
-.stat-green .stat-icon { background: #10b981; }
-.stat-orange .stat-icon { background: #f59e0b; }
-.stat-purple .stat-icon { background: #8b5cf6; }
+.stat-blue .stat-icon { background: var(--stat-blue); }
+.stat-green .stat-icon { background: var(--stat-green); }
+.stat-orange .stat-icon { background: var(--stat-orange); }
+.stat-purple .stat-icon { background: var(--stat-purple); }

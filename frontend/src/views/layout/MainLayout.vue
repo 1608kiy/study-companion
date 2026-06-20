@@ -186,7 +186,7 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  border-bottom: 1px solid var(--border);
   padding: 0 24px;
   height: 64px;
 }
@@ -230,7 +230,7 @@ onUnmounted(() => {
 }
 
 .user-info:hover {
-  background-color: #f1f5f9;
+  background-color: var(--bg-page);
 }
 
 .user-avatar {
