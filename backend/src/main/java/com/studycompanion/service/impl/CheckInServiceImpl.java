@@ -2,9 +2,11 @@ package com.studycompanion.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.studycompanion.entity.CheckIn;
+import com.studycompanion.entity.Diary;
 import com.studycompanion.entity.StudyRecord;
 import com.studycompanion.entity.UserStatistics;
 import com.studycompanion.mapper.CheckInMapper;
+import com.studycompanion.mapper.DiaryMapper;
 import com.studycompanion.mapper.StudyRecordMapper;
 import com.studycompanion.mapper.UserStatisticsMapper;
 import com.studycompanion.service.CheckInService;
@@ -27,6 +29,7 @@ public class CheckInServiceImpl implements CheckInService {
 
     private final CheckInMapper checkInMapper;
     private final StudyRecordMapper studyRecordMapper;
+    private final DiaryMapper diaryMapper;
     private final UserStatisticsMapper userStatisticsMapper;
 
     @Override
@@ -122,9 +125,10 @@ public class CheckInServiceImpl implements CheckInService {
             status.setStreak(0);
         }
 
-        // 检查是否可以打卡（今日有学习记录且未打卡）
+        // 检查是否可以打卡（今日有学习记录+写日记且未打卡）
         boolean hasStudyRecord = hasStudyRecord(userId, date);
-        status.setCanCheckIn(hasStudyRecord && !Boolean.TRUE.equals(status.getIsCompleted()));
+        boolean hasDiary = hasDiary(userId, date);
+        status.setCanCheckIn(hasStudyRecord && hasDiary && !Boolean.TRUE.equals(status.getIsCompleted()));
 
         return status;
     }
@@ -134,6 +138,13 @@ public class CheckInServiceImpl implements CheckInService {
         wrapper.eq(StudyRecord::getUserId, userId)
                .eq(StudyRecord::getStudyDate, date);
         return studyRecordMapper.selectCount(wrapper) > 0;
+    }
+
+    private boolean hasDiary(Long userId, LocalDate date) {
+        LambdaQueryWrapper<Diary> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(Diary::getUserId, userId)
+               .eq(Diary::getDiaryDate, date);
+        return diaryMapper.selectCount(wrapper) > 0;
     }
 
     private int calculateStreak(Long userId, LocalDate today) {

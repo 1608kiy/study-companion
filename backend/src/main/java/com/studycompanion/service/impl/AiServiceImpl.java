@@ -6,10 +6,12 @@ import com.studycompanion.common.BusinessException;
 import com.studycompanion.common.ErrorCode;
 import com.studycompanion.dto.AiChatRequest;
 import com.studycompanion.entity.AiAnalysis;
+import com.studycompanion.entity.MissRecord;
 import com.studycompanion.entity.StudyRecord;
 import com.studycompanion.entity.Subject;
 import com.studycompanion.entity.User;
 import com.studycompanion.mapper.AiAnalysisMapper;
+import com.studycompanion.mapper.MissRecordMapper;
 import com.studycompanion.mapper.StudyRecordMapper;
 import com.studycompanion.mapper.SubjectMapper;
 import com.studycompanion.mapper.UserMapper;
@@ -36,6 +38,7 @@ public class AiServiceImpl implements AiService {
     private final AiAnalysisMapper aiAnalysisMapper;
     private final StudyRecordMapper studyRecordMapper;
     private final SubjectMapper subjectMapper;
+    private final MissRecordMapper missRecordMapper;
     private final UserMapper userMapper;
     private final AiClient aiClient;
 
@@ -46,8 +49,14 @@ public class AiServiceImpl implements AiService {
         LocalDate weekEnd = weekStart.plusDays(6);
 
         String dataSummary = buildDataSummary(userId, weekStart, weekEnd);
-        String systemPrompt = "你是一个考公学习陪伴助手。根据用户本周的学习数据，生成一份温暖、鼓励的学习周报。" +
-                "包含学习概况、科目分布分析、学习建议。使用Markdown格式，语气温暖积极。";
+        String systemPrompt = "你是一个考公学习陪伴助手。根据用户本周的学习数据，生成一份温暖、鼓励的学习周报。\n\n" +
+                "要求：\n" +
+                "1. 包含学习概况、科目分布分析\n" +
+                "2. 如果有断签记录，要特别提醒用户，但语气要温和鼓励\n" +
+                "3. 分析断签原因，给出改进建议\n" +
+                "4. 如果没有断签，要表扬用户的坚持\n" +
+                "5. 使用Markdown格式，语气温暖积极\n" +
+                "6. 在报告末尾给出下周的学习建议";
         String content = aiClient.chat(systemPrompt, "请根据以下学习数据生成周报：\n\n" + dataSummary);
 
         AiAnalysis analysis = new AiAnalysis();
@@ -66,8 +75,15 @@ public class AiServiceImpl implements AiService {
         LocalDate monthEnd = thisMonth.atEndOfMonth();
 
         String dataSummary = buildDataSummary(userId, monthStart, monthEnd);
-        String systemPrompt = "你是一个考公学习陪伴助手。根据用户本月的学习数据，生成一份详细的月度学习报告。" +
-                "包含学习概况、趋势分析、薄弱科目提醒、下月建议。使用Markdown格式，语气温暖鼓励。";
+        String systemPrompt = "你是一个考公学习陪伴助手。根据用户本月的学习数据，生成一份详细的月度学习报告。\n\n" +
+                "要求：\n" +
+                "1. 包含学习概况、趋势分析、薄弱科目提醒\n" +
+                "2. 如果有断签记录，要重点分析断签规律和原因\n" +
+                "3. 统计断签次数，提醒用户注意学习连续性\n" +
+                "4. 给出具体的改进建议，帮助用户减少断签\n" +
+                "5. 如果断签次数少或没有，要给予肯定和鼓励\n" +
+                "6. 使用Markdown格式，语气温暖鼓励\n" +
+                "7. 在报告末尾给出下月的学习计划建议";
         String content = aiClient.chat(systemPrompt, "请根据以下学习数据生成月报：\n\n" + dataSummary);
 
         AiAnalysis analysis = new AiAnalysis();
@@ -194,37 +210,57 @@ public class AiServiceImpl implements AiService {
 
         if (records.isEmpty()) {
             sb.append("暂无学习记录。\n");
-            return sb.toString();
+        } else {
+            int totalDuration = records.stream().mapToInt(StudyRecord::getDuration).sum();
+            int totalDays = (int) records.stream().map(StudyRecord::getStudyDate).distinct().count();
+
+            sb.append("累计学习天数：").append(totalDays).append(" 天\n");
+            sb.append("累计学习时长：").append(totalDuration).append(" 分钟\n");
+            sb.append("日均学习时长：").append(totalDuration / Math.max(totalDays, 1)).append(" 分钟\n\n");
+
+            // 批量查询科目，避免 N+1
+            Set<Long> subjectIds = records.stream()
+                    .map(StudyRecord::getSubjectId)
+                    .collect(Collectors.toSet());
+            Map<Long, Subject> subjectMap = subjectIds.isEmpty()
+                    ? Collections.emptyMap()
+                    : subjectMapper.selectBatchIds(subjectIds).stream()
+                            .collect(Collectors.toMap(Subject::getId, s -> s));
+
+            sb.append("科目分布：\n");
+            Map<String, Integer> subjectStats = records.stream()
+                    .collect(Collectors.groupingBy(
+                            r -> {
+                                Subject subject = subjectMap.get(r.getSubjectId());
+                                return subject != null ? subject.getName() : "未知";
+                            },
+                            Collectors.summingInt(StudyRecord::getDuration)
+                    ));
+            subjectStats.forEach((name, duration) ->
+                    sb.append("- ").append(name).append("：").append(duration).append(" 分钟\n")
+            );
         }
 
-        int totalDuration = records.stream().mapToInt(StudyRecord::getDuration).sum();
-        int totalDays = (int) records.stream().map(StudyRecord::getStudyDate).distinct().count();
+        // 查询断签记录
+        LambdaQueryWrapper<MissRecord> missWrapper = new LambdaQueryWrapper<>();
+        missWrapper.eq(MissRecord::getUserId, userId)
+                   .ge(MissRecord::getMissDate, startDate)
+                   .le(MissRecord::getMissDate, endDate)
+                   .orderByAsc(MissRecord::getMissDate);
+        List<MissRecord> missRecords = missRecordMapper.selectList(missWrapper);
 
-        sb.append("累计学习天数：").append(totalDays).append(" 天\n");
-        sb.append("累计学习时长：").append(totalDuration).append(" 分钟\n");
-        sb.append("日均学习时长：").append(totalDuration / Math.max(totalDays, 1)).append(" 分钟\n\n");
-
-        // 批量查询科目，避免 N+1
-        Set<Long> subjectIds = records.stream()
-                .map(StudyRecord::getSubjectId)
-                .collect(Collectors.toSet());
-        Map<Long, Subject> subjectMap = subjectIds.isEmpty()
-                ? Collections.emptyMap()
-                : subjectMapper.selectBatchIds(subjectIds).stream()
-                        .collect(Collectors.toMap(Subject::getId, s -> s));
-
-        sb.append("科目分布：\n");
-        Map<String, Integer> subjectStats = records.stream()
-                .collect(Collectors.groupingBy(
-                        r -> {
-                            Subject subject = subjectMap.get(r.getSubjectId());
-                            return subject != null ? subject.getName() : "未知";
-                        },
-                        Collectors.summingInt(StudyRecord::getDuration)
-                ));
-        subjectStats.forEach((name, duration) ->
-                sb.append("- ").append(name).append("：").append(duration).append(" 分钟\n")
-        );
+        if (!missRecords.isEmpty()) {
+            sb.append("\n断签记录（共").append(missRecords.size()).append("天）：\n");
+            for (MissRecord miss : missRecords) {
+                sb.append("- ").append(miss.getMissDate()).append("：").append(miss.getReason());
+                if (miss.getIsReplenished() == 1) {
+                    sb.append(" [已补签]");
+                } else if (miss.getAiAllowReplenish() != null && miss.getAiAllowReplenish() == 1) {
+                    sb.append(" [可补签]");
+                }
+                sb.append("\n");
+            }
+        }
 
         return sb.toString();
     }

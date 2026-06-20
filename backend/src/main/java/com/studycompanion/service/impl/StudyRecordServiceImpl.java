@@ -1,6 +1,7 @@
 package com.studycompanion.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.studycompanion.common.AiClient;
 import com.studycompanion.common.BusinessException;
 import com.studycompanion.common.ErrorCode;
 import com.studycompanion.dto.StartTimerRequest;
@@ -37,6 +38,7 @@ public class StudyRecordServiceImpl implements StudyRecordService {
     private final StudyRecordMapper studyRecordMapper;
     private final SubjectMapper subjectMapper;
     private final CheckInMapper checkInMapper;
+    private final AiClient aiClient;
     private final StringRedisTemplate redisTemplate;
 
     private static final String TIMER_PREFIX = "timer:";
@@ -255,6 +257,60 @@ public class StudyRecordServiceImpl implements StudyRecordService {
             throw new BusinessException(ErrorCode.RECORD_NOT_FOUND);
         }
         return convertToVO(record);
+    }
+
+    @Override
+    public Map<String, Object> aiJudgeModify(Long userId, Long recordId, String reason) {
+        StudyRecord record = studyRecordMapper.selectById(recordId);
+        if (record == null || !record.getUserId().equals(userId)) {
+            throw new BusinessException(ErrorCode.RECORD_NOT_FOUND);
+        }
+
+        Subject subject = subjectMapper.selectById(record.getSubjectId());
+        String subjectName = subject != null ? subject.getName() : "未知科目";
+
+        String systemPrompt = "你是一个考公学习陪伴助手。根据用户描述的修改原因，判断是否允许修改学习记录。\n\n" +
+                "判断规则：\n" +
+                "- 记录有误、科目选错、时间记录错误 → 允许修改\n" +
+                "- 补充备注、添加心情 → 允许修改\n" +
+                "- 想删除记录、想改短时间、觉得学太多 → 不允许修改\n" +
+                "- 没有正当理由 → 不允许修改\n\n" +
+                "学习记录信息：\n" +
+                "- 科目：" + subjectName + "\n" +
+                "- 时长：" + record.getDuration() + "分钟\n" +
+                "- 日期：" + record.getStudyDate() + "\n\n" +
+                "请只返回JSON格式：{\"allow\":true/false,\"reason\":\"简短原因\"}";
+
+        String userMessage = "修改原因：" + reason;
+
+        try {
+            String result = aiClient.chat(systemPrompt, userMessage);
+            
+            String trimmed = result.trim();
+            if (trimmed.startsWith("```")) {
+                trimmed = trimmed.replaceAll("```json\\s*", "").replaceAll("```\\s*", "");
+            }
+            
+            com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+            Map<String, Object> jsonMap = mapper.readValue(trimmed, Map.class);
+            boolean allow = jsonMap.containsKey("allow") ? (Boolean) jsonMap.get("allow") : false;
+            String aiReason = jsonMap.containsKey("reason") ? (String) jsonMap.get("reason") : "";
+            
+            log.info("AI修改判断: userId={}, recordId={}, allow={}, reason={}", userId, recordId, allow, aiReason);
+            
+            Map<String, Object> response = new HashMap<>();
+            response.put("allow", allow);
+            response.put("reason", aiReason);
+            return response;
+        } catch (Exception e) {
+            log.error("AI修改判断失败，使用默认规则: {}", e.getMessage());
+            // 降级处理
+            boolean allow = reason != null && (reason.contains("错误") || reason.contains("备注"));
+            Map<String, Object> response = new HashMap<>();
+            response.put("allow", allow);
+            response.put("reason", allow ? "系统判断允许修改" : "系统判断不允许修改");
+            return response;
+        }
     }
 
     @Override

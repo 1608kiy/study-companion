@@ -17,6 +17,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @Tag(name = "学习记录", description = "番茄钟计时、学习记录CRUD、学习统计")
 @RestController
@@ -97,6 +98,17 @@ public class StudyRecordController {
         Long userId = getUserIdFromRequest(request);
         StudyRecordVO record = studyRecordService.getStudyRecordById(userId, recordId);
         return Result.success(record);
+    }
+
+    @Operation(summary = "AI判断是否允许修改")
+    @PostMapping("/{recordId}/ai-judge")
+    public Result<Map<String, Object>> aiJudgeModify(HttpServletRequest request,
+                                                      @PathVariable Long recordId,
+                                                      @RequestBody Map<String, String> body) {
+        Long userId = getUserIdFromRequest(request);
+        String reason = body.getOrDefault("reason", "");
+        Map<String, Object> result = studyRecordService.aiJudgeModify(userId, recordId, reason);
+        return Result.success(result);
     }
 
     @Operation(summary = "更新学习记录")

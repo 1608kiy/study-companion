@@ -5,6 +5,7 @@ import com.studycompanion.entity.CheckIn;
 import com.studycompanion.entity.StudyRecord;
 import com.studycompanion.entity.UserStatistics;
 import com.studycompanion.mapper.CheckInMapper;
+import com.studycompanion.mapper.DiaryMapper;
 import com.studycompanion.mapper.StudyRecordMapper;
 import com.studycompanion.mapper.UserStatisticsMapper;
 import com.studycompanion.service.impl.CheckInServiceImpl;
@@ -35,6 +36,9 @@ class CheckInServiceTest {
     private StudyRecordMapper studyRecordMapper;
     
     @Mock
+    private DiaryMapper diaryMapper;
+    
+    @Mock
     private UserStatisticsMapper userStatisticsMapper;
     
     @InjectMocks
@@ -47,6 +51,7 @@ class CheckInServiceTest {
     void getTodayCheckInStatus_NotCheckedIn() {
         when(checkInMapper.selectOne(any(LambdaQueryWrapper.class))).thenReturn(null);
         when(studyRecordMapper.selectCount(any(LambdaQueryWrapper.class))).thenReturn(1L);
+        when(diaryMapper.selectCount(any(LambdaQueryWrapper.class))).thenReturn(1L);
         
         CheckInStatusVO result = checkInService.getTodayCheckInStatus(userId);
         
@@ -80,6 +85,20 @@ class CheckInServiceTest {
     void getTodayCheckInStatus_NoStudyRecord() {
         when(checkInMapper.selectOne(any(LambdaQueryWrapper.class))).thenReturn(null);
         when(studyRecordMapper.selectCount(any(LambdaQueryWrapper.class))).thenReturn(0L);
+        when(diaryMapper.selectCount(any(LambdaQueryWrapper.class))).thenReturn(1L);
+        
+        CheckInStatusVO result = checkInService.getTodayCheckInStatus(userId);
+        
+        assertNotNull(result);
+        assertFalse(result.getIsCompleted());
+        assertFalse(result.getCanCheckIn());
+    }
+
+    @Test
+    void getTodayCheckInStatus_NoDiary() {
+        when(checkInMapper.selectOne(any(LambdaQueryWrapper.class))).thenReturn(null);
+        when(studyRecordMapper.selectCount(any(LambdaQueryWrapper.class))).thenReturn(1L);
+        when(diaryMapper.selectCount(any(LambdaQueryWrapper.class))).thenReturn(0L);
         
         CheckInStatusVO result = checkInService.getTodayCheckInStatus(userId);
         
@@ -98,6 +117,7 @@ class CheckInServiceTest {
             .thenReturn(null)   // calculateStreak day-2 - no check-in (loop breaks)
             .thenReturn(createCheckIn()); // Final getCheckInStatus
         when(studyRecordMapper.selectCount(any(LambdaQueryWrapper.class))).thenReturn(1L);
+        when(diaryMapper.selectCount(any(LambdaQueryWrapper.class))).thenReturn(1L);
         when(studyRecordMapper.selectList(any(LambdaQueryWrapper.class)))
             .thenReturn(Arrays.asList(createStudyRecord()));
         when(userStatisticsMapper.selectOne(any(LambdaQueryWrapper.class))).thenReturn(null);

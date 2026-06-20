@@ -1,6 +1,7 @@
 package com.studycompanion.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.studycompanion.common.AiClient;
 import com.studycompanion.common.BusinessException;
 import com.studycompanion.common.ErrorCode;
 import com.studycompanion.dto.MissRecordRequest;
@@ -14,6 +15,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -22,12 +24,13 @@ import java.util.stream.Collectors;
 public class MissRecordServiceImpl implements MissRecordService {
 
     private final MissRecordMapper missRecordMapper;
+    private final AiClient aiClient;
 
     @Override
     public MissRecordVO recordMiss(Long userId, MissRecordRequest request) {
         MissRecord missRecord = new MissRecord();
         missRecord.setUserId(userId);
-        missRecord.setMissDate(LocalDate.now());
+        missRecord.setMissDate(request.getMissDate() != null ? request.getMissDate() : LocalDate.now());
         missRecord.setReason(request.getReason());
         missRecord.setAiAllowReplenish(null);
         missRecord.setIsReplenished(0);
@@ -40,14 +43,51 @@ public class MissRecordServiceImpl implements MissRecordService {
     public MissRecordVO aiJudgeReplenish(Long userId, Long missRecordId) {
         MissRecord missRecord = getMissRecordById(userId, missRecordId);
 
-        // TODO: 接入AI服务判断是否允许补签
-        // 目前简单实现：根据断签原因判断
-        String reason = missRecord.getReason().toLowerCase();
-        boolean allow = reason.contains("生病") || reason.contains("考试") || reason.contains("出差");
+        // 调用 AI 判断是否允许补签
+        String systemPrompt = "你是一个考公学习陪伴助手。根据用户描述的断签原因，判断是否允许补签。\n\n" +
+                "判断规则：\n" +
+                "- 生病、住院、身体不适 → 允许补签\n" +
+                "- 考试、面试、出差、紧急事务 → 允许补签\n" +
+                "- 家庭紧急情况、丧事、婚礼 → 允许补签\n" +
+                "- 偷懒、忘记、不想学、玩手机 → 不允许补签\n" +
+                "- 天气不好、心情不好、压力大 → 不允许补签\n\n" +
+                "请只返回JSON格式：{\"allow\":true/false,\"reason\":\"简短原因\"}";
 
-        missRecord.setAiAllowReplenish(allow ? 1 : 0);
+        String userMessage = "断签原因：" + missRecord.getReason() + "\n断签日期：" + missRecord.getMissDate();
+
+        try {
+            String result = aiClient.chat(systemPrompt, userMessage);
+            
+            // 解析 AI 返回的 JSON
+            String trimmed = result.trim();
+            if (trimmed.startsWith("```")) {
+                trimmed = trimmed.replaceAll("```json\\s*", "").replaceAll("```\\s*", "");
+            }
+            
+            com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+            Map<String, Object> jsonMap = mapper.readValue(trimmed, Map.class);
+            boolean allow = jsonMap.containsKey("allow") ? (Boolean) jsonMap.get("allow") : false;
+            
+            missRecord.setAiAllowReplenish(allow ? 1 : 0);
+            
+            // 保存 AI 判断原因
+            String reason = jsonMap.containsKey("reason") ? (String) jsonMap.get("reason") : "";
+            if (reason != null && !reason.isEmpty()) {
+                missRecord.setReason(missRecord.getReason() + "\n[AI判断] " + reason);
+            }
+            
+            log.info("AI补签判断: userId={}, missDate={}, allow={}, reason={}", 
+                    userId, missRecord.getMissDate(), allow, reason);
+        } catch (Exception e) {
+            log.error("AI补签判断失败，使用默认规则: {}", e.getMessage());
+            // 降级处理：根据关键词判断
+            String reason = missRecord.getReason().toLowerCase();
+            boolean allow = reason.contains("生病") || reason.contains("考试") || 
+                           reason.contains("出差") || reason.contains("紧急");
+            missRecord.setAiAllowReplenish(allow ? 1 : 0);
+        }
+
         missRecordMapper.updateById(missRecord);
-
         return convertToVO(missRecord);
     }
 

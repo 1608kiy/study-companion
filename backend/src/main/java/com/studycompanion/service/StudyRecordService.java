@@ -8,6 +8,7 @@ import com.studycompanion.vo.StudyStatsVO;
 import com.studycompanion.vo.TimerStateVO;
 
 import java.util.List;
+import java.util.Map;
 
 public interface StudyRecordService {
 
@@ -26,6 +27,8 @@ public interface StudyRecordService {
     PageResponse<StudyRecordVO> getStudyRecordsPaged(Long userId, String startDate, String endDate, int page, int size);
 
     StudyRecordVO getStudyRecordById(Long userId, Long recordId);
+
+    Map<String, Object> aiJudgeModify(Long userId, Long recordId, String reason);
 
     StudyRecordVO updateStudyRecord(Long userId, Long recordId, UpdateStudyRecordRequest request);
 
