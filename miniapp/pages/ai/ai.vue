@@ -1,54 +1,57 @@
 <template>
-  <view class="ai-container">
-    <!-- 聊天消息 -->
-    <scroll-view 
-      class="chat-messages" 
-      scroll-y 
-      :scroll-into-view="scrollToView"
-    >
-      <view 
-        v-for="(msg, index) in messages" 
-        :key="index" 
-        :id="'msg-' + index"
-        class="message" 
-        :class="msg.role"
+  <main-layout :showTabbar="true" :currentTab="4">
+    <view class="ai-container">
+      <!-- 聊天消息 -->
+      <scroll-view 
+        class="chat-messages" 
+        scroll-y 
+        :scroll-into-view="scrollToView"
       >
-        <view class="message-avatar">
-          <text v-if="msg.role === 'user'">我</text>
-          <text v-else>AI</text>
+        <view 
+          v-for="(msg, index) in messages" 
+          :key="index" 
+          :id="'msg-' + index"
+          class="message" 
+          :class="msg.role"
+        >
+          <view class="message-avatar">
+            <text v-if="msg.role === 'user'">我</text>
+            <text v-else>AI</text>
+          </view>
+          <view class="message-bubble">
+            <rich-text :nodes="renderMarkdown(msg.content)"></rich-text>
+          </view>
         </view>
-        <view class="message-bubble">
-          <rich-text :nodes="renderMarkdown(msg.content)"></rich-text>
-        </view>
+      </scroll-view>
+      
+      <!-- 快捷操作 -->
+      <view class="quick-actions">
+        <button class="action-btn" @click="handleWeeklyReport">周报</button>
+        <button class="action-btn" @click="handleMonthlyReport">月报</button>
+        <button class="action-btn" @click="handleFocusJudge">专注度</button>
       </view>
-    </scroll-view>
-    
-    <!-- 快捷操作 -->
-    <view class="quick-actions">
-      <button class="action-btn" @click="handleWeeklyReport">周报</button>
-      <button class="action-btn" @click="handleMonthlyReport">月报</button>
-      <button class="action-btn" @click="handleFocusJudge">专注度</button>
+      
+      <!-- 输入区域 -->
+      <view class="input-area">
+        <input 
+          v-model="inputMessage" 
+          class="chat-input" 
+          placeholder="向AI助手提问..."
+          @confirm="sendMessage"
+        />
+        <button class="btn-send" @click="sendMessage" :loading="loading">
+          发送
+        </button>
+      </view>
     </view>
-    
-    <!-- 输入区域 -->
-    <view class="input-area">
-      <input 
-        v-model="inputMessage" 
-        class="chat-input" 
-        placeholder="向AI助手提问..."
-        @confirm="sendMessage"
-      />
-      <button class="btn-send" @click="sendMessage" :loading="loading">
-        发送
-      </button>
-    </view>
-  </view>
+  </main-layout>
 </template>
 
 <script setup>
 import { ref, onMounted, nextTick } from 'vue'
 import { aiApi } from '../../api/modules'
 import { renderMarkdown } from '../../utils/markdown'
+import MainLayout from '../../components/main-layout.vue'
 
 const CHAT_HISTORY_KEY = 'ai_chat_history'
 const MAX_HISTORY = 20

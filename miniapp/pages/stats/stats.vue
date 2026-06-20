@@ -1,59 +1,62 @@
 <template>
-  <view class="stats-container">
-    <!-- 月份选择 -->
-    <view class="month-picker">
-      <text class="month-text">{{ selectedMonth }}</text>
-    </view>
-    
-    <!-- 统计卡片 -->
-    <view class="stats-row">
-      <view class="stat-card stat-blue">
-        <text class="stat-value">{{ stats.totalDays || 0 }}</text>
-        <text class="stat-label">学习天数</text>
+  <main-layout :showTabbar="true" :currentTab="3">
+    <view class="stats-container">
+      <!-- 月份选择 -->
+      <view class="month-picker">
+        <text class="month-text">{{ selectedMonth }}</text>
       </view>
-      <view class="stat-card stat-green">
-        <text class="stat-value">{{ formatDuration(stats.totalDuration) }}</text>
-        <text class="stat-label">总学习时长</text>
+      
+      <!-- 统计卡片 -->
+      <view class="stats-row">
+        <view class="stat-card stat-blue">
+          <text class="stat-value">{{ stats.totalDays || 0 }}</text>
+          <text class="stat-label">学习天数</text>
+        </view>
+        <view class="stat-card stat-green">
+          <text class="stat-value">{{ formatDuration(stats.totalDuration) }}</text>
+          <text class="stat-label">总学习时长</text>
+        </view>
+        <view class="stat-card stat-orange">
+          <text class="stat-value">{{ stats.avgDuration || 0 }}</text>
+          <text class="stat-label">日均时长(分钟)</text>
+        </view>
+        <view class="stat-card stat-purple">
+          <text class="stat-value">{{ stats.maxDuration || 0 }}</text>
+          <text class="stat-label">最长单日(分钟)</text>
+        </view>
       </view>
-      <view class="stat-card stat-orange">
-        <text class="stat-value">{{ stats.avgDuration || 0 }}</text>
-        <text class="stat-label">日均时长(分钟)</text>
-      </view>
-      <view class="stat-card stat-purple">
-        <text class="stat-value">{{ stats.maxDuration || 0 }}</text>
-        <text class="stat-label">最长单日(分钟)</text>
-      </view>
-    </view>
-    
-    <!-- 科目分布 -->
-    <view class="card">
-      <text class="card-title">科目分布</text>
-      <view v-if="subjectData.length === 0" class="empty-tip">
-        <text>暂无数据</text>
-      </view>
-      <view v-else class="subject-list">
-        <view 
-          v-for="item in subjectData" 
-          :key="item.name" 
-          class="subject-item"
-        >
-          <text class="subject-name">{{ item.name }}</text>
-          <view class="subject-bar">
-            <view 
-              class="bar-fill" 
-              :style="{ width: (item.value / maxSubjectValue * 100) + '%' }"
-            ></view>
+      
+      <!-- 科目分布 -->
+      <view class="card">
+        <text class="card-title">科目分布</text>
+        <view v-if="subjectData.length === 0" class="empty-tip">
+          <text>暂无数据</text>
+        </view>
+        <view v-else class="subject-list">
+          <view 
+            v-for="item in subjectData" 
+            :key="item.name" 
+            class="subject-item"
+          >
+            <text class="subject-name">{{ item.name }}</text>
+            <view class="subject-bar">
+              <view 
+                class="bar-fill" 
+                :style="{ width: (item.value / maxSubjectValue * 100) + '%' }"
+              ></view>
+            </view>
+            <text class="subject-value">{{ item.value }}分钟</text>
           </view>
-          <text class="subject-value">{{ item.value }}分钟</text>
         </view>
       </view>
     </view>
-  </view>
+  </main-layout>
 </template>
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { goalApi, studyRecordApi } from '../../api/modules'
+import MainLayout from '../../components/main-layout.vue'
 
 const selectedMonth = ref(new Date().toISOString().slice(0, 7))
 const stats = ref({})

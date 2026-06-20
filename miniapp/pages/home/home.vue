@@ -1,67 +1,83 @@
 <template>
-  <view class="home-container">
-    <!-- 欢迎语 -->
-    <view class="welcome-section">
-      <text class="welcome-text">欢迎回来，{{ userStore.nickname }} 👋</text>
-      <text class="welcome-sub">今天也要加油学习哦</text>
-    </view>
-    
-    <!-- 统计卡片 -->
-    <view class="stats-row">
-      <view class="stat-card stat-blue">
-        <text class="stat-value">{{ todayStats.duration || 0 }}</text>
-        <text class="stat-label">今日学习(分钟)</text>
+  <main-layout :showTabbar="true" :currentTab="0">
+    <view class="home-container">
+      <!-- 欢迎语 -->
+      <view class="welcome-section">
+        <text class="welcome-text">欢迎回来，{{ userStore.nickname }} 👋</text>
+        <text class="welcome-sub">今天也要加油学习哦</text>
       </view>
-      <view class="stat-card stat-green">
-        <text class="stat-value">{{ todayStats.streak || 0 }}</text>
-        <text class="stat-label">连续打卡(天)</text>
-      </view>
-      <view class="stat-card stat-orange">
-        <text class="stat-value">{{ todayStats.diaryCount || 0 }}</text>
-        <text class="stat-label">本周日记(篇)</text>
-      </view>
-      <view class="stat-card stat-purple">
-        <text class="stat-value">{{ todayStats.goalProgress || 0 }}%</text>
-        <text class="stat-label">目标完成度</text>
-      </view>
-    </view>
-    
-    <!-- 打卡区域 -->
-    <view class="card checkin-card">
-      <text class="card-title">今日打卡</text>
-      <view class="checkin-content">
-        <view class="progress-ring">
-          <text class="progress-value">{{ checkInProgress }}%</text>
-          <text class="progress-label">今日完成</text>
+      
+      <!-- 统计卡片 -->
+      <view class="stats-row">
+        <view class="stat-card stat-blue">
+          <text class="stat-value">{{ todayStats.duration || 0 }}</text>
+          <text class="stat-label">今日学习(分钟)</text>
         </view>
-        <button 
-          v-if="!todayCheckedIn" 
-          class="btn-checkin" 
-          @click="handleCheckIn"
-        >
-          打卡
-        </button>
-        <view v-else class="checked-tag">
-          <text>✓ 已打卡</text>
+        <view class="stat-card stat-green">
+          <text class="stat-value">{{ todayStats.streak || 0 }}</text>
+          <text class="stat-label">连续打卡(天)</text>
+        </view>
+        <view class="stat-card stat-orange">
+          <text class="stat-value">{{ todayStats.diaryCount || 0 }}</text>
+          <text class="stat-label">本周日记(篇)</text>
+        </view>
+        <view class="stat-card stat-purple">
+          <text class="stat-value">{{ todayStats.goalProgress || 0 }}%</text>
+          <text class="stat-label">目标完成度</text>
         </view>
       </view>
-    </view>
-    
-    <!-- 学习趋势 -->
-    <view class="card chart-card">
-      <text class="card-title">学习趋势</text>
-      <view class="chart-container">
-        <!-- 这里使用 echarts-for-weixin -->
-        <text class="chart-placeholder">近7天学习趋势</text>
+      
+      <!-- 打卡区域 -->
+      <view class="card checkin-card">
+        <text class="card-title">今日打卡</text>
+        <view class="checkin-content">
+          <view class="progress-ring">
+            <text class="progress-value">{{ checkInProgress }}%</text>
+            <text class="progress-label">今日完成</text>
+          </view>
+          <button 
+            v-if="!todayCheckedIn" 
+            class="btn-checkin" 
+            @click="handleCheckIn"
+          >
+            打卡
+          </button>
+          <view v-else class="checked-tag">
+            <text>✓ 已打卡</text>
+          </view>
+        </view>
+      </view>
+      
+      <!-- 学习趋势 -->
+      <view class="card chart-card">
+        <text class="card-title">学习趋势</text>
+        <view class="chart-container">
+          <view class="trend-bars">
+            <view 
+              v-for="(value, index) in weeklyData" 
+              :key="index"
+              class="bar-item"
+            >
+              <view class="bar" :style="{ height: (value / maxWeeklyValue * 100) + '%' }"></view>
+              <text class="bar-label">{{ weekDays[index] }}</text>
+            </view>
+          </view>
+        </view>
+      </view>
+      
+      <!-- 设置入口 -->
+      <view class="settings-entry" @click="goSettings">
+        <text>⚙️ 设置</text>
       </view>
     </view>
-  </view>
+  </main-layout>
 </template>
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useUserStore } from '../../store/user'
 import { checkInApi, studyRecordApi, diaryApi } from '../../api/modules'
+import MainLayout from '../../components/main-layout.vue'
 
 const userStore = useUserStore()
 const dailyGoal = computed(() => userStore.userInfo?.dailyGoal || 120)
@@ -79,6 +95,13 @@ const checkInStatusData = ref({
   isCompleted: false
 })
 
+const weeklyData = ref([0, 0, 0, 0, 0, 0, 0])
+const weekDays = ['一', '二', '三', '四', '五', '六', '日']
+
+const maxWeeklyValue = computed(() => {
+  return Math.max(...weeklyData.value, 1)
+})
+
 const todayCheckedIn = computed(() => checkInStatusData.value.isCompleted)
 const checkInProgress = computed(() => {
   const progress = Math.min(100, (checkInStatusData.value.totalDuration / dailyGoal.value) * 100)
@@ -93,6 +116,10 @@ const handleCheckIn = async () => {
   } catch (error) {
     console.error('打卡失败:', error)
   }
+}
+
+const goSettings = () => {
+  uni.navigateTo({ url: '/pages/settings/settings' })
 }
 
 const loadCheckInStatus = async () => {
@@ -117,6 +144,7 @@ const loadTodayStats = async () => {
       diaryCount,
       goalProgress: Math.min(100, Math.round(((statsRes.data.todayDuration || 0) / dailyGoal.value) * 100))
     }
+    weeklyData.value = statsRes.data.weeklyDurations || [0, 0, 0, 0, 0, 0, 0]
   } catch (error) {
     console.error('获取今日统计失败:', error)
   }
@@ -253,13 +281,47 @@ onMounted(async () => {
 
 .chart-container {
   height: 300rpx;
-  display: flex;
-  align-items: center;
-  justify-content: center;
 }
 
-.chart-placeholder {
-  font-size: 26rpx;
-  color: #94a3b8;
+.trend-bars {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  height: 250rpx;
+  padding: 0 10rpx;
+}
+
+.bar-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8rpx;
+}
+
+.bar {
+  width: 40rpx;
+  min-height: 10rpx;
+  background: #6366f1;
+  border-radius: 8rpx 8rpx 0 0;
+}
+
+.bar-label {
+  font-size: 20rpx;
+  color: #64748b;
+}
+
+.settings-entry {
+  text-align: center;
+  padding: 24rpx;
+  background: #fff;
+  border-radius: 16rpx;
+  border: 1rpx solid #e2e8f0;
+  margin-top: 20rpx;
+}
+
+.settings-entry text {
+  font-size: 28rpx;
+  color: #6366f1;
 }
 </style>

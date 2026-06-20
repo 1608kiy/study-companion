@@ -1,43 +1,46 @@
 <template>
-  <view class="diary-container">
-    <!-- 日记详情 -->
-    <view v-if="currentDiary" class="card diary-detail">
-      <view class="diary-header">
-        <text class="diary-date">{{ currentDiary.diaryDate }}</text>
-        <view class="diary-actions">
-          <text class="action-btn" @click="handleEdit">编辑</text>
-          <text class="action-btn delete" @click="handleDelete">删除</text>
+  <main-layout :showTabbar="true" :currentTab="2">
+    <view class="diary-container">
+      <!-- 日记详情 -->
+      <view v-if="currentDiary" class="card diary-detail">
+        <view class="diary-header">
+          <text class="diary-date">{{ currentDiary.diaryDate }}</text>
+          <view class="diary-actions">
+            <text class="action-btn" @click="handleEdit">编辑</text>
+            <text class="action-btn delete" @click="handleDelete">删除</text>
+          </view>
+        </view>
+        <view class="diary-content">
+          <rich-text :nodes="renderMarkdown(currentDiary.content)"></rich-text>
+        </view>
+        <view v-if="currentDiary.aiGenerated" class="ai-badge">
+          <text>AI 生成</text>
         </view>
       </view>
-      <view class="diary-content">
-        <rich-text :nodes="renderMarkdown(currentDiary.content)"></rich-text>
+      
+      <!-- 空状态 -->
+      <view v-else class="empty-state">
+        <text class="empty-text">选择日期查看日记</text>
       </view>
-      <view v-if="currentDiary.aiGenerated" class="ai-badge">
-        <text>AI 生成</text>
-      </view>
+      
+      <!-- 写日记按钮 -->
+      <button class="btn-write" @click="handleWrite">
+        写日记
+      </button>
+      
+      <!-- AI生成按钮 -->
+      <button class="btn-ai" @click="handleAIGenerate">
+        AI 生成日记
+      </button>
     </view>
-    
-    <!-- 空状态 -->
-    <view v-else class="empty-state">
-      <text class="empty-text">选择日期查看日记</text>
-    </view>
-    
-    <!-- 写日记按钮 -->
-    <button class="btn-write" @click="handleWrite">
-      写日记
-    </button>
-    
-    <!-- AI生成按钮 -->
-    <button class="btn-ai" @click="handleAIGenerate">
-      AI 生成日记
-    </button>
-  </view>
+  </main-layout>
 </template>
 
 <script setup>
 import { ref, onMounted } from 'vue'
 import { diaryApi } from '../../api/modules'
 import { renderMarkdown } from '../../utils/markdown'
+import MainLayout from '../../components/main-layout.vue'
 
 const currentDiary = ref(null)
 const today = new Date().toISOString().split('T')[0]
@@ -52,7 +55,6 @@ const loadDiary = async (date) => {
 }
 
 const handleWrite = () => {
-  // 跳转到写日记页面或弹出表单
   uni.showToast({ title: '功能开发中', icon: 'none' })
 }
 

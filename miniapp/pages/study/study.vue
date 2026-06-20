@@ -1,97 +1,100 @@
 <template>
-  <view class="study-container">
-    <!-- 计时器区域 -->
-    <view class="timer-card">
-      <view class="timer-display">
-        <text class="timer-value">{{ studyStore.elapsedDisplay }}</text>
-        <text class="timer-subject">{{ studyStore.timerState.subjectName || '选择科目开始学习' }}</text>
+  <main-layout :showTabbar="true" :currentTab="1">
+    <view class="study-container">
+      <!-- 计时器区域 -->
+      <view class="timer-card">
+        <view class="timer-display">
+          <text class="timer-value">{{ studyStore.elapsedDisplay }}</text>
+          <text class="timer-subject">{{ studyStore.timerState.subjectName || '选择科目开始学习' }}</text>
+        </view>
+        
+        <!-- 科目选择 -->
+        <view class="subject-picker" v-if="!studyStore.isTimerRunning">
+          <picker :range="subjectNames" @change="onSubjectChange">
+            <view class="picker-value">
+              {{ selectedSubject ? selectedSubject.name : '请选择科目' }}
+            </view>
+          </picker>
+        </view>
+        
+        <!-- 控制按钮 -->
+        <view class="timer-controls">
+          <button 
+            v-if="!studyStore.isTimerRunning && !studyStore.isPaused"
+            class="btn-start" 
+            @click="handleStart"
+            :disabled="!selectedSubject"
+          >
+            开始学习
+          </button>
+          <button 
+            v-if="studyStore.isTimerRunning"
+            class="btn-pause" 
+            @click="handlePause"
+          >
+            暂停
+          </button>
+          <button 
+            v-if="studyStore.isPaused"
+            class="btn-resume" 
+            @click="handleResume"
+          >
+            继续
+          </button>
+          <button 
+            v-if="studyStore.isTimerRunning || studyStore.isPaused"
+            class="btn-stop" 
+            @click="handleStop"
+          >
+            停止
+          </button>
+        </view>
       </view>
       
-      <!-- 科目选择 -->
-      <view class="subject-picker" v-if="!studyStore.isTimerRunning">
-        <picker :range="subjectNames" @change="onSubjectChange">
-          <view class="picker-value">
-            {{ selectedSubject ? selectedSubject.name : '请选择科目' }}
+      <!-- 今日统计 -->
+      <view class="card stats-card">
+        <text class="card-title">今日统计</text>
+        <view class="stats-row">
+          <view class="stat-item">
+            <text class="stat-value">{{ todayStats.duration }}</text>
+            <text class="stat-label">总时长(分钟)</text>
           </view>
-        </picker>
+          <view class="stat-item">
+            <text class="stat-value">{{ todayStats.count }}</text>
+            <text class="stat-label">学习次数</text>
+          </view>
+        </view>
       </view>
       
-      <!-- 控制按钮 -->
-      <view class="timer-controls">
-        <button 
-          v-if="!studyStore.isTimerRunning && !studyStore.isPaused"
-          class="btn-start" 
-          @click="handleStart"
-          :disabled="!selectedSubject"
-        >
-          开始学习
-        </button>
-        <button 
-          v-if="studyStore.isTimerRunning"
-          class="btn-pause" 
-          @click="handlePause"
-        >
-          暂停
-        </button>
-        <button 
-          v-if="studyStore.isPaused"
-          class="btn-resume" 
-          @click="handleResume"
-        >
-          继续
-        </button>
-        <button 
-          v-if="studyStore.isTimerRunning || studyStore.isPaused"
-          class="btn-stop" 
-          @click="handleStop"
-        >
-          停止
-        </button>
-      </view>
-    </view>
-    
-    <!-- 今日统计 -->
-    <view class="card stats-card">
-      <text class="card-title">今日统计</text>
-      <view class="stats-row">
-        <view class="stat-item">
-          <text class="stat-value">{{ todayStats.duration }}</text>
-          <text class="stat-label">总时长(分钟)</text>
+      <!-- 今日记录 -->
+      <view class="card records-card">
+        <text class="card-title">今日记录</text>
+        <view v-if="studyRecords.length === 0" class="empty-tip">
+          <text>暂无学习记录</text>
         </view>
-        <view class="stat-item">
-          <text class="stat-value">{{ todayStats.count }}</text>
-          <text class="stat-label">学习次数</text>
-        </view>
-      </view>
-    </view>
-    
-    <!-- 今日记录 -->
-    <view class="card records-card">
-      <text class="card-title">今日记录</text>
-      <view v-if="studyRecords.length === 0" class="empty-tip">
-        <text>暂无学习记录</text>
-      </view>
-      <view v-else class="record-list">
-        <view 
-          v-for="record in studyRecords" 
-          :key="record.id" 
-          class="record-item"
-        >
-          <view class="record-info">
-            <text class="record-subject">{{ record.subjectName }}</text>
-            <text class="record-time">{{ record.startTime }} - {{ record.endTime }}</text>
+        <view v-else class="record-list">
+          <view 
+            v-for="record in studyRecords" 
+            :key="record.id" 
+            class="record-item"
+          >
+            <view class="record-info">
+              <text class="record-subject">{{ record.subjectName }}</text>
+              <text class="record-time">{{ record.startTime }} - {{ record.endTime }}</text>
+            </view>
+            <text class="record-duration">{{ record.duration }}分钟</text>
           </view>
-          <text class="record-duration">{{ record.duration }}分钟</text>
         </view>
       </view>
     </view>
-  </view>
+  </main-layout>
 </template>
 
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useStudyStore } from '../../store/study'
 import { subjectApi, studyRecordApi } from '../../api/modules'
+import MainLayout from '../../components/main-layout.vue'
 
 const studyStore = useStudyStore()
 
@@ -202,7 +205,6 @@ onMounted(async () => {
     studyStore.getTimerState()
   ])
   
-  // 如果计时器正在运行，启动前端计时
   if (studyStore.isTimerRunning) {
     startTimerInterval()
   }

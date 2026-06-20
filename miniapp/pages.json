@@ -54,43 +54,5 @@
     "navigationBarTitleText": "智学伴",
     "navigationBarBackgroundColor": "#ffffff",
     "backgroundColor": "#f8fafc"
-  },
-  "tabBar": {
-    "color": "#64748b",
-    "selectedColor": "#6366f1",
-    "backgroundColor": "#ffffff",
-    "borderStyle": "black",
-    "list": [
-      {
-        "pagePath": "pages/home/home",
-        "text": "首页",
-        "iconPath": "static/icons/home.png",
-        "selectedIconPath": "static/icons/home-active.png"
-      },
-      {
-        "pagePath": "pages/study/study",
-        "text": "学习",
-        "iconPath": "static/icons/study.png",
-        "selectedIconPath": "static/icons/study-active.png"
-      },
-      {
-        "pagePath": "pages/diary/diary",
-        "text": "日记",
-        "iconPath": "static/icons/diary.png",
-        "selectedIconPath": "static/icons/diary-active.png"
-      },
-      {
-        "pagePath": "pages/stats/stats",
-        "text": "统计",
-        "iconPath": "static/icons/stats.png",
-        "selectedIconPath": "static/icons/stats-active.png"
-      },
-      {
-        "pagePath": "pages/ai/ai",
-        "text": "AI",
-        "iconPath": "static/icons/ai.png",
-        "selectedIconPath": "static/icons/ai-active.png"
-      }
-    ]
   }
 }
