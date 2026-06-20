@@ -2,6 +2,7 @@ package com.studycompanion.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.studycompanion.common.AiClient;
+import com.studycompanion.common.AiResponseParser;
 import com.studycompanion.common.BusinessException;
 import com.studycompanion.common.ErrorCode;
 import com.studycompanion.dto.StartTimerRequest;
@@ -326,15 +327,9 @@ public class StudyRecordServiceImpl implements StudyRecordService {
         try {
             String result = aiClient.chat(systemPrompt, userMessage);
             
-            String trimmed = result.trim();
-            if (trimmed.startsWith("```")) {
-                trimmed = trimmed.replaceAll("```json\\s*", "").replaceAll("```\\s*", "");
-            }
-            
-            com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
-            Map<String, Object> jsonMap = mapper.readValue(trimmed, Map.class);
-            boolean allow = jsonMap.containsKey("allow") ? (Boolean) jsonMap.get("allow") : false;
-            String aiReason = jsonMap.containsKey("reason") ? (String) jsonMap.get("reason") : "";
+            AiResponseParser.AiJudgmentResult judgment = AiResponseParser.parseJudgment(result);
+            boolean allow = judgment.isAllow();
+            String aiReason = judgment.getReason();
             
             log.info("AI修改判断: userId={}, recordId={}, allow={}, reason={}", userId, recordId, allow, aiReason);
             

@@ -2,6 +2,7 @@ package com.studycompanion.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.studycompanion.common.AiClient;
+import com.studycompanion.common.AiResponseParser;
 import com.studycompanion.common.BusinessException;
 import com.studycompanion.common.ErrorCode;
 import com.studycompanion.dto.AiChatRequest;
@@ -136,14 +137,9 @@ public class AiServiceImpl implements AiService {
         // 解析 AI 返回的 JSON，格式化为可读文本
         String formattedResult;
         try {
-            String trimmed = result.trim();
-            if (trimmed.startsWith("```")) {
-                trimmed = trimmed.replaceAll("```json\\s*", "").replaceAll("```\\s*", "");
-            }
-            com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
-            Map<String, Object> jsonMap = mapper.readValue(trimmed, Map.class);
-            int level = jsonMap.containsKey("level") ? ((Number) jsonMap.get("level")).intValue() : 0;
-            String reason = jsonMap.containsKey("reason") ? (String) jsonMap.get("reason") : "未提供原因";
+            AiResponseParser.AiJudgmentResult judgment = AiResponseParser.parseJudgment(result);
+            int level = judgment.getLevel();
+            String reason = judgment.getReason().isEmpty() ? "未提供原因" : judgment.getReason();
             String[] levelDesc = {"", "非常不专注", "不太专注", "一般", "比较专注", "非常专注"};
             String levelText = level >= 1 && level <= 5 ? levelDesc[level] : "未知";
             formattedResult = String.format("专注度评级：%d/5（%s）\n\n%s", level, levelText, reason);

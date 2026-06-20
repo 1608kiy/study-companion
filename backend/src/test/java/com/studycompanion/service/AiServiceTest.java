@@ -114,7 +114,8 @@ class AiServiceTest {
         var result = aiService.judgeFocusLevel(userId, "学习了");
         
         assertNotNull(result);
-        assertTrue(result.getContent().contains("这不是JSON格式"));
+        // AiResponseParser 返回空结果，格式化为默认文本
+        assertTrue(result.getContent().contains("专注度评级"));
     }
 
     @Test

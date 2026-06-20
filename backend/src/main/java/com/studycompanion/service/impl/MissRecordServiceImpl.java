@@ -2,6 +2,7 @@ package com.studycompanion.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.studycompanion.common.AiClient;
+import com.studycompanion.common.AiResponseParser;
 import com.studycompanion.common.BusinessException;
 import com.studycompanion.common.ErrorCode;
 import com.studycompanion.dto.MissRecordRequest;
@@ -59,19 +60,13 @@ public class MissRecordServiceImpl implements MissRecordService {
             String result = aiClient.chat(systemPrompt, userMessage);
             
             // 解析 AI 返回的 JSON
-            String trimmed = result.trim();
-            if (trimmed.startsWith("```")) {
-                trimmed = trimmed.replaceAll("```json\\s*", "").replaceAll("```\\s*", "");
-            }
-            
-            com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
-            Map<String, Object> jsonMap = mapper.readValue(trimmed, Map.class);
-            boolean allow = jsonMap.containsKey("allow") ? (Boolean) jsonMap.get("allow") : false;
+            AiResponseParser.AiJudgmentResult judgment = AiResponseParser.parseJudgment(result);
+            boolean allow = judgment.isAllow();
             
             missRecord.setAiAllowReplenish(allow ? 1 : 0);
             
             // 保存 AI 判断原因
-            String reason = jsonMap.containsKey("reason") ? (String) jsonMap.get("reason") : "";
+            String reason = judgment.getReason();
             if (reason != null && !reason.isEmpty()) {
                 missRecord.setReason(missRecord.getReason() + "\n[AI判断] " + reason);
             }
