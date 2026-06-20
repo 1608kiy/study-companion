@@ -1,5 +1,7 @@
 package com.studycompanion.controller;
 
+import com.studycompanion.common.BusinessException;
+import com.studycompanion.common.ErrorCode;
 import com.studycompanion.common.JwtUtil;
 import com.studycompanion.common.Result;
 import com.studycompanion.dto.CreateDiaryRequest;
@@ -67,23 +69,19 @@ public class DiaryController {
         return Result.success("创建成功", diary);
     }
 
-    @Operation(summary = "更新日记")
+    @Operation(summary = "更新日记（已禁用 - 日记不可编辑）")
     @PutMapping("/{diaryId}")
     public Result<DiaryVO> updateDiary(HttpServletRequest request,
                                        @PathVariable Long diaryId,
                                        @RequestBody UpdateDiaryRequest body) {
-        Long userId = getUserIdFromRequest(request);
-        DiaryVO diary = diaryService.updateDiary(userId, diaryId, body);
-        return Result.success("更新成功", diary);
+        throw new BusinessException(ErrorCode.DIARY_IMMUTABLE, "日记不可编辑，保证数据真实性");
     }
 
-    @Operation(summary = "删除日记")
+    @Operation(summary = "删除日记（已禁用 - 日记不可删除）")
     @DeleteMapping("/{diaryId}")
     public Result<Void> deleteDiary(HttpServletRequest request,
                                     @PathVariable Long diaryId) {
-        Long userId = getUserIdFromRequest(request);
-        diaryService.deleteDiary(userId, diaryId);
-        return Result.success("删除成功", null);
+        throw new BusinessException(ErrorCode.DIARY_IMMUTABLE, "日记不可删除，保证数据真实性");
     }
 
     @Operation(summary = "AI生成日记")

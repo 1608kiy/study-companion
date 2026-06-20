@@ -32,7 +32,7 @@ public interface StudyRecordService {
 
     StudyRecordVO updateStudyRecord(Long userId, Long recordId, UpdateStudyRecordRequest request);
 
-    void deleteStudyRecord(Long userId, Long recordId);
+    void deleteStudyRecord(Long userId, Long recordId, String approveToken);
 
     StudyStatsVO getStudyStats(Long userId);
 }

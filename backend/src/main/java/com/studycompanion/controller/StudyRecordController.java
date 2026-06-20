@@ -121,12 +121,13 @@ public class StudyRecordController {
         return Result.success("更新成功", record);
     }
 
-    @Operation(summary = "删除学习记录")
+    @Operation(summary = "删除学习记录（需AI审批）")
     @DeleteMapping("/{recordId}")
     public Result<Void> deleteStudyRecord(HttpServletRequest request,
-                                          @PathVariable Long recordId) {
+                                          @PathVariable Long recordId,
+                                          @RequestParam String approveToken) {
         Long userId = getUserIdFromRequest(request);
-        studyRecordService.deleteStudyRecord(userId, recordId);
+        studyRecordService.deleteStudyRecord(userId, recordId, approveToken);
         return Result.success("删除成功", null);
     }
 

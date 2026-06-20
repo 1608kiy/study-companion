@@ -34,8 +34,8 @@ export const studyRecordApi = {
   getList: (params) => get('/study-records', params),
   getPagedList: (params) => get('/study-records/paged', params),
   getById: (id) => get(`/study-records/${id}`),
+  aiJudge: (recordId, reason) => post(`/study-records/${recordId}/ai-judge`, { reason }),
   update: (id, data) => put(`/study-records/${id}`, data),
-  delete: (id) => del(`/study-records/${id}`),
   getStats: () => get('/study-records/stats')
 }
 
@@ -56,8 +56,6 @@ export const diaryApi = {
   getPagedList: (params) => get('/diaries/paged', params),
   getByDate: (date) => get(`/diaries/date/${date}`),
   create: (data) => post('/diaries', data),
-  update: (id, data) => put(`/diaries/${id}`, data),
-  delete: (id) => del(`/diaries/${id}`),
   generate: () => post('/diaries/generate'),
   regenerate: (id) => post(`/diaries/${id}/regenerate`)
 }

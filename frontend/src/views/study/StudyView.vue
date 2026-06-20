@@ -88,11 +88,7 @@
             <el-table-column prop="duration" label="时长(分钟)" width="100" />
             <el-table-column prop="startTime" label="开始时间" width="180" />
             <el-table-column prop="endTime" label="结束时间" width="180" />
-            <el-table-column label="操作" width="80">
-              <template #default="{ row }">
-                <el-button type="danger" text size="small" @click="deleteRecord(row)">删除</el-button>
-              </template>
-            </el-table-column>
+            <el-table-column label="备注" prop="remark" />
           </el-table>
         </el-card>
       </el-col>
@@ -258,25 +254,6 @@ const loadSubjects = async () => {
     subjects.value = res.data || []
   } catch (error) {
     console.error('获取科目列表失败:', error)
-  }
-}
-
-const deleteRecord = async (record) => {
-  try {
-    await ElMessageBox.confirm('确定要删除这条记录吗？', '确认', {
-      confirmButtonText: '确定',
-      cancelButtonText: '取消',
-      type: 'warning',
-    })
-    
-    await studyRecordApi.delete(record.id)
-    ElMessage.success('删除成功')
-    await refreshRecords()
-  } catch (error) {
-    if (error !== 'cancel') {
-      ElMessage.error('删除失败')
-      console.error('删除失败:', error)
-    }
   }
 }
 

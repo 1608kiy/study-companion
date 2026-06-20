@@ -87,4 +87,16 @@ public class StudyRecord extends BaseEntity {
      */
     @TableField("interruption_reason")
     private String interruptionReason;
+
+    /**
+     * AI是否允许修改 (0=不允许, 1=允许, null=未判断)
+     */
+    @TableField("ai_allow_modify")
+    private Integer aiAllowModify;
+
+    /**
+     * AI修改判断原因
+     */
+    @TableField("ai_modify_reason")
+    private String aiModifyReason;
 }

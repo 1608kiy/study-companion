@@ -259,6 +259,9 @@ public class StudyRecordServiceImpl implements StudyRecordService {
         return convertToVO(record);
     }
 
+    private static final String AI_APPROVE_PREFIX = "ai_approve:";
+    private static final long AI_APPROVE_EXPIRE_MINUTES = 10;
+
     @Override
     public Map<String, Object> aiJudgeModify(Long userId, Long recordId, String reason) {
         StudyRecord record = studyRecordMapper.selectById(recordId);
@@ -301,6 +304,15 @@ public class StudyRecordServiceImpl implements StudyRecordService {
             Map<String, Object> response = new HashMap<>();
             response.put("allow", allow);
             response.put("reason", aiReason);
+            
+            // 如果AI允许，生成审批token存入Redis
+            if (allow) {
+                String token = UUID.randomUUID().toString().replace("-", "");
+                String redisKey = AI_APPROVE_PREFIX + userId + ":" + recordId;
+                redisTemplate.opsForValue().set(redisKey, token, AI_APPROVE_EXPIRE_MINUTES, TimeUnit.MINUTES);
+                response.put("approveToken", token);
+            }
+            
             return response;
         } catch (Exception e) {
             log.error("AI修改判断失败，使用默认规则: {}", e.getMessage());
@@ -309,8 +321,29 @@ public class StudyRecordServiceImpl implements StudyRecordService {
             Map<String, Object> response = new HashMap<>();
             response.put("allow", allow);
             response.put("reason", allow ? "系统判断允许修改" : "系统判断不允许修改");
+            
+            if (allow) {
+                String token = UUID.randomUUID().toString().replace("-", "");
+                String redisKey = AI_APPROVE_PREFIX + userId + ":" + recordId;
+                redisTemplate.opsForValue().set(redisKey, token, AI_APPROVE_EXPIRE_MINUTES, TimeUnit.MINUTES);
+                response.put("approveToken", token);
+            }
+            
             return response;
         }
+    }
+
+    private void checkAiApproval(Long userId, Long recordId, String approveToken) {
+        if (approveToken == null || approveToken.isEmpty()) {
+            throw new BusinessException(ErrorCode.RECORD_MODIFY_NOT_ALLOWED, "请先通过AI审批");
+        }
+        String redisKey = AI_APPROVE_PREFIX + userId + ":" + recordId;
+        String storedToken = redisTemplate.opsForValue().get(redisKey);
+        if (storedToken == null || !storedToken.equals(approveToken)) {
+            throw new BusinessException(ErrorCode.RECORD_MODIFY_NOT_ALLOWED, "审批token无效或已过期");
+        }
+        // 使用后删除token（一次性）
+        redisTemplate.delete(redisKey);
     }
 
     @Override
@@ -319,6 +352,9 @@ public class StudyRecordServiceImpl implements StudyRecordService {
         if (record == null || !record.getUserId().equals(userId)) {
             throw new BusinessException(ErrorCode.RECORD_NOT_FOUND);
         }
+
+        // 检查AI审批token
+        checkAiApproval(userId, recordId, request.getApproveToken());
 
         if (request.getMood() != null) {
             record.setMood(request.getMood());
@@ -341,11 +377,13 @@ public class StudyRecordServiceImpl implements StudyRecordService {
     }
 
     @Override
-    public void deleteStudyRecord(Long userId, Long recordId) {
+    public void deleteStudyRecord(Long userId, Long recordId, String approveToken) {
         StudyRecord record = studyRecordMapper.selectById(recordId);
         if (record == null || !record.getUserId().equals(userId)) {
             throw new BusinessException(ErrorCode.RECORD_NOT_FOUND);
         }
+        // 检查AI审批token
+        checkAiApproval(userId, recordId, approveToken);
         studyRecordMapper.deleteById(recordId);
     }
 

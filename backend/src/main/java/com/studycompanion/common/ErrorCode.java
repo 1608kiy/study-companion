@@ -40,9 +40,10 @@ public enum ErrorCode {
     DIARY_NOT_FOUND(5001, "日记不存在"),
     DIARY_ALREADY_EXISTS(5002, "今日日记已存在"),
     DIARY_MODIFY_NOT_ALLOWED(5003, "日记提交后不可修改"),
-    DIARY_AI_COUNT_EXCEEDED(5004, "AI生成次数已达上限"),
-    DIARY_IMAGE_LIMIT_EXCEEDED(5005, "图片数量超限"),
-    DIARY_IMAGE_SIZE_EXCEEDED(5006, "图片大小超限"),
+    DIARY_IMMUTABLE(5004, "日记不可编辑删除，保证数据真实性"),
+    DIARY_AI_COUNT_EXCEEDED(5005, "AI生成次数已达上限"),
+    DIARY_IMAGE_LIMIT_EXCEEDED(5006, "图片数量超限"),
+    DIARY_IMAGE_SIZE_EXCEEDED(5007, "图片大小超限"),
 
     // 目标模块 6xxx
     GOAL_NOT_FOUND(6001, "目标不存在"),

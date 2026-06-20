@@ -14,4 +14,6 @@ public class UpdateStudyRecordRequest {
     private Integer interruptionCount;
 
     private String interruptionReason;
+
+    private String approveToken;
 }

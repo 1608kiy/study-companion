@@ -22,4 +22,6 @@ public class StudyRecordVO {
     private Integer interruptionCount;
     private String interruptionReason;
     private LocalDateTime createTime;
+    private Boolean aiAllowModify;
+    private String aiModifyReason;
 }

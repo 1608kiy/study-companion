@@ -32,15 +32,13 @@
           <template #header>
             <div class="card-header">
               <span class="card-title">{{ formatDiaryDate(currentDiary.diaryDate) }}</span>
-              <el-dropdown @command="handleCommand">
+              <el-dropdown @command="handleCommand" v-if="currentDiary.aiGenerateCount < 3">
                 <el-icon class="more-btn"><MoreFilled /></el-icon>
                 <template #dropdown>
                   <el-dropdown-menu>
-                    <el-dropdown-item command="edit">编辑</el-dropdown-item>
-                    <el-dropdown-item command="regenerate" :disabled="currentDiary.aiGenerateCount >= 3">
+                    <el-dropdown-item command="regenerate">
                       AI重新生成
                     </el-dropdown-item>
-                    <el-dropdown-item command="delete" divided>删除</el-dropdown-item>
                   </el-dropdown-menu>
                 </template>
               </el-dropdown>
@@ -213,11 +211,7 @@ const submitDiary = async () => {
 }
 
 const handleCommand = async (command) => {
-  if (command === 'edit') {
-    isEdit.value = true
-    diaryForm.value = { ...currentDiary.value }
-    dialogVisible.value = true
-  } else if (command === 'regenerate') {
+  if (command === 'regenerate') {
     try {
       await ElMessageBox.confirm('确定要重新生成日记吗？', '确认', {
         confirmButtonText: '确定',
@@ -230,22 +224,6 @@ const handleCommand = async (command) => {
     } catch (error) {
       if (error !== 'cancel') {
         console.error('重新生成失败:', error)
-      }
-    }
-  } else if (command === 'delete') {
-    try {
-      await ElMessageBox.confirm('确定要删除这篇日记吗？', '确认', {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
-        type: 'warning',
-      })
-      await diaryApi.delete(currentDiary.value.id)
-      ElMessage.success('删除成功')
-      currentDiary.value = null
-      await loadDiaryList()
-    } catch (error) {
-      if (error !== 'cancel') {
-        console.error('删除失败:', error)
       }
     }
   }

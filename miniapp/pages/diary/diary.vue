@@ -27,9 +27,8 @@
         <view v-if="currentDiary" class="card">
           <view class="diary-header">
             <text class="diary-date">{{ currentDiary.diaryDate }}</text>
-            <view class="diary-actions">
-              <text class="action-btn" @click="handleEdit">编辑</text>
-              <text class="action-btn delete" @click="handleDelete">删除</text>
+            <view class="diary-actions" v-if="currentDiary.aiGenerated && currentDiary.aiGenerateCount < 3">
+              <text class="action-btn" @click="handleAIGenerate">重新生成</text>
             </view>
           </view>
           <view class="diary-content">
@@ -58,7 +57,7 @@
     <view v-if="showWriteDialog" class="dialog-mask" @click="closeDialog">
       <view class="dialog-content" @click.stop>
         <view class="dialog-header">
-          <text class="dialog-title">{{ isEdit ? '编辑日记' : '写日记' }}</text>
+          <text class="dialog-title">写日记</text>
           <text class="dialog-close" @click="closeDialog">✕</text>
         </view>
         <view class="dialog-body">
@@ -107,7 +106,7 @@
         <view class="dialog-footer">
           <button class="dialog-btn-cancel" @click="closeDialog">取消</button>
           <button class="dialog-btn-confirm" @click="submitDiary" :loading="submitting">
-            {{ isEdit ? '保存' : '创建' }}
+            创建
           </button>
         </view>
       </view>
@@ -128,7 +127,6 @@ const submitting = ref(false)
 const currentDiary = ref(null)
 const currentDate = ref(new Date().toISOString().split('T')[0])
 const showWriteDialog = ref(false)
-const isEdit = ref(false)
 
 const diaryForm = ref({
   content: '',
@@ -164,21 +162,7 @@ const loadDiary = async (date) => {
 }
 
 const handleWrite = () => {
-  isEdit.value = false
   diaryForm.value = { content: '', summary: '', plan: '', reflection: '', problems: '' }
-  showWriteDialog.value = true
-}
-
-const handleEdit = () => {
-  if (!currentDiary.value) return
-  isEdit.value = true
-  diaryForm.value = {
-    content: currentDiary.value.content || '',
-    summary: currentDiary.value.summary || '',
-    plan: currentDiary.value.plan || '',
-    reflection: currentDiary.value.reflection || '',
-    problems: currentDiary.value.problems || ''
-  }
   showWriteDialog.value = true
 }
 
@@ -194,13 +178,8 @@ const submitDiary = async () => {
   
   submitting.value = true
   try {
-    if (isEdit.value && currentDiary.value) {
-      await diaryApi.update(currentDiary.value.id, diaryForm.value)
-      uni.showToast({ title: '保存成功', icon: 'success' })
-    } else {
-      await diaryApi.create({ ...diaryForm.value, diaryDate: currentDate.value })
-      uni.showToast({ title: '创建成功', icon: 'success' })
-    }
+    await diaryApi.create({ ...diaryForm.value, diaryDate: currentDate.value })
+    uni.showToast({ title: '创建成功', icon: 'success' })
     closeDialog()
     await loadDiary(currentDate.value)
   } catch (error) {
@@ -208,24 +187,6 @@ const submitDiary = async () => {
   } finally {
     submitting.value = false
   }
-}
-
-const handleDelete = () => {
-  uni.showModal({
-    title: '确认删除',
-    content: '确定要删除这篇日记吗？',
-    success: async (res) => {
-      if (res.confirm && currentDiary.value) {
-        try {
-          await diaryApi.delete(currentDiary.value.id)
-          currentDiary.value = null
-          uni.showToast({ title: '删除成功', icon: 'success' })
-        } catch (error) {
-          uni.showToast({ title: error.message || '删除失败', icon: 'none' })
-        }
-      }
-    }
-  })
 }
 
 const handleAIGenerate = async () => {
