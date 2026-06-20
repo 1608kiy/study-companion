@@ -62,9 +62,18 @@ const form = ref({
   nickname: ''
 })
 
+const validateEmail = (email) => {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
+}
+
 const handleRegister = async () => {
   if (!form.value.email || !form.value.password) {
     uni.showToast({ title: '请输入邮箱和密码', icon: 'none' })
+    return
+  }
+  
+  if (!validateEmail(form.value.email)) {
+    uni.showToast({ title: '请输入正确的邮箱格式', icon: 'none' })
     return
   }
   
@@ -81,16 +90,16 @@ const handleRegister = async () => {
   loading.value = true
   try {
     await userStore.register({
-      email: form.value.email,
+      email: form.value.email.trim(),
       password: form.value.password,
-      nickname: form.value.nickname || undefined
+      nickname: form.value.nickname?.trim() || undefined
     })
     uni.showToast({ title: '注册成功', icon: 'success' })
     setTimeout(() => {
       uni.switchTab({ url: '/pages/home/home' })
     }, 1000)
   } catch (error) {
-    console.error('注册失败:', error)
+    uni.showToast({ title: error.message || '注册失败', icon: 'none' })
   } finally {
     loading.value = false
   }

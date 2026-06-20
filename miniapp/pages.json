@@ -47,6 +47,12 @@
       "style": {
         "navigationBarTitleText": "注册"
       }
+    },
+    {
+      "path": "pages/subjects/subjects",
+      "style": {
+        "navigationBarTitleText": "科目管理"
+      }
     }
   ],
   "globalStyle": {
@@ -54,5 +60,33 @@
     "navigationBarTitleText": "智学伴",
     "navigationBarBackgroundColor": "#ffffff",
     "backgroundColor": "#f8fafc"
+  },
+  "tabBar": {
+    "color": "#64748b",
+    "selectedColor": "#6366f1",
+    "backgroundColor": "#ffffff",
+    "borderStyle": "black",
+    "list": [
+      {
+        "pagePath": "pages/home/home",
+        "text": "首页"
+      },
+      {
+        "pagePath": "pages/study/study",
+        "text": "学习"
+      },
+      {
+        "pagePath": "pages/diary/diary",
+        "text": "日记"
+      },
+      {
+        "pagePath": "pages/stats/stats",
+        "text": "统计"
+      },
+      {
+        "pagePath": "pages/ai/ai",
+        "text": "AI"
+      }
+    ]
   }
 }

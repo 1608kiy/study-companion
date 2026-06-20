@@ -1,7 +1,9 @@
 <template>
   <view class="login-container">
     <view class="login-header">
-      <image class="logo" src="/static/icons/logo.png" mode="aspectFit" />
+      <view class="logo-placeholder">
+        <text class="logo-icon">📚</text>
+      </view>
       <text class="title">智学伴</text>
       <text class="subtitle">记录努力，看见进步</text>
     </view>
@@ -45,9 +47,23 @@ const form = ref({
   password: ''
 })
 
+const validateEmail = (email) => {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
+}
+
 const handleLogin = async () => {
   if (!form.value.email || !form.value.password) {
     uni.showToast({ title: '请输入邮箱和密码', icon: 'none' })
+    return
+  }
+  
+  if (!validateEmail(form.value.email)) {
+    uni.showToast({ title: '请输入正确的邮箱格式', icon: 'none' })
+    return
+  }
+  
+  if (form.value.password.length < 6) {
+    uni.showToast({ title: '密码至少6位', icon: 'none' })
     return
   }
   
@@ -59,7 +75,7 @@ const handleLogin = async () => {
       uni.switchTab({ url: '/pages/home/home' })
     }, 1000)
   } catch (error) {
-    console.error('登录失败:', error)
+    uni.showToast({ title: error.message || '登录失败', icon: 'none' })
   } finally {
     loading.value = false
   }
@@ -82,10 +98,19 @@ const goRegister = () => {
   margin-bottom: 80rpx;
 }
 
-.logo {
+.logo-placeholder {
   width: 160rpx;
   height: 160rpx;
-  margin-bottom: 20rpx;
+  margin: 0 auto 20rpx;
+  background: #eef2ff;
+  border-radius: 40rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.logo-icon {
+  font-size: 80rpx;
 }
 
 .title {

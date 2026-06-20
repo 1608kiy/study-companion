@@ -78,13 +78,48 @@ const form = ref({
   monthlyGoal: 3600
 })
 
+const validateForm = () => {
+  if (!form.value.nickname?.trim()) {
+    uni.showToast({ title: '请输入昵称', icon: 'none' })
+    return false
+  }
+  
+  const daily = Number(form.value.dailyGoal)
+  const weekly = Number(form.value.weeklyGoal)
+  const monthly = Number(form.value.monthlyGoal)
+  
+  if (isNaN(daily) || daily < 1 || daily > 1440) {
+    uni.showToast({ title: '每日目标应在1-1440分钟之间', icon: 'none' })
+    return false
+  }
+  
+  if (isNaN(weekly) || weekly < 1 || weekly > 10080) {
+    uni.showToast({ title: '每周目标应在1-10080分钟之间', icon: 'none' })
+    return false
+  }
+  
+  if (isNaN(monthly) || monthly < 1 || monthly > 43200) {
+    uni.showToast({ title: '每月目标应在1-43200分钟之间', icon: 'none' })
+    return false
+  }
+  
+  return true
+}
+
 const handleSave = async () => {
+  if (!validateForm()) return
+  
   saving.value = true
   try {
-    await userStore.updateProfile(form.value)
+    await userStore.updateProfile({
+      nickname: form.value.nickname.trim(),
+      dailyGoal: Number(form.value.dailyGoal),
+      weeklyGoal: Number(form.value.weeklyGoal),
+      monthlyGoal: Number(form.value.monthlyGoal)
+    })
     uni.showToast({ title: '保存成功', icon: 'success' })
   } catch (error) {
-    console.error('保存失败:', error)
+    uni.showToast({ title: error.message || '保存失败', icon: 'none' })
   } finally {
     saving.value = false
   }
@@ -98,9 +133,9 @@ const handleLogout = () => {
       if (res.confirm) {
         try {
           await userStore.logout()
-          uni.navigateTo({ url: '/pages/login/login' })
+          uni.reLaunch({ url: '/pages/login/login' })
         } catch (error) {
-          console.error('退出失败:', error)
+          uni.showToast({ title: error.message || '退出失败', icon: 'none' })
         }
       }
     }
@@ -118,10 +153,10 @@ const handleDeleteAccount = () => {
         try {
           await userApi.deleteAccount()
           await userStore.logout()
-          uni.navigateTo({ url: '/pages/login/login' })
+          uni.reLaunch({ url: '/pages/login/login' })
           uni.showToast({ title: '账号已注销', icon: 'success' })
         } catch (error) {
-          console.error('注销失败:', error)
+          uni.showToast({ title: error.message || '注销失败', icon: 'none' })
         }
       }
     }

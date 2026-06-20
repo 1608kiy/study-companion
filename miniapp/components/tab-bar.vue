@@ -16,9 +16,6 @@
 </template>
 
 <script setup>
-import { ref, watch } from 'vue'
-import { onLoad, onShow } from '@dcloudio/uni-app'
-
 const props = defineProps({
   currentTab: {
     type: Number,
@@ -29,38 +26,16 @@ const props = defineProps({
 const emit = defineEmits(['change'])
 
 const tabList = [
-  {
-    pagePath: '/pages/home/home',
-    text: '首页',
-    icon: '🏠'
-  },
-  {
-    pagePath: '/pages/study/study',
-    text: '学习',
-    icon: '⏱️'
-  },
-  {
-    pagePath: '/pages/diary/diary',
-    text: '日记',
-    icon: '📝'
-  },
-  {
-    pagePath: '/pages/stats/stats',
-    text: '统计',
-    icon: '📊'
-  },
-  {
-    pagePath: '/pages/ai/ai',
-    text: 'AI',
-    icon: '🤖'
-  }
+  { pagePath: '/pages/home/home', text: '首页', icon: '🏠' },
+  { pagePath: '/pages/study/study', text: '学习', icon: '⏱️' },
+  { pagePath: '/pages/diary/diary', text: '日记', icon: '📝' },
+  { pagePath: '/pages/stats/stats', text: '统计', icon: '📊' },
+  { pagePath: '/pages/ai/ai', text: 'AI', icon: '🤖' }
 ]
 
 const switchTab = (index) => {
   const item = tabList[index]
-  uni.switchTab({
-    url: item.pagePath
-  })
+  uni.switchTab({ url: item.pagePath })
   emit('change', index)
 }
 </script>

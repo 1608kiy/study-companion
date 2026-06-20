@@ -1,92 +1,111 @@
 <template>
   <main-layout :showTabbar="true" :currentTab="1">
-    <view class="study-container">
-      <!-- 计时器区域 -->
-      <view class="timer-card">
-        <view class="timer-display">
-          <text class="timer-value">{{ studyStore.elapsedDisplay }}</text>
-          <text class="timer-subject">{{ studyStore.timerState.subjectName || '选择科目开始学习' }}</text>
-        </view>
-        
-        <!-- 科目选择 -->
-        <view class="subject-picker" v-if="!studyStore.isTimerRunning">
-          <picker :range="subjectNames" @change="onSubjectChange">
-            <view class="picker-value">
-              {{ selectedSubject ? selectedSubject.name : '请选择科目' }}
-            </view>
-          </picker>
-        </view>
-        
-        <!-- 控制按钮 -->
-        <view class="timer-controls">
-          <button 
-            v-if="!studyStore.isTimerRunning && !studyStore.isPaused"
-            class="btn-start" 
-            @click="handleStart"
-            :disabled="!selectedSubject"
-          >
-            开始学习
-          </button>
-          <button 
-            v-if="studyStore.isTimerRunning"
-            class="btn-pause" 
-            @click="handlePause"
-          >
-            暂停
-          </button>
-          <button 
-            v-if="studyStore.isPaused"
-            class="btn-resume" 
-            @click="handleResume"
-          >
-            继续
-          </button>
-          <button 
-            v-if="studyStore.isTimerRunning || studyStore.isPaused"
-            class="btn-stop" 
-            @click="handleStop"
-          >
-            停止
-          </button>
-        </view>
+    <scroll-view 
+      class="study-scroll" 
+      scroll-y
+      refresher-enabled
+      :refresher-triggered="refreshing"
+      @refresherrefresh="onRefresh"
+    >
+      <!-- 骨架屏 -->
+      <view v-if="loading" class="skeleton-wrapper">
+        <view class="skeleton-timer"></view>
+        <view class="skeleton-stats"></view>
+        <view class="skeleton-records"></view>
       </view>
       
-      <!-- 今日统计 -->
-      <view class="card stats-card">
-        <text class="card-title">今日统计</text>
-        <view class="stats-row">
-          <view class="stat-item">
-            <text class="stat-value">{{ todayStats.duration }}</text>
-            <text class="stat-label">总时长(分钟)</text>
+      <!-- 实际内容 -->
+      <view v-else class="study-container">
+        <!-- 计时器区域 -->
+        <view class="timer-card">
+          <view class="timer-display">
+            <text class="timer-value">{{ studyStore.elapsedDisplay }}</text>
+            <text class="timer-subject">{{ studyStore.timerState.subjectName || '选择科目开始学习' }}</text>
           </view>
-          <view class="stat-item">
-            <text class="stat-value">{{ todayStats.count }}</text>
-            <text class="stat-label">学习次数</text>
+          
+          <!-- 科目选择 -->
+          <view class="subject-picker" v-if="!studyStore.isTimerRunning">
+            <picker :range="subjectNames" @change="onSubjectChange">
+              <view class="picker-value">
+                {{ selectedSubject ? selectedSubject.name : '请选择科目' }}
+              </view>
+            </picker>
+          </view>
+          
+          <!-- 控制按钮 -->
+          <view class="timer-controls">
+            <button 
+              v-if="!studyStore.isTimerRunning && !studyStore.isPaused"
+              class="btn-start" 
+              @click="handleStart"
+              :disabled="!selectedSubject"
+            >
+              开始学习
+            </button>
+            <button 
+              v-if="studyStore.isTimerRunning"
+              class="btn-pause" 
+              @click="handlePause"
+            >
+              暂停
+            </button>
+            <button 
+              v-if="studyStore.isPaused"
+              class="btn-resume" 
+              @click="handleResume"
+            >
+              继续
+            </button>
+            <button 
+              v-if="studyStore.isTimerRunning || studyStore.isPaused"
+              class="btn-stop" 
+              @click="handleStop"
+            >
+              停止
+            </button>
           </view>
         </view>
-      </view>
-      
-      <!-- 今日记录 -->
-      <view class="card records-card">
-        <text class="card-title">今日记录</text>
-        <view v-if="studyRecords.length === 0" class="empty-tip">
-          <text>暂无学习记录</text>
-        </view>
-        <view v-else class="record-list">
-          <view 
-            v-for="record in studyRecords" 
-            :key="record.id" 
-            class="record-item"
-          >
-            <view class="record-info">
-              <text class="record-subject">{{ record.subjectName }}</text>
-              <text class="record-time">{{ record.startTime }} - {{ record.endTime }}</text>
+        
+        <!-- 今日统计 -->
+        <view class="card stats-card">
+          <text class="card-title">今日统计</text>
+          <view class="stats-row">
+            <view class="stat-item">
+              <text class="stat-value">{{ todayStats.duration }}</text>
+              <text class="stat-label">总时长(分钟)</text>
             </view>
-            <text class="record-duration">{{ record.duration }}分钟</text>
+            <view class="stat-item">
+              <text class="stat-value">{{ todayStats.count }}</text>
+              <text class="stat-label">学习次数</text>
+            </view>
+          </view>
+        </view>
+        
+        <!-- 今日记录 -->
+        <view class="card records-card">
+          <view class="card-header">
+            <text class="card-title">今日记录</text>
+            <text class="manage-subjects" @click="goSubjects">管理科目</text>
+          </view>
+          <view v-if="studyRecords.length === 0" class="empty-tip">
+            <text>暂无学习记录</text>
+          </view>
+          <view v-else class="record-list">
+            <view 
+              v-for="record in studyRecords" 
+              :key="record.id" 
+              class="record-item"
+            >
+              <view class="record-info">
+                <text class="record-subject">{{ record.subjectName }}</text>
+                <text class="record-time">{{ record.startTime }} - {{ record.endTime }}</text>
+              </view>
+              <text class="record-duration">{{ record.duration }}分钟</text>
+            </view>
           </view>
         </view>
       </view>
-    </view>
+    </scroll-view>
   </main-layout>
 </template>
 
@@ -98,6 +117,8 @@ import MainLayout from '../../components/main-layout.vue'
 
 const studyStore = useStudyStore()
 
+const loading = ref(true)
+const refreshing = ref(false)
 const subjects = ref([])
 const selectedSubject = ref(null)
 const studyRecords = ref([])
@@ -111,6 +132,10 @@ const onSubjectChange = (e) => {
   selectedSubject.value = subjects.value[index]
 }
 
+const goSubjects = () => {
+  uni.navigateTo({ url: '/pages/subjects/subjects' })
+}
+
 const handleStart = async () => {
   if (!selectedSubject.value) {
     uni.showToast({ title: '请先选择科目', icon: 'none' })
@@ -120,7 +145,7 @@ const handleStart = async () => {
     await studyStore.startTimer(selectedSubject.value.id)
     startTimerInterval()
   } catch (error) {
-    console.error('开始计时失败:', error)
+    uni.showToast({ title: error.message || '开始计时失败', icon: 'none' })
   }
 }
 
@@ -129,7 +154,7 @@ const handlePause = async () => {
     await studyStore.pauseTimer()
     stopTimerInterval()
   } catch (error) {
-    console.error('暂停失败:', error)
+    uni.showToast({ title: error.message || '暂停失败', icon: 'none' })
   }
 }
 
@@ -138,7 +163,7 @@ const handleResume = async () => {
     await studyStore.resumeTimer()
     startTimerInterval()
   } catch (error) {
-    console.error('恢复失败:', error)
+    uni.showToast({ title: error.message || '恢复失败', icon: 'none' })
   }
 }
 
@@ -154,7 +179,7 @@ const handleStop = () => {
           await loadTodayRecords()
           uni.showToast({ title: '计时结束', icon: 'success' })
         } catch (error) {
-          console.error('停止失败:', error)
+          uni.showToast({ title: error.message || '停止失败', icon: 'none' })
         }
       }
     }
@@ -180,7 +205,7 @@ const loadSubjects = async () => {
     const res = await subjectApi.getList()
     subjects.value = res.data || []
   } catch (error) {
-    console.error('获取科目失败:', error)
+    uni.showToast({ title: '获取科目失败', icon: 'none' })
   }
 }
 
@@ -194,20 +219,38 @@ const loadTodayRecords = async () => {
       count: studyRecords.value.length
     }
   } catch (error) {
-    console.error('获取记录失败:', error)
+    uni.showToast({ title: '获取记录失败', icon: 'none' })
   }
 }
 
-onMounted(async () => {
-  await Promise.all([
-    loadSubjects(),
-    loadTodayRecords(),
-    studyStore.getTimerState()
-  ])
-  
-  if (studyStore.isTimerRunning) {
-    startTimerInterval()
+const loadData = async () => {
+  loading.value = true
+  try {
+    await Promise.all([
+      loadSubjects(),
+      loadTodayRecords(),
+      studyStore.getTimerState()
+    ])
+    
+    if (studyStore.isTimerRunning) {
+      startTimerInterval()
+    }
+  } finally {
+    loading.value = false
   }
+}
+
+const onRefresh = async () => {
+  refreshing.value = true
+  try {
+    await loadData()
+  } finally {
+    refreshing.value = false
+  }
+}
+
+onMounted(() => {
+  loadData()
 })
 
 onUnmounted(() => {
@@ -216,12 +259,48 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
+.study-scroll {
+  height: 100vh;
+}
+
 .study-container {
   padding: 20rpx;
   background: #f8fafc;
   min-height: 100vh;
 }
 
+/* 骨架屏 */
+.skeleton-wrapper {
+  padding: 20rpx;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.skeleton-timer {
+  height: 400rpx;
+  background: #e2e8f0;
+  border-radius: 24rpx;
+  margin-bottom: 20rpx;
+}
+
+.skeleton-stats {
+  height: 150rpx;
+  background: #e2e8f0;
+  border-radius: 16rpx;
+  margin-bottom: 20rpx;
+}
+
+.skeleton-records {
+  height: 300rpx;
+  background: #e2e8f0;
+  border-radius: 16rpx;
+}
+
+/* 计时器 */
 .timer-card {
   background: #fff;
   border-radius: 24rpx;
@@ -298,6 +377,7 @@ onUnmounted(() => {
   color: #fff;
 }
 
+/* 卡片 */
 .card {
   background: #fff;
   border-radius: 16rpx;
@@ -306,12 +386,22 @@ onUnmounted(() => {
   border: 1rpx solid #e2e8f0;
 }
 
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20rpx;
+}
+
 .card-title {
-  display: block;
   font-size: 30rpx;
   font-weight: 600;
   color: #1e293b;
-  margin-bottom: 20rpx;
+}
+
+.manage-subjects {
+  font-size: 24rpx;
+  color: #6366f1;
 }
 
 .stats-row {

@@ -1,5 +1,6 @@
 // API 请求封装
-const BASE_URL = '/api/v1'
+import { getConfig } from '../config'
+
 const TIMEOUT = 10000
 
 // 请求拦截器
@@ -21,34 +22,25 @@ const responseInterceptor = (response) => {
   // HTTP 状态码处理
   if (statusCode === 401) {
     uni.removeStorageSync('token')
-    uni.showToast({
-      title: '登录已过期，请重新登录',
-      icon: 'none'
-    })
+    uni.showToast({ title: '登录已过期，请重新登录', icon: 'none' })
     setTimeout(() => {
-      uni.navigateTo({ url: '/pages/login/login' })
+      uni.reLaunch({ url: '/pages/login/login' })
     }, 1500)
     return Promise.reject(new Error('未授权'))
   }
 
   if (statusCode !== 200) {
-    uni.showToast({
-      title: data.message || '请求失败',
-      icon: 'none'
-    })
-    return Promise.reject(new Error(data.message || '请求失败'))
+    uni.showToast({ title: data?.message || '请求失败', icon: 'none' })
+    return Promise.reject(new Error(data?.message || '请求失败'))
   }
 
   // 业务状态码处理
   if (data.code !== 200) {
-    uni.showToast({
-      title: data.message || '操作失败',
-      icon: 'none'
-    })
+    uni.showToast({ title: data.message || '操作失败', icon: 'none' })
     if (data.code === 401) {
       uni.removeStorageSync('token')
       setTimeout(() => {
-        uni.navigateTo({ url: '/pages/login/login' })
+        uni.reLaunch({ url: '/pages/login/login' })
       }, 1500)
     }
     return Promise.reject(new Error(data.message || '操作失败'))
@@ -59,8 +51,10 @@ const responseInterceptor = (response) => {
 
 // 封装 uni.request
 const request = (options) => {
+  const { baseUrl } = getConfig()
+  
   const config = {
-    url: `${BASE_URL}${options.url}`,
+    url: `${baseUrl}${options.url}`,
     method: options.method || 'GET',
     data: options.data || {},
     header: {
@@ -80,10 +74,7 @@ const request = (options) => {
         responseInterceptor(response).then(resolve).catch(reject)
       },
       fail: (error) => {
-        uni.showToast({
-          title: '网络错误',
-          icon: 'none'
-        })
+        uni.showToast({ title: '网络错误，请检查网络连接', icon: 'none' })
         reject(error)
       }
     })

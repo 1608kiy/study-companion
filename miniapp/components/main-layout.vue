@@ -8,8 +8,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
-import { onLoad, onShow } from '@dcloudio/uni-app'
+import { onMounted } from 'vue'
 import TabBar from './tab-bar.vue'
 
 const props = defineProps({
@@ -28,6 +27,13 @@ const emit = defineEmits(['tabchange'])
 const onTabChange = (index) => {
   emit('tabchange', index)
 }
+
+onMounted(() => {
+  // 隐藏原生 tabBar
+  if (props.showTabbar) {
+    uni.hideTabBar()
+  }
+})
 </script>
 
 <style scoped>

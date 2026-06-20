@@ -22,13 +22,39 @@
             <rich-text :nodes="renderMarkdown(msg.content)"></rich-text>
           </view>
         </view>
+        <view v-if="loading" class="message assistant">
+          <view class="message-avatar">
+            <text>AI</text>
+          </view>
+          <view class="message-bubble loading-bubble">
+            <text class="loading-text">思考中...</text>
+          </view>
+        </view>
       </scroll-view>
       
       <!-- 快捷操作 -->
       <view class="quick-actions">
-        <button class="action-btn" @click="handleWeeklyReport">周报</button>
-        <button class="action-btn" @click="handleMonthlyReport">月报</button>
-        <button class="action-btn" @click="handleFocusJudge">专注度</button>
+        <button 
+          class="action-btn" 
+          :class="{ disabled: loading }" 
+          @click="!loading && handleWeeklyReport()"
+        >
+          周报
+        </button>
+        <button 
+          class="action-btn" 
+          :class="{ disabled: loading }" 
+          @click="!loading && handleMonthlyReport()"
+        >
+          月报
+        </button>
+        <button 
+          class="action-btn" 
+          :class="{ disabled: loading }" 
+          @click="!loading && handleFocusJudge()"
+        >
+          专注度
+        </button>
       </view>
       
       <!-- 输入区域 -->
@@ -38,8 +64,14 @@
           class="chat-input" 
           placeholder="向AI助手提问..."
           @confirm="sendMessage"
+          :disabled="loading"
         />
-        <button class="btn-send" @click="sendMessage" :loading="loading">
+        <button 
+          class="btn-send" 
+          @click="sendMessage" 
+          :loading="loading"
+          :disabled="!inputMessage.trim() || loading"
+        >
           发送
         </button>
       </view>
@@ -69,7 +101,7 @@ const saveHistory = () => {
       .map(m => ({ role: m.role, content: m.content }))
     uni.setStorageSync(CHAT_HISTORY_KEY, JSON.stringify(historyToSave))
   } catch (e) {
-    // 忽略
+    console.error('保存聊天记录失败:', e)
   }
 }
 
@@ -84,7 +116,7 @@ const loadHistory = () => {
       }
     }
   } catch (e) {
-    // 忽略
+    console.error('加载聊天记录失败:', e)
   }
   return false
 }
@@ -145,7 +177,7 @@ const handleWeeklyReport = async () => {
     saveHistory()
     await scrollToBottom()
   } catch (error) {
-    uni.showToast({ title: '生成周报失败', icon: 'none' })
+    uni.showToast({ title: error.message || '生成周报失败', icon: 'none' })
   } finally {
     loading.value = false
   }
@@ -162,7 +194,7 @@ const handleMonthlyReport = async () => {
     saveHistory()
     await scrollToBottom()
   } catch (error) {
-    uni.showToast({ title: '生成月报失败', icon: 'none' })
+    uni.showToast({ title: error.message || '生成月报失败', icon: 'none' })
   } finally {
     loading.value = false
   }
@@ -179,7 +211,7 @@ const handleFocusJudge = async () => {
     saveHistory()
     await scrollToBottom()
   } catch (error) {
-    uni.showToast({ title: '专注度评估失败', icon: 'none' })
+    uni.showToast({ title: error.message || '专注度评估失败', icon: 'none' })
   } finally {
     loading.value = false
   }
@@ -254,6 +286,17 @@ onMounted(() => {
   color: #fff;
 }
 
+.loading-bubble {
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+}
+
+.loading-text {
+  font-size: 26rpx;
+  color: #64748b;
+}
+
 .quick-actions {
   display: flex;
   gap: 16rpx;
@@ -271,6 +314,11 @@ onMounted(() => {
   color: #6366f1;
   border-radius: 12rpx;
   border: 1rpx solid #e2e8f0;
+}
+
+.action-btn.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .input-area {
