@@ -1,80 +1,92 @@
 <template>
   <view class="page-container">
-    <!-- 个人信息 -->
-    <view class="card">
-      <text class="card-title">个人信息</text>
-      <view class="form-item">
-        <text class="form-label">昵称</text>
-        <input 
-          v-model="form.nickname" 
-          class="form-input" 
-          placeholder="请输入昵称"
-        />
-      </view>
+    <!-- 骨架屏 -->
+    <view v-if="loading" class="skeleton-wrapper">
+      <view class="skeleton-card"></view>
+      <view class="skeleton-card"></view>
+      <view class="skeleton-btn"></view>
+      <view class="skeleton-card"></view>
     </view>
     
-    <!-- 学习目标 -->
-    <view class="card">
-      <text class="card-title">学习目标</text>
-      <view class="form-item">
-        <text class="form-label">每日目标(分钟)</text>
-        <input 
-          v-model="form.dailyGoal" 
-          type="number" 
-          class="form-input" 
-          placeholder="120"
-        />
+    <!-- 实际内容 -->
+    <view v-else>
+      <!-- 个人信息 -->
+      <view class="card">
+        <text class="card-title">个人信息</text>
+        <view class="form-item">
+          <text class="form-label">昵称</text>
+          <input 
+            v-model="form.nickname" 
+            class="form-input" 
+            placeholder="请输入昵称"
+          />
+        </view>
       </view>
-      <view class="form-item">
-        <text class="form-label">每周目标(分钟)</text>
-        <input 
-          v-model="form.weeklyGoal" 
-          type="number" 
-          class="form-input" 
-          placeholder="840"
-        />
+      
+      <!-- 学习目标 -->
+      <view class="card">
+        <text class="card-title">学习目标</text>
+        <view class="form-item">
+          <text class="form-label">每日目标(分钟)</text>
+          <input 
+            v-model="form.dailyGoal" 
+            type="number" 
+            class="form-input" 
+            placeholder="120"
+          />
+        </view>
+        <view class="form-item">
+          <text class="form-label">每周目标(分钟)</text>
+          <input 
+            v-model="form.weeklyGoal" 
+            type="number" 
+            class="form-input" 
+            placeholder="840"
+          />
+        </view>
+        <view class="form-item">
+          <text class="form-label">每月目标(分钟)</text>
+          <input 
+            v-model="form.monthlyGoal" 
+            type="number" 
+            class="form-input" 
+            placeholder="3600"
+          />
+        </view>
       </view>
-      <view class="form-item">
-        <text class="form-label">每月目标(分钟)</text>
-        <input 
-          v-model="form.monthlyGoal" 
-          type="number" 
-          class="form-input" 
-          placeholder="3600"
-        />
-      </view>
-    </view>
-    
-    <!-- 保存按钮 -->
-    <button class="btn-primary" @click="handleSave" :loading="saving">
-      保存设置
-    </button>
-    
-    <!-- 账号操作 -->
-    <view class="card">
-      <text class="card-title">账号操作</text>
-      <button class="btn-secondary" style="margin-bottom: 16rpx;" @click="handleLogout">
-        退出登录
+      
+      <!-- 保存按钮 -->
+      <button class="btn-primary" @click="handleSave" :loading="saving">
+        保存设置
       </button>
-      <button class="btn-danger" @click="handleDeleteAccount">
-        注销账号
-      </button>
-    </view>
-    
-    <!-- 版本信息 -->
-    <view class="card version-card" @click="showVersionInfo">
-      <text class="version-text">版本：v{{ currentVersion }}</text>
+      
+      <!-- 账号操作 -->
+      <view class="card">
+        <text class="card-title">账号操作</text>
+        <button class="btn-secondary" style="margin-bottom: 16rpx;" @click="handleLogout">
+          退出登录
+        </button>
+        <button class="btn-danger" @click="handleDeleteAccount">
+          注销账号
+        </button>
+      </view>
+      
+      <!-- 版本信息 -->
+      <view class="card version-card" @click="showVersionInfo">
+        <text class="version-text">版本：v{{ currentVersion }}</text>
+      </view>
     </view>
   </view>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, watch, onMounted } from 'vue'
 import { useUserStore } from '../../store/user'
 import { userApi } from '../../api/modules'
 import { showVersionInfo, getCurrentVersion } from '../../utils/version'
 
 const userStore = useUserStore()
+const loading = ref(true)
 const saving = ref(false)
 const currentVersion = getCurrentVersion()
 
@@ -84,6 +96,18 @@ const form = ref({
   weeklyGoal: 840,
   monthlyGoal: 3600
 })
+
+// 监听 userInfo 变化，更新表单
+watch(() => userStore.userInfo, (newInfo) => {
+  if (newInfo) {
+    form.value = {
+      nickname: newInfo.nickname || '',
+      dailyGoal: newInfo.dailyGoal || 120,
+      weeklyGoal: newInfo.weeklyGoal || 840,
+      monthlyGoal: newInfo.monthlyGoal || 3600
+    }
+  }
+}, { immediate: true })
 
 const validateForm = () => {
   if (!form.value.nickname?.trim()) {
@@ -171,6 +195,7 @@ const handleDeleteAccount = () => {
 }
 
 onMounted(() => {
+  // 如果 userInfo 已经加载完成
   if (userStore.userInfo) {
     form.value = {
       nickname: userStore.userInfo.nickname || '',
@@ -179,14 +204,11 @@ onMounted(() => {
       monthlyGoal: userStore.userInfo.monthlyGoal || 3600
     }
   }
+  loading.value = false
 })
 </script>
 
 <style scoped>
-.form-item {
-  margin-bottom: 24rpx;
-}
-
 .version-card {
   text-align: center;
   padding: 24rpx;
@@ -195,5 +217,19 @@ onMounted(() => {
 .version-text {
   font-size: 24rpx;
   color: #6b7280;
+}
+
+.skeleton-card {
+  height: 200rpx;
+  background: #e2e8f0;
+  border-radius: 16rpx;
+  margin-bottom: 20rpx;
+}
+
+.skeleton-btn {
+  height: 88rpx;
+  background: #e2e8f0;
+  border-radius: 16rpx;
+  margin-bottom: 20rpx;
 }
 </style>

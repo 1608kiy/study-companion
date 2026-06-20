@@ -76,12 +76,12 @@
           <text class="card-title">今日统计</text>
           <view class="stats-row">
             <view class="stat-item">
-              <text class="stat-value">{{ todayStats.duration }}</text>
-              <text class="stat-label">总时长(分钟)</text>
+              <text class="stat-item-value">{{ todayStats.duration }}</text>
+              <text class="stat-item-label">总时长(分钟)</text>
             </view>
             <view class="stat-item">
-              <text class="stat-value">{{ todayStats.count }}</text>
-              <text class="stat-label">学习次数</text>
+              <text class="stat-item-value">{{ todayStats.count }}</text>
+              <text class="stat-item-label">学习次数</text>
             </view>
           </view>
         </view>
@@ -90,7 +90,7 @@
         <view class="card">
           <view class="card-header">
             <text class="card-title">今日记录</text>
-            <text class="manage-subjects" @click="goSubjects">管理科目</text>
+            <text class="manage-link" @click="goSubjects">管理科目</text>
           </view>
           <view v-if="studyRecords.length === 0" class="empty-state">
             <text class="empty-text">暂无学习记录</text>
@@ -268,7 +268,6 @@ onUnmounted(() => {
   height: 100vh;
 }
 
-/* 计时器 */
 .timer-card {
   text-align: center;
 }
@@ -282,7 +281,7 @@ onUnmounted(() => {
   font-size: 96rpx;
   font-weight: 700;
   color: #1e293b;
-  font-family: monospace;
+  font-family: 'Courier New', Courier, monospace;
 }
 
 .timer-subject {
@@ -297,8 +296,8 @@ onUnmounted(() => {
 }
 
 .picker-value {
-  height: 80rpx;
-  line-height: 80rpx;
+  height: 88rpx;
+  line-height: 88rpx;
   background: #f8fafc;
   border-radius: 12rpx;
   padding: 0 24rpx;
@@ -320,36 +319,6 @@ onUnmounted(() => {
   opacity: 0.5;
 }
 
-.btn-pause {
-  flex: 1;
-  height: 88rpx;
-  background: #f59e0b;
-  color: #fff;
-  border-radius: 16rpx;
-  font-size: 28rpx;
-  font-weight: 600;
-}
-
-.btn-resume {
-  flex: 1;
-  height: 88rpx;
-  background: #10b981;
-  color: #fff;
-  border-radius: 16rpx;
-  font-size: 28rpx;
-  font-weight: 600;
-}
-
-.btn-stop {
-  flex: 1;
-  height: 88rpx;
-  background: #ef4444;
-  color: #fff;
-  border-radius: 16rpx;
-  font-size: 28rpx;
-  font-weight: 600;
-}
-
 .hint-text {
   display: block;
   font-size: 24rpx;
@@ -366,6 +335,20 @@ onUnmounted(() => {
   border-radius: 12rpx;
 }
 
+.stat-item-value {
+  display: block;
+  font-size: 40rpx;
+  font-weight: 700;
+  color: #6366f1;
+}
+
+.stat-item-label {
+  display: block;
+  font-size: 22rpx;
+  color: #64748b;
+  margin-top: 8rpx;
+}
+
 .card-header {
   display: flex;
   justify-content: space-between;
@@ -373,7 +356,7 @@ onUnmounted(() => {
   margin-bottom: 20rpx;
 }
 
-.manage-subjects {
+.manage-link {
   font-size: 24rpx;
   color: #6366f1;
   padding: 16rpx;

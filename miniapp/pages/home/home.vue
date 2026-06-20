@@ -54,8 +54,7 @@
             </view>
             <button 
               v-if="!todayCheckedIn" 
-              class="btn-primary" 
-              style="width: 240rpx; height: 80rpx; line-height: 80rpx;"
+              class="btn-sm" 
               @click="handleCheckIn"
             >
               打卡
@@ -150,7 +149,7 @@ const loadCheckInStatus = async () => {
     const res = await checkInApi.getTodayStatus()
     checkInStatusData.value = res.data
   } catch (error) {
-    console.error('获取打卡状态失败:', error)
+    uni.showToast({ title: '获取打卡状态失败', icon: 'none' })
   }
 }
 
@@ -194,12 +193,10 @@ const onRefresh = async () => {
   }
 }
 
-// 分享给好友
 const onShareAppMessage = () => {
   return generateCheckInShare(todayStats.value)
 }
 
-// 分享到朋友圈
 const onShareTimeline = () => {
   return generateCheckInShare(todayStats.value)
 }
@@ -233,7 +230,6 @@ onMounted(() => {
   color: #64748b;
 }
 
-/* 打卡 */
 .checkin-content {
   display: flex;
   flex-direction: column;
@@ -263,7 +259,6 @@ onMounted(() => {
   color: #64748b;
 }
 
-/* 趋势图 */
 .chart-container {
   height: 300rpx;
 }
@@ -296,7 +291,6 @@ onMounted(() => {
   color: #64748b;
 }
 
-/* 设置入口 */
 .settings-entry {
   display: flex;
   align-items: center;
@@ -308,12 +302,15 @@ onMounted(() => {
   margin-top: 20rpx;
 }
 
+.settings-entry:active {
+  background: #f8fafc;
+}
+
 .settings-entry text {
   font-size: 28rpx;
   color: #6366f1;
 }
 
-/* 骨架屏 */
 .skeleton-welcome {
   height: 80rpx;
   background: #e2e8f0;

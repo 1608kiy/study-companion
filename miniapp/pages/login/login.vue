@@ -14,7 +14,7 @@
           v-model="form.email" 
           type="text" 
           placeholder="请输入邮箱"
-          class="input"
+          class="form-input"
         />
       </view>
       <view class="form-item">
@@ -22,10 +22,10 @@
           v-model="form.password" 
           type="password" 
           placeholder="请输入密码"
-          class="input"
+          class="form-input"
         />
       </view>
-      <button class="btn-login" @click="handleLogin" :loading="loading">
+      <button class="btn-primary" @click="handleLogin" :loading="loading">
         登录
       </button>
       <view class="register-link" @click="goRegister">
@@ -131,35 +131,6 @@ const goRegister = () => {
   background: #fff;
   border-radius: 24rpx;
   padding: 40rpx;
-}
-
-.form-item {
-  margin-bottom: 30rpx;
-}
-
-.input {
-  width: 100%;
-  height: 88rpx;
-  background: #f8fafc;
-  border-radius: 12rpx;
-  padding: 0 24rpx;
-  font-size: 28rpx;
-  border: 1rpx solid #e2e8f0;
-}
-
-.btn-login {
-  width: 100%;
-  height: 88rpx;
-  background: #6366f1;
-  color: #fff;
-  border-radius: 12rpx;
-  font-size: 30rpx;
-  font-weight: 600;
-  margin-top: 20rpx;
-}
-
-.btn-login:active {
-  background: #4f46e5;
 }
 
 .register-link {

@@ -1,6 +1,9 @@
 <template>
   <view class="register-container">
     <view class="register-header">
+      <view class="logo-placeholder">
+        <text class="logo-icon">📚</text>
+      </view>
       <text class="title">注册账号</text>
       <text class="subtitle">开始你的学习之旅</text>
     </view>
@@ -11,7 +14,7 @@
           v-model="form.email" 
           type="text" 
           placeholder="请输入邮箱"
-          class="input"
+          class="form-input"
         />
       </view>
       <view class="form-item">
@@ -19,7 +22,7 @@
           v-model="form.password" 
           type="password" 
           placeholder="请输入密码（至少6位）"
-          class="input"
+          class="form-input"
         />
       </view>
       <view class="form-item">
@@ -27,7 +30,7 @@
           v-model="form.confirmPassword" 
           type="password" 
           placeholder="请确认密码"
-          class="input"
+          class="form-input"
         />
       </view>
       <view class="form-item">
@@ -35,10 +38,10 @@
           v-model="form.nickname" 
           type="text" 
           placeholder="请输入昵称（可选）"
-          class="input"
+          class="form-input"
         />
       </view>
-      <button class="btn-register" @click="handleRegister" :loading="loading">
+      <button class="btn-primary" @click="handleRegister" :loading="loading">
         注册
       </button>
       <view class="login-link" @click="goLogin">
@@ -106,7 +109,7 @@ const handleRegister = async () => {
 }
 
 const goLogin = () => {
-  uni.navigateBack()
+  uni.navigateBack({ fail: () => uni.switchTab({ url: '/pages/home/home' }) })
 }
 </script>
 
@@ -119,7 +122,22 @@ const goLogin = () => {
 
 .register-header {
   text-align: center;
-  margin-bottom: 60rpx;
+  margin-bottom: 80rpx;
+}
+
+.logo-placeholder {
+  width: 160rpx;
+  height: 160rpx;
+  margin: 0 auto 20rpx;
+  background: #eef2ff;
+  border-radius: 40rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.logo-icon {
+  font-size: 80rpx;
 }
 
 .title {
@@ -140,35 +158,6 @@ const goLogin = () => {
   background: #fff;
   border-radius: 24rpx;
   padding: 40rpx;
-}
-
-.form-item {
-  margin-bottom: 30rpx;
-}
-
-.input {
-  width: 100%;
-  height: 88rpx;
-  background: #f8fafc;
-  border-radius: 12rpx;
-  padding: 0 24rpx;
-  font-size: 28rpx;
-  border: 1rpx solid #e2e8f0;
-}
-
-.btn-register {
-  width: 100%;
-  height: 88rpx;
-  background: #6366f1;
-  color: #fff;
-  border-radius: 12rpx;
-  font-size: 30rpx;
-  font-weight: 600;
-  margin-top: 20rpx;
-}
-
-.btn-register:active {
-  background: #4f46e5;
 }
 
 .login-link {

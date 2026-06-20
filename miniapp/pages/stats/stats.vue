@@ -128,10 +128,7 @@ const loadSubjectStats = async () => {
   try {
     const res = await studyRecordApi.getStats()
     const subjectStats = res.data?.subjectStats || {}
-    subjectData.value = Object.entries(subjectStats).map(([name, value]) => ({
-      name,
-      value
-    }))
+    subjectData.value = Object.entries(subjectStats).map(([name, value]) => ({ name, value }))
   } catch (error) {
     uni.showToast({ title: '获取科目统计失败', icon: 'none' })
   }
@@ -140,10 +137,7 @@ const loadSubjectStats = async () => {
 const loadData = async () => {
   loading.value = true
   try {
-    await Promise.all([
-      loadStats(),
-      loadSubjectStats()
-    ])
+    await Promise.all([loadStats(), loadSubjectStats()])
   } finally {
     loading.value = false
   }
@@ -172,7 +166,6 @@ onMounted(() => {
   height: 100vh;
 }
 
-/* 科目分布 */
 .subject-list {
   display: flex;
   flex-direction: column;
@@ -214,7 +207,6 @@ onMounted(() => {
   flex-shrink: 0;
 }
 
-/* 骨架屏 */
 .skeleton-month {
   height: 80rpx;
   background: #e2e8f0;

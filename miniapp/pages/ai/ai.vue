@@ -1,6 +1,6 @@
 <template>
   <main-layout :showTabbar="true" :currentTab="4">
-    <view class="ai-container">
+    <view class="ai-page">
       <!-- 聊天消息 -->
       <scroll-view 
         class="chat-messages" 
@@ -32,48 +32,51 @@
         </view>
       </scroll-view>
       
-      <!-- 快捷操作 -->
-      <view class="quick-actions">
-        <button 
-          class="action-btn" 
-          :class="{ disabled: loading }" 
-          @click="!loading && handleWeeklyReport()"
-        >
-          📊 周报
-        </button>
-        <button 
-          class="action-btn" 
-          :class="{ disabled: loading }" 
-          @click="!loading && handleMonthlyReport()"
-        >
-          📈 月报
-        </button>
-        <button 
-          class="action-btn" 
-          :class="{ disabled: loading }" 
-          @click="!loading && handleFocusJudge()"
-        >
-          🎯 专注度
-        </button>
-      </view>
-      
-      <!-- 输入区域 -->
-      <view class="input-area">
-        <input 
-          v-model="inputMessage" 
-          class="chat-input" 
-          placeholder="向AI助手提问..."
-          @confirm="sendMessage"
-          :disabled="loading"
-        />
-        <button 
-          class="btn-send" 
-          @click="sendMessage" 
-          :loading="loading"
-          :disabled="!inputMessage.trim() || loading"
-        >
-          发送
-        </button>
+      <!-- 底部区域 -->
+      <view class="bottom-area">
+        <!-- 快捷操作 -->
+        <view class="quick-actions">
+          <button 
+            class="action-btn-item" 
+            :class="{ disabled: loading }" 
+            @click="!loading && handleWeeklyReport()"
+          >
+            📊 周报
+          </button>
+          <button 
+            class="action-btn-item" 
+            :class="{ disabled: loading }" 
+            @click="!loading && handleMonthlyReport()"
+          >
+            📈 月报
+          </button>
+          <button 
+            class="action-btn-item" 
+            :class="{ disabled: loading }" 
+            @click="!loading && handleFocusJudge()"
+          >
+            🎯 专注度
+          </button>
+        </view>
+        
+        <!-- 输入区域 -->
+        <view class="input-area">
+          <input 
+            v-model="inputMessage" 
+            class="chat-input" 
+            placeholder="向AI助手提问..."
+            @confirm="sendMessage"
+            :disabled="loading"
+          />
+          <button 
+            class="btn-send" 
+            @click="sendMessage" 
+            :loading="loading"
+            :disabled="!inputMessage.trim() || loading"
+          >
+            发送
+          </button>
+        </view>
       </view>
     </view>
   </main-layout>
@@ -218,7 +221,6 @@ const handleFocusJudge = async () => {
   }
 }
 
-// 分享给好友
 const onShareAppMessage = () => {
   return {
     title: '智学伴 AI 助手 - 智能学习分析',
@@ -226,7 +228,6 @@ const onShareAppMessage = () => {
   }
 }
 
-// 分享到朋友圈
 const onShareTimeline = () => {
   return {
     title: '智学伴 AI 助手 - 智能学习分析',
@@ -248,7 +249,7 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-.ai-container {
+.ai-page {
   display: flex;
   flex-direction: column;
   height: 100vh;
@@ -258,8 +259,7 @@ onMounted(async () => {
 .chat-messages {
   flex: 1;
   padding: 20rpx;
-  /* 为 TabBar 和输入框留出空间 */
-  padding-bottom: calc(200rpx + env(safe-area-inset-bottom, 0px));
+  padding-bottom: 20rpx;
 }
 
 .message {
@@ -282,16 +282,12 @@ onMounted(async () => {
   font-size: 24rpx;
   font-weight: 600;
   flex-shrink: 0;
-}
-
-.message.user .message-avatar {
   background: #6366f1;
   color: #fff;
 }
 
 .message.assistant .message-avatar {
   background: #10b981;
-  color: #fff;
 }
 
 .message-bubble {
@@ -305,12 +301,12 @@ onMounted(async () => {
 .message.user .message-bubble {
   background: #6366f1;
   color: #fff;
+  border-color: #6366f1;
 }
 
 .loading-bubble {
   display: flex;
   align-items: center;
-  gap: 8rpx;
 }
 
 .loading-text {
@@ -318,45 +314,52 @@ onMounted(async () => {
   color: #64748b;
 }
 
+/* 底部区域 */
+.bottom-area {
+  background: #fff;
+  border-top: 1rpx solid #e2e8f0;
+  /* 安全区域 */
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
 .quick-actions {
   display: flex;
   gap: 16rpx;
   padding: 16rpx 20rpx;
-  background: #fff;
-  border-top: 1rpx solid #e2e8f0;
+  border-bottom: 1rpx solid #e2e8f0;
 }
 
-.action-btn {
+.action-btn-item {
   flex: 1;
   height: 80rpx;
   line-height: 80rpx;
   font-size: 26rpx;
   background: #f8fafc;
   color: #6366f1;
-  border-radius: 12rpx;
+  border-radius: 16rpx;
   border: 1rpx solid #e2e8f0;
+  font-weight: 600;
 }
 
-.action-btn.disabled {
+.action-btn-item:active {
+  background: #eef2ff;
+}
+
+.action-btn-item.disabled {
   opacity: 0.5;
-  cursor: not-allowed;
 }
 
 .input-area {
   display: flex;
   gap: 16rpx;
   padding: 20rpx;
-  background: #fff;
-  border-top: 1rpx solid #e2e8f0;
-  /* 为 TabBar 留出空间 */
-  padding-bottom: calc(20rpx + env(safe-area-inset-bottom, 0px));
 }
 
 .chat-input {
   flex: 1;
-  height: 80rpx;
+  height: 88rpx;
   background: #f8fafc;
-  border-radius: 12rpx;
+  border-radius: 16rpx;
   padding: 0 24rpx;
   font-size: 28rpx;
   border: 1rpx solid #e2e8f0;
@@ -364,11 +367,16 @@ onMounted(async () => {
 
 .btn-send {
   width: 120rpx;
-  height: 80rpx;
-  line-height: 80rpx;
+  height: 88rpx;
+  line-height: 88rpx;
   background: #6366f1;
   color: #fff;
-  border-radius: 12rpx;
+  border-radius: 16rpx;
   font-size: 28rpx;
+  font-weight: 600;
+}
+
+.btn-send:active {
+  background: #4f46e5;
 }
 </style>

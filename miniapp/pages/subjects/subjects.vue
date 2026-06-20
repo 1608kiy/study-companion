@@ -15,7 +15,7 @@
       <view v-if="subjects.length === 0" class="empty-state">
         <text class="empty-icon">📚</text>
         <text class="empty-text">暂无科目</text>
-        <button class="btn-primary" style="width: 240rpx; height: 80rpx; line-height: 80rpx;" @click="handleAdd">添加科目</button>
+        <button class="btn-sm" @click="handleAdd">添加科目</button>
       </view>
       
       <view 
@@ -65,8 +65,8 @@
           </view>
         </view>
         <view class="dialog-footer">
-          <button class="btn-cancel" @click="closeDialog">取消</button>
-          <button class="btn-confirm" @click="submitSubject" :loading="submitting">
+          <button class="dialog-btn-cancel" @click="closeDialog">取消</button>
+          <button class="dialog-btn-confirm" @click="submitSubject" :loading="submitting">
             {{ isEdit ? '保存' : '添加' }}
           </button>
         </view>
@@ -118,10 +118,7 @@ const handleAdd = () => {
 const handleEdit = (subject) => {
   isEdit.value = true
   editingId.value = subject.id
-  form.value = {
-    name: subject.name,
-    color: subject.color || '#6366f1'
-  }
+  form.value = { name: subject.name, color: subject.color || '#6366f1' }
   showDialog.value = true
 }
 
@@ -196,12 +193,15 @@ onMounted(() => {
   padding: 0 24rpx;
   background: #6366f1;
   color: #fff;
-  border-radius: 12rpx;
+  border-radius: 16rpx;
   font-size: 26rpx;
   font-weight: 600;
 }
 
-/* 科目列表 */
+.btn-add:active {
+  background: #4f46e5;
+}
+
 .subject-list {
   display: flex;
   flex-direction: column;
@@ -250,38 +250,18 @@ onMounted(() => {
 .color-item {
   width: 64rpx;
   height: 64rpx;
-  border-radius: 12rpx;
+  border-radius: 16rpx;
   border: 2rpx solid transparent;
+}
+
+.color-item:active {
+  opacity: 0.8;
 }
 
 .color-item.active {
   border-color: #1e293b;
 }
 
-.form-item {
-  margin-bottom: 24rpx;
-}
-
-.btn-cancel {
-  flex: 1;
-  height: 80rpx;
-  background: #f8fafc;
-  color: #64748b;
-  border-radius: 12rpx;
-  font-size: 28rpx;
-}
-
-.btn-confirm {
-  flex: 1;
-  height: 80rpx;
-  background: #6366f1;
-  color: #fff;
-  border-radius: 12rpx;
-  font-size: 28rpx;
-  font-weight: 600;
-}
-
-/* 骨架屏 */
 .skeleton-item {
   height: 100rpx;
   background: #e2e8f0;

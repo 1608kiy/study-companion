@@ -45,8 +45,8 @@
           <text class="empty-icon">📝</text>
           <text class="empty-text">这一天还没有日记</text>
           <view class="empty-actions">
-            <button class="btn-primary" style="width: 200rpx; height: 80rpx; line-height: 80rpx;" @click="handleWrite">写日记</button>
-            <button class="btn-secondary" style="width: 200rpx; height: 80rpx; line-height: 80rpx;" @click="handleAIGenerate" :loading="aiLoading">
+            <button class="btn-sm" @click="handleWrite">写日记</button>
+            <button class="btn-secondary" style="width: 200rpx; height: 80rpx; line-height: 80rpx; font-size: 28rpx;" @click="handleAIGenerate" :loading="aiLoading">
               AI 生成
             </button>
           </view>
@@ -105,8 +105,8 @@
           </view>
         </view>
         <view class="dialog-footer">
-          <button class="btn-cancel" @click="closeDialog">取消</button>
-          <button class="btn-confirm" @click="submitDiary" :loading="submitting">
+          <button class="dialog-btn-cancel" @click="closeDialog">取消</button>
+          <button class="dialog-btn-confirm" @click="submitDiary" :loading="submitting">
             {{ isEdit ? '保存' : '创建' }}
           </button>
         </view>
@@ -165,13 +165,7 @@ const loadDiary = async (date) => {
 
 const handleWrite = () => {
   isEdit.value = false
-  diaryForm.value = {
-    content: '',
-    summary: '',
-    plan: '',
-    reflection: '',
-    problems: ''
-  }
+  diaryForm.value = { content: '', summary: '', plan: '', reflection: '', problems: '' }
   showWriteDialog.value = true
 }
 
@@ -204,10 +198,7 @@ const submitDiary = async () => {
       await diaryApi.update(currentDiary.value.id, diaryForm.value)
       uni.showToast({ title: '保存成功', icon: 'success' })
     } else {
-      await diaryApi.create({
-        ...diaryForm.value,
-        diaryDate: currentDate.value
-      })
+      await diaryApi.create({ ...diaryForm.value, diaryDate: currentDate.value })
       uni.showToast({ title: '创建成功', icon: 'success' })
     }
     closeDialog()
@@ -320,30 +311,6 @@ onMounted(async () => {
   justify-content: center;
 }
 
-.form-item {
-  margin-bottom: 24rpx;
-}
-
-.btn-cancel {
-  flex: 1;
-  height: 80rpx;
-  background: #f8fafc;
-  color: #64748b;
-  border-radius: 12rpx;
-  font-size: 28rpx;
-}
-
-.btn-confirm {
-  flex: 1;
-  height: 80rpx;
-  background: #6366f1;
-  color: #fff;
-  border-radius: 12rpx;
-  font-size: 28rpx;
-  font-weight: 600;
-}
-
-/* 骨架屏 */
 .skeleton-card {
   height: 400rpx;
   background: #e2e8f0;

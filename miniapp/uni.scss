@@ -5,35 +5,42 @@ $primary-dark: #4f46e5;
 $primary-bg: #eef2ff;
 
 $success: #10b981;
-$success-dark: #047857; // 更深的绿色，对比度更好
+$success-dark: #047857;
 $success-bg: #ecfdf5;
-$warning: #d97706; // 加深橙色，提高对比度
+$warning: #d97706;
 $warning-bg: #fffbeb;
 $danger: #ef4444;
+$danger-dark: #dc2626;
 $danger-bg: #fef2f2;
 
 $text-primary: #1e293b;
 $text-secondary: #64748b;
-$text-muted: #6b7280; // 加深，提高对比度 (原 #94a3b8)
+$text-muted: #6b7280;
 
 $bg-page: #f8fafc;
 $bg-card: #ffffff;
+$bg-input: #f8fafc;
+$bg-hover: #f1f5f9;
 
 $border: #e2e8f0;
 
 $stat-blue: #3b82f6;
 $stat-green: #10b981;
-$stat-orange: #d97706; // 加深橙色
+$stat-orange: #d97706;
 $stat-purple: #8b5cf6;
 
-// 侧边栏
 $sidebar-bg: #1e293b;
-
-// 日历热力图
 $heatmap-light: #d1fae5;
 $heatmap-heavy: #10b981;
 
 // ===== 公共组件样式 =====
+
+// 页面容器
+.page-container {
+  padding: 20rpx;
+  background: $bg-page;
+  min-height: 100vh;
+}
 
 // 卡片
 .card {
@@ -79,7 +86,48 @@ $heatmap-heavy: #10b981;
 .stat-orange .stat-value { color: $stat-orange; }
 .stat-purple .stat-value { color: $stat-purple; }
 
-// 按钮
+// 统计行
+.stats-row {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20rpx;
+  margin-bottom: 20rpx;
+}
+
+// 表单
+.form-item {
+  margin-bottom: 24rpx;
+}
+
+.form-label {
+  display: block;
+  font-size: 26rpx;
+  color: $text-secondary;
+  margin-bottom: 12rpx;
+}
+
+.form-input {
+  width: 100%;
+  height: 88rpx;
+  background: $bg-input;
+  border-radius: 12rpx;
+  padding: 0 24rpx;
+  font-size: 28rpx;
+  border: 1rpx solid $border;
+}
+
+.form-textarea {
+  width: 100%;
+  min-height: 200rpx;
+  max-height: 40vh;
+  background: $bg-input;
+  border-radius: 12rpx;
+  padding: 24rpx;
+  font-size: 28rpx;
+  border: 1rpx solid $border;
+}
+
+// 按钮 - 主要
 .btn-primary {
   width: 100%;
   height: 88rpx;
@@ -98,9 +146,9 @@ $heatmap-heavy: #10b981;
 
 .btn-primary:disabled {
   opacity: 0.5;
-  cursor: not-allowed;
 }
 
+// 按钮 - 次要
 .btn-secondary {
   width: 100%;
   height: 88rpx;
@@ -114,6 +162,11 @@ $heatmap-heavy: #10b981;
   border: 1rpx solid $primary;
 }
 
+.btn-secondary:active {
+  background: $primary-bg;
+}
+
+// 按钮 - 危险
 .btn-danger {
   width: 100%;
   height: 88rpx;
@@ -127,62 +180,74 @@ $heatmap-heavy: #10b981;
   border: 1rpx solid $danger;
 }
 
-// 表单输入
-.form-input {
-  width: 100%;
-  height: 88rpx;
-  background: $bg-page;
-  border-radius: 12rpx;
-  padding: 0 24rpx;
+.btn-danger:active {
+  background: $danger-bg;
+}
+
+// 按钮 - 小型
+.btn-sm {
+  width: 200rpx;
+  height: 80rpx;
+  line-height: 80rpx;
+  background: $primary;
+  color: #fff;
+  border-radius: 16rpx;
   font-size: 28rpx;
-  border: 1rpx solid $border;
-}
-
-.form-textarea {
-  width: 100%;
-  min-height: 200rpx;
-  max-height: 40vh;
-  background: $bg-page;
-  border-radius: 12rpx;
-  padding: 24rpx;
-  font-size: 28rpx;
-  border: 1rpx solid $border;
-}
-
-.form-label {
-  display: block;
-  font-size: 26rpx;
-  color: $text-secondary;
-  margin-bottom: 12rpx;
-}
-
-// 空状态
-.empty-state {
+  font-weight: 600;
   text-align: center;
-  padding: 80rpx 40rpx;
 }
 
-.empty-icon {
-  display: block;
-  font-size: 80rpx;
-  margin-bottom: 20rpx;
+.btn-sm:active {
+  background: $primary-dark;
 }
 
-.empty-text {
-  display: block;
+// 按钮 - 操作按钮（暂停/继续/停止）
+.btn-pause {
+  flex: 1;
+  height: 88rpx;
+  line-height: 88rpx;
+  background: $warning;
+  color: #fff;
+  border-radius: 16rpx;
   font-size: 28rpx;
-  color: $text-muted;
-  margin-bottom: 40rpx;
+  font-weight: 600;
+  text-align: center;
 }
 
-// 骨架屏动画（全局）
-@keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
+.btn-pause:active {
+  background: #b45309;
 }
 
-.skeleton-wrapper {
-  animation: pulse 1.5s ease-in-out infinite;
+.btn-resume {
+  flex: 1;
+  height: 88rpx;
+  line-height: 88rpx;
+  background: $success;
+  color: #fff;
+  border-radius: 16rpx;
+  font-size: 28rpx;
+  font-weight: 600;
+  text-align: center;
+}
+
+.btn-resume:active {
+  background: $success-dark;
+}
+
+.btn-stop {
+  flex: 1;
+  height: 88rpx;
+  line-height: 88rpx;
+  background: $danger;
+  color: #fff;
+  border-radius: 16rpx;
+  font-size: 28rpx;
+  font-weight: 600;
+  text-align: center;
+}
+
+.btn-stop:active {
+  background: $danger-dark;
 }
 
 // 弹窗
@@ -224,7 +289,7 @@ $heatmap-heavy: #10b981;
 .dialog-close {
   font-size: 32rpx;
   color: $text-secondary;
-  padding: 20rpx; // 增大触摸目标
+  padding: 20rpx;
 }
 
 .dialog-body {
@@ -240,11 +305,62 @@ $heatmap-heavy: #10b981;
   border-top: 1rpx solid $border;
 }
 
+.dialog-btn-cancel {
+  flex: 1;
+  height: 88rpx;
+  line-height: 88rpx;
+  background: $bg-input;
+  color: $text-secondary;
+  border-radius: 16rpx;
+  font-size: 28rpx;
+  font-weight: 600;
+  text-align: center;
+}
+
+.dialog-btn-cancel:active {
+  background: $bg-hover;
+}
+
+.dialog-btn-confirm {
+  flex: 1;
+  height: 88rpx;
+  line-height: 88rpx;
+  background: $primary;
+  color: #fff;
+  border-radius: 16rpx;
+  font-size: 28rpx;
+  font-weight: 600;
+  text-align: center;
+}
+
+.dialog-btn-confirm:active {
+  background: $primary-dark;
+}
+
+// 空状态
+.empty-state {
+  text-align: center;
+  padding: 80rpx 40rpx;
+}
+
+.empty-icon {
+  display: block;
+  font-size: 80rpx;
+  margin-bottom: 20rpx;
+}
+
+.empty-text {
+  display: block;
+  font-size: 28rpx;
+  color: $text-muted;
+  margin-bottom: 40rpx;
+}
+
 // 操作按钮（编辑/删除）
 .action-btn {
   font-size: 26rpx;
   color: $primary;
-  padding: 16rpx; // 增大触摸目标
+  padding: 16rpx;
 }
 
 .action-btn.delete {
@@ -265,7 +381,7 @@ $heatmap-heavy: #10b981;
 .date-prev, .date-next, .month-prev, .month-next {
   font-size: 28rpx;
   color: $primary;
-  padding: 20rpx; // 增大触摸目标
+  padding: 20rpx;
 }
 
 .date-current, .month-text {
@@ -274,27 +390,27 @@ $heatmap-heavy: #10b981;
   color: $text-primary;
 }
 
-// 统计行
-.stats-row {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 20rpx;
-  margin-bottom: 20rpx;
-}
-
 // 标签
 .tag-success {
   display: inline-block;
   padding: 16rpx 32rpx;
   background: $success-bg;
-  color: $success-dark; // 使用更深的绿色
+  color: $success-dark;
   border-radius: 16rpx;
   font-size: 28rpx;
 }
 
-// 页面容器
-.page-container {
-  padding: 20rpx;
-  background: $bg-page;
-  min-height: 100vh;
+// 骨架屏动画
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.skeleton-wrapper {
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+// 占位符颜色
+.placeholder {
+  color: $text-muted;
 }
