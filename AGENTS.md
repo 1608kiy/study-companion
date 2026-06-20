@@ -6,7 +6,7 @@
 
 - `backend/` — Spring Boot 3.2.5, Java 17, MyBatis-Plus 3.5.5
 - `frontend/` — Vue3 + Vite + Element Plus + Pinia
-- `miniapp/` — Uniapp (empty, not yet started)
+- `miniapp/` — Uniapp 3.x (Vue3) 通用小程序，支持微信/支付宝/百度/抖音/QQ
 
 ## Quick commands
 
@@ -25,6 +25,16 @@ npm install --legacy-peer-deps   # MUST use --legacy-peer-deps (peer dep conflic
 npm run dev                      # dev server on port 3000
 npm test                         # vitest (single run)
 npm run build                    # production build
+```
+
+### Miniapp (from `miniapp/`)
+
+```bash
+npm install                      # install dependencies
+npm run dev:mp-weixin            # dev for WeChat
+npm run dev:mp-alipay            # dev for Alipay
+npm run dev:h5                   # dev for H5 preview
+npm run build:mp-weixin          # build for WeChat
 ```
 
 ## Dev environment
@@ -62,6 +72,21 @@ DevContainer provides MySQL 8.0 and Redis 7 via docker-compose. Forwarded ports:
 - **Responsive**: All views support mobile (768px breakpoint), sidebar becomes drawer on mobile
 - **Security**: DOMPurify for markdown rendering, API key via environment variable (never committed)
 
+## Miniapp conventions
+
+- **Framework**: Uniapp 3.x with Vue3 Composition API (`<script setup>`)
+- **State management**: Pinia (`store/user.js`, `store/study.js`)
+- **API layer**: `api/index.js` (uni.request wrapper) + `api/modules.js` (all endpoints)
+- **Config**: `config/index.js` — environment-based BASE_URL (H5 proxy vs production)
+- **Pages**: 9 pages (5 tabs + 4 sub-pages) in `pages/` directory
+- **Components**: Custom `tab-bar.vue` + `main-layout.vue` (replaces native tabBar)
+- **Styling**: Shared styles in `uni.scss`, all pages use global classes
+- **Error handling**: `utils/error-handler.js` — Vue errors, unhandled rejections, page not found
+- **Share**: `utils/share.js` — WeChat share to friends and timeline
+- **Version**: `utils/version.js` — auto update check, version display
+- **Markdown**: `utils/markdown.js` — simple markdown renderer using `rich-text` component
+- **Platform**: Supports WeChat, Alipay, Baidu, TikTok, QQ, H5
+
 ## API endpoints
 
 | Module | Endpoints | Description |
@@ -86,7 +111,7 @@ Runs on push/PR to `main`:
 - Frontend npm install **requires** `--legacy-peer-deps` — bare `npm install` will fail
 - Backend `application.yml` uses `spring.profiles.active: dev` — no separate profile configs exist, dev is the only one
 - AI API keys are placeholder (`your-api-key`) in `application.yml` — set `AI_API_KEY` environment variable
-- `miniapp/` is empty — do not reference or generate code for it
+- `miniapp/` is now complete with 9 pages — uses custom tab-bar component, not native tabBar
 - Backend test classes mirror main package structure under `src/test/java/com/studycompanion/`
 - MySQL uses `mysql_native_password` authentication (changed from `auth_socket` for JDBC compatibility)
 - Server memory is tight (1.6GB) — stop MySQL/Redis when not in use
