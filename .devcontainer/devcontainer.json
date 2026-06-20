@@ -1,0 +1,22 @@
+{
+  "name": "智学伴开发环境",
+  "image": "mcr.microsoft.com/devcontainers/java:17",
+  "features": {
+    "ghcr.io/devcontainers/features/node:1": { "version": "18" },
+    "ghcr.io/devcontainers/features/github-cli:1": {}
+  },
+  "forwardPorts": [3000, 8080, 3306, 6379],
+  "postCreateCommand": "cd frontend && npm install --legacy-peer-deps",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "vscjava.vscode-java-pack",
+        "Vue.volar",
+        "dbaeumer.vscode-eslint"
+      ]
+    }
+  },
+  "dockerComposeFile": "docker-compose.yml",
+  "service": "app",
+  "workspaceFolder": "/workspace"
+}
