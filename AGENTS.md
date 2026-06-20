@@ -46,6 +46,8 @@ DevContainer provides MySQL 8.0 and Redis 7 via docker-compose. Forwarded ports:
 - **Maps**: MapStruct for DTO↔Entity conversion (annotation processor configured in pom.xml)
 - **Soft delete**: MyBatis-Plus logical delete on `deleted` field (0/1)
 - **Logical delete value**: 1=deleted, 0=not deleted
+- **AI integration**: MiMo via `AiClient.java` (generic OpenAI-compatible HTTP client)
+- **API endpoints**: Auth, User, Subject, StudyRecord, Goal, Diary, CheckIn, AI
 
 ## Frontend conventions
 
@@ -55,6 +57,23 @@ DevContainer provides MySQL 8.0 and Redis 7 via docker-compose. Forwarded ports:
 - **Stores**: Pinia composition API style (`defineStore` with setup function) in `src/stores/`
 - **Routing**: lazy-loaded, auth guard checks `localStorage.token`, redirects unauthenticated to `/login`
 - **Testing**: Vitest with `happy-dom` environment, tests in `src/__tests__/`
+- **Styling**: Flat Remix style — no gradients, no shadows, no decorative elements, solid colors, border-based hierarchy
+- **CSS variables**: All colors defined as CSS variables in `src/assets/main.css`, zero hardcoded colors in Vue files
+- **Responsive**: All views support mobile (768px breakpoint), sidebar becomes drawer on mobile
+- **Security**: DOMPurify for markdown rendering, API key via environment variable (never committed)
+
+## API endpoints
+
+| Module | Endpoints | Description |
+|--------|-----------|-------------|
+| Auth | POST `/api/v1/auth/login`, `/api/v1/auth/register` | JWT authentication |
+| User | GET/PUT `/api/v1/user/profile`, DELETE `/api/v1/user/delete` | User management |
+| Subject | CRUD `/api/v1/subjects`, GET `/api/v1/subjects/preset` | Study subjects |
+| StudyRecord | CRUD `/api/v1/study-records`, timer endpoints, GET `/api/v1/study-records/stats` | Study tracking |
+| Goal | CRUD `/api/v1/goals`, daily/weekly/monthly stats, calendar stats | Goal management |
+| Diary | CRUD `/api/v1/diaries`, generate, regenerate, images | AI diary |
+| CheckIn | POST `/api/v1/check-in`, history, miss, replenish | Attendance |
+| AI | POST `/api/v1/ai/chat`, focus-judge, weekly/monthly report | AI features |
 
 ## CI (`.github/workflows/ci.yml`)
 
@@ -66,6 +85,8 @@ Runs on push/PR to `main`:
 
 - Frontend npm install **requires** `--legacy-peer-deps` — bare `npm install` will fail
 - Backend `application.yml` uses `spring.profiles.active: dev` — no separate profile configs exist, dev is the only one
-- AI API keys are placeholder (`your-api-key`) in `application.yml` — AI features won't work without real keys
+- AI API keys are placeholder (`your-api-key`) in `application.yml` — set `AI_API_KEY` environment variable
 - `miniapp/` is empty — do not reference or generate code for it
 - Backend test classes mirror main package structure under `src/test/java/com/studycompanion/`
+- MySQL uses `mysql_native_password` authentication (changed from `auth_socket` for JDBC compatibility)
+- Server memory is tight (1.6GB) — stop MySQL/Redis when not in use
