@@ -115,10 +115,22 @@
               <el-icon><CircleCheck /></el-icon>
               已打卡
             </el-tag>
+            <el-button 
+              v-if="!todayCheckedIn" 
+              type="warning" 
+              link
+              class="replenish-link"
+              @click="showReplenish = true"
+            >
+              补卡申请
+            </el-button>
           </div>
         </el-card>
       </el-col>
     </el-row>
+    
+    <!-- 补卡对话框 -->
+    <ReplenishDialog v-model="showReplenish" @success="loadCheckInStatus" />
     
     <!-- 快捷操作 -->
     <el-row :gutter="20" class="quick-actions-row">
@@ -157,6 +169,7 @@ import { useUserStore } from '@/stores/user'
 import { checkInApi, studyRecordApi, diaryApi } from '@/api/modules'
 import { ElMessage } from 'element-plus'
 import ChartView from '@/components/ChartView.vue'
+import ReplenishDialog from '@/components/ReplenishDialog.vue'
 import dayjs from 'dayjs'
 
 const userStore = useUserStore()
@@ -164,6 +177,7 @@ const userInfo = computed(() => userStore.userInfo)
 const dailyGoal = computed(() => userStore.userInfo?.dailyGoal || 120)
 const loading = ref(true)
 const diaryLoading = ref(false)
+const showReplenish = ref(false)
 
 const todayStats = ref({
   duration: 0,
@@ -349,6 +363,7 @@ onMounted(async () => {
 
 .checkin-btn { width: 120px; height: 40px; border-radius: 10px; font-weight: 600; }
 .checked-tag { height: 40px; padding: 0 20px; font-size: 14px; border-radius: 10px; }
+.replenish-link { margin-top: 8px; font-size: 13px; }
 
 /* 快捷操作 */
 .quick-actions-row {

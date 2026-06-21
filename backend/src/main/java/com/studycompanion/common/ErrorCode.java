@@ -20,6 +20,8 @@ public enum ErrorCode {
     EMAIL_INVALID(1003, "邮箱格式不正确"),
     PASSWORD_ERROR(1004, "密码错误"),
     PASSWORD_TOO_SHORT(1005, "密码长度不能少于6位"),
+    RESET_CODE_INVALID(1006, "验证码无效"),
+    RESET_CODE_EXPIRED(1007, "验证码已过期"),
 
     // 科目模块 2xxx
     SUBJECT_NOT_FOUND(2001, "科目不存在"),

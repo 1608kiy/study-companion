@@ -4,7 +4,9 @@ import { get, post, put, del } from './index'
 // 认证相关API
 export const authApi = {
   register: (data) => post('/auth/register', data),
-  login: (data) => post('/auth/login', data)
+  login: (data) => post('/auth/login', data),
+  forgotPassword: (data) => post('/auth/forgot-password', data),
+  resetPassword: (data) => post('/auth/reset-password', data)
 }
 
 // 用户相关API

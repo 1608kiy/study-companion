@@ -4,8 +4,10 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.studycompanion.common.BusinessException;
 import com.studycompanion.common.ErrorCode;
 import com.studycompanion.common.JwtUtil;
+import com.studycompanion.dto.ForgotPasswordRequest;
 import com.studycompanion.dto.LoginRequest;
 import com.studycompanion.dto.RegisterRequest;
+import com.studycompanion.dto.ResetPasswordRequest;
 import com.studycompanion.dto.UpdateProfileRequest;
 import com.studycompanion.entity.Subject;
 import com.studycompanion.entity.User;
@@ -23,6 +25,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
@@ -38,6 +41,7 @@ public class UserServiceImpl implements UserService {
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
     private static final String TOKEN_BLACKLIST_PREFIX = "token:blacklist:";
+    private static final String RESET_CODE_PREFIX = "reset:code:";
     private static final String PRESET_SUBJECTS_KEY = "preset:subjects";
 
     @Override
@@ -168,6 +172,60 @@ public class UserServiceImpl implements UserService {
 
     public boolean isTokenBlacklisted(String token) {
         return Boolean.TRUE.equals(redisTemplate.hasKey(TOKEN_BLACKLIST_PREFIX + token));
+    }
+
+    @Override
+    public String forgotPassword(ForgotPasswordRequest request) {
+        // 检查用户是否存在
+        LambdaQueryWrapper<User> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(User::getEmail, request.getEmail());
+        User user = userMapper.selectOne(wrapper);
+        if (user == null) {
+            throw new BusinessException(ErrorCode.USER_NOT_FOUND);
+        }
+
+        // 生成6位验证码
+        String code = String.format("%06d", new Random().nextInt(1000000));
+
+        // 存储到Redis，5分钟有效
+        redisTemplate.opsForValue().set(
+                RESET_CODE_PREFIX + request.getEmail(),
+                code,
+                5,
+                TimeUnit.MINUTES
+        );
+
+        log.info("密码重置验证码已生成: email={}, code={}", request.getEmail(), code);
+        return code;
+    }
+
+    @Override
+    public void resetPassword(ResetPasswordRequest request) {
+        // 验证码校验
+        String storedCode = redisTemplate.opsForValue().get(RESET_CODE_PREFIX + request.getEmail());
+        if (storedCode == null) {
+            throw new BusinessException(ErrorCode.RESET_CODE_EXPIRED);
+        }
+        if (!storedCode.equals(request.getCode())) {
+            throw new BusinessException(ErrorCode.RESET_CODE_INVALID);
+        }
+
+        // 查找用户
+        LambdaQueryWrapper<User> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(User::getEmail, request.getEmail());
+        User user = userMapper.selectOne(wrapper);
+        if (user == null) {
+            throw new BusinessException(ErrorCode.USER_NOT_FOUND);
+        }
+
+        // 更新密码
+        user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+        userMapper.updateById(user);
+
+        // 删除验证码
+        redisTemplate.delete(RESET_CODE_PREFIX + request.getEmail());
+
+        log.info("密码重置成功: email={}", request.getEmail());
     }
 
     private void createPresetSubjects(Long userId) {

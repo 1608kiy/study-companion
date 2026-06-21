@@ -23,7 +23,7 @@
       </el-form>
       <div class="auth-footer">
         <div class="auth-links">
-          <span class="forgot-password">忘记密码？请联系管理员</span>
+          <router-link to="/forgot-password" class="forgot-password">忘记密码？</router-link>
         </div>
         <div class="auth-register">
           还没有账号？<router-link to="/register">立即注册</router-link>

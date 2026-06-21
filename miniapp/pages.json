@@ -53,6 +53,12 @@
       "style": {
         "navigationBarTitleText": "科目管理"
       }
+    },
+    {
+      "path": "pages/forgot-password/forgot-password",
+      "style": {
+        "navigationBarTitleText": "忘记密码"
+      }
     }
   ],
   "globalStyle": {

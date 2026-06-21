@@ -62,6 +62,13 @@
             <view v-else class="tag-success">
               <text>✓ 已打卡</text>
             </view>
+            <text 
+              v-if="!todayCheckedIn" 
+              class="replenish-link" 
+              @click="showReplenish = true"
+            >
+              补卡申请
+            </text>
           </view>
         </view>
         
@@ -88,11 +95,69 @@
         </view>
       </view>
     </scroll-view>
+    
+    <!-- 补卡弹窗 -->
+    <view v-if="showReplenish" class="modal-overlay" @click="showReplenish = false">
+      <view class="modal-content" @click.stop>
+        <text class="modal-title">补卡申请</text>
+        
+        <!-- 步骤1: 填写信息 -->
+        <view v-if="replenishStep === 1">
+          <view class="form-item">
+            <text class="form-label">断签日期</text>
+            <picker mode="date" :value="missDate" @change="onDateChange">
+              <view class="picker-value">{{ missDate || '请选择日期' }}</view>
+            </picker>
+          </view>
+          <view class="form-item">
+            <text class="form-label">断签原因</text>
+            <textarea 
+              v-model="missReason" 
+              class="form-textarea" 
+              placeholder="请说明断签原因（如：生病、出差、考试等）"
+            />
+          </view>
+          <view class="tip">
+            <text>AI 将根据您的原因判断是否允许补签</text>
+          </view>
+          <view class="modal-btns">
+            <button class="btn-cancel" @click="showReplenish = false">取消</button>
+            <button class="btn-primary" @click="handleSubmitReplenish" :loading="submitting">提交申请</button>
+          </view>
+        </view>
+        
+        <!-- 步骤2: AI判断结果 -->
+        <view v-if="replenishStep === 2" class="result-section">
+          <view v-if="judging" class="judging">
+            <text>AI 正在评估...</text>
+          </view>
+          <view v-else class="judgment-result">
+            <text :class="['result-icon', judgmentAllow ? 'success' : 'fail']">
+              {{ judgmentAllow ? '✓' : '✗' }}
+            </text>
+            <text class="result-text">{{ judgmentAllow ? '允许补签' : '不允许补签' }}</text>
+            <text class="result-reason">{{ judgmentReason }}</text>
+          </view>
+          <view class="modal-btns">
+            <button class="btn-cancel" @click="replenishStep = 1">返回</button>
+            <button v-if="judgmentAllow" class="btn-primary" @click="handleReplenish" :loading="replenishing">确认补签</button>
+          </view>
+        </view>
+        
+        <!-- 步骤3: 成功 -->
+        <view v-if="replenishStep === 3" class="success-section">
+          <text class="success-icon">✓</text>
+          <text class="success-text">补签成功！</text>
+          <text class="success-date">{{ missDate }} 的打卡已补签</text>
+          <button class="btn-primary" @click="showReplenish = false">完成</button>
+        </view>
+      </view>
+    </view>
   </main-layout>
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { onShareAppMessage, onShareTimeline } from '@dcloudio/uni-app'
 import { useUserStore } from '../../store/user'
 import { checkInApi, studyRecordApi, diaryApi } from '../../api/modules'
@@ -105,6 +170,16 @@ const dailyGoal = computed(() => userStore.userInfo?.dailyGoal || 120)
 
 const loading = ref(true)
 const refreshing = ref(false)
+const showReplenish = ref(false)
+const replenishStep = ref(1)
+const submitting = ref(false)
+const judging = ref(false)
+const replenishing = ref(false)
+const missDate = ref('')
+const missReason = ref('')
+const currentMissRecordId = ref(null)
+const judgmentAllow = ref(false)
+const judgmentReason = ref('')
 
 const todayStats = ref({
   duration: 0,
@@ -156,6 +231,63 @@ const handleCheckIn = async () => {
 const goSettings = () => {
   uni.navigateTo({ url: '/pages/settings/settings' })
 }
+
+const onDateChange = (e) => {
+  missDate.value = e.detail.value
+}
+
+const handleSubmitReplenish = async () => {
+  if (!missDate.value) {
+    uni.showToast({ title: '请选择断签日期', icon: 'none' })
+    return
+  }
+  if (!missReason.value) {
+    uni.showToast({ title: '请填写断签原因', icon: 'none' })
+    return
+  }
+  
+  submitting.value = true
+  try {
+    const missRes = await checkInApi.recordMiss({
+      missDate: missDate.value,
+      reason: missReason.value
+    })
+    currentMissRecordId.value = missRes.data.id
+    
+    replenishStep.value = 2
+    judging.value = true
+    const judgeRes = await checkInApi.aiJudge(currentMissRecordId.value)
+    judgmentAllow.value = judgeRes.data.aiAllowReplenish
+    judgmentReason.value = judgeRes.data.reason || (judgmentAllow.value ? '符合补签条件' : '不符合补签条件')
+  } catch (error) {
+    uni.showToast({ title: error.message || '提交失败', icon: 'none' })
+  } finally {
+    submitting.value = false
+    judging.value = false
+  }
+}
+
+const handleReplenish = async () => {
+  replenishing.value = true
+  try {
+    await checkInApi.replenish(currentMissRecordId.value)
+    replenishStep.value = 3
+    await loadCheckInStatus()
+  } catch (error) {
+    uni.showToast({ title: error.message || '补签失败', icon: 'none' })
+  } finally {
+    replenishing.value = false
+  }
+}
+
+watch(showReplenish, (val) => {
+  if (val) {
+    replenishStep.value = 1
+    missDate.value = ''
+    missReason.value = ''
+    currentMissRecordId.value = null
+  }
+})
 
 const loadCheckInStatus = async () => {
   try {
@@ -323,6 +455,167 @@ onMounted(() => {
 .settings-entry text {
   font-size: 28rpx;
   color: #6366f1;
+}
+
+.replenish-link {
+  font-size: 24rpx;
+  color: #f59e0b;
+  margin-top: 16rpx;
+}
+
+/* 弹窗样式 */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+}
+
+.modal-content {
+  width: 85%;
+  background: #fff;
+  border-radius: 24rpx;
+  padding: 40rpx;
+}
+
+.modal-title {
+  display: block;
+  font-size: 36rpx;
+  font-weight: 700;
+  color: #1e293b;
+  text-align: center;
+  margin-bottom: 30rpx;
+}
+
+.form-item {
+  margin-bottom: 24rpx;
+}
+
+.form-label {
+  display: block;
+  font-size: 28rpx;
+  color: #64748b;
+  margin-bottom: 12rpx;
+}
+
+.picker-value {
+  padding: 20rpx;
+  background: #f8fafc;
+  border-radius: 12rpx;
+  font-size: 28rpx;
+  color: #1e293b;
+}
+
+.form-textarea {
+  width: 100%;
+  height: 150rpx;
+  padding: 20rpx;
+  background: #f8fafc;
+  border-radius: 12rpx;
+  font-size: 28rpx;
+  color: #1e293b;
+}
+
+.tip {
+  padding: 16rpx;
+  background: #f0f9ff;
+  border-radius: 12rpx;
+  margin-bottom: 24rpx;
+}
+
+.tip text {
+  font-size: 24rpx;
+  color: #0ea5e9;
+}
+
+.modal-btns {
+  display: flex;
+  gap: 20rpx;
+  margin-top: 30rpx;
+}
+
+.btn-cancel {
+  flex: 1;
+  height: 80rpx;
+  background: #f1f5f9;
+  border-radius: 12rpx;
+  font-size: 28rpx;
+  color: #64748b;
+}
+
+.btn-primary {
+  flex: 1;
+  height: 80rpx;
+  background: #6366f1;
+  border-radius: 12rpx;
+  font-size: 28rpx;
+  color: #fff;
+}
+
+.result-section,
+.success-section {
+  text-align: center;
+  padding: 30rpx 0;
+}
+
+.judging text {
+  font-size: 28rpx;
+  color: #64748b;
+}
+
+.judgment-result {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16rpx;
+}
+
+.result-icon {
+  font-size: 80rpx;
+}
+
+.result-icon.success { color: #10b981; }
+.result-icon.fail { color: #ef4444; }
+
+.result-text {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.result-reason {
+  font-size: 26rpx;
+  color: #64748b;
+}
+
+.success-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16rpx;
+}
+
+.success-icon {
+  font-size: 100rpx;
+  color: #10b981;
+}
+
+.success-text {
+  font-size: 36rpx;
+  font-weight: 600;
+  color: #10b981;
+}
+
+.success-date {
+  font-size: 26rpx;
+  color: #64748b;
+  margin-bottom: 20rpx;
 }
 
 .skeleton-welcome {
