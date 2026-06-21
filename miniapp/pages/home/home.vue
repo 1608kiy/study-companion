@@ -90,8 +90,19 @@
         </view>
         
         <!-- 设置入口 -->
-        <view class="settings-entry" @click="goSettings">
-          <text>⚙️ 设置</text>
+        <view class="entry-row">
+          <view class="entry-item" @click="goEfficiency">
+            <text class="entry-icon">📊</text>
+            <text class="entry-text">效率分析</text>
+          </view>
+          <view class="entry-item" @click="goMaterials">
+            <text class="entry-icon">📁</text>
+            <text class="entry-text">学习资料</text>
+          </view>
+          <view class="entry-item" @click="goSettings">
+            <text class="entry-icon">⚙️</text>
+            <text class="entry-text">设置</text>
+          </view>
         </view>
       </view>
     </scroll-view>
@@ -230,6 +241,14 @@ const handleCheckIn = async () => {
 
 const goSettings = () => {
   uni.navigateTo({ url: '/pages/settings/settings' })
+}
+
+const goEfficiency = () => {
+  uni.navigateTo({ url: '/pages/efficiency/efficiency' })
+}
+
+const goMaterials = () => {
+  uni.navigateTo({ url: '/pages/materials/materials' })
 }
 
 const onDateChange = (e) => {
@@ -455,6 +474,37 @@ onMounted(() => {
 .settings-entry text {
   font-size: 28rpx;
   color: #6366f1;
+}
+
+.entry-row {
+  display: flex;
+  gap: 20rpx;
+  margin-top: 20rpx;
+}
+
+.entry-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12rpx;
+  padding: 24rpx;
+  background: #fff;
+  border-radius: 16rpx;
+  border: 1rpx solid #e2e8f0;
+}
+
+.entry-item:active {
+  background: #f8fafc;
+}
+
+.entry-icon {
+  font-size: 48rpx;
+}
+
+.entry-text {
+  font-size: 24rpx;
+  color: #64748b;
 }
 
 .replenish-link {

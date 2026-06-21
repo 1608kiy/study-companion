@@ -59,6 +59,18 @@
       "style": {
         "navigationBarTitleText": "忘记密码"
       }
+    },
+    {
+      "path": "pages/efficiency/efficiency",
+      "style": {
+        "navigationBarTitleText": "效率分析"
+      }
+    },
+    {
+      "path": "pages/materials/materials",
+      "style": {
+        "navigationBarTitleText": "学习资料"
+      }
     }
   ],
   "globalStyle": {

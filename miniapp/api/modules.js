@@ -38,7 +38,8 @@ export const studyRecordApi = {
   getById: (id) => get(`/study-records/${id}`),
   aiJudge: (recordId, reason) => post(`/study-records/${recordId}/ai-judge`, { reason }),
   update: (id, data) => put(`/study-records/${id}`, data),
-  getStats: () => get('/study-records/stats')
+  getStats: () => get('/study-records/stats'),
+  getEfficiency: () => get('/study-records/efficiency')
 }
 
 // 打卡相关API
@@ -84,4 +85,22 @@ export const aiApi = {
   getShareImage: () => get('/ai/share'),
   getChatHistory: (limit = 20) => get('/ai/chat/history', { limit }),
   clearChatHistory: () => del('/ai/chat/history')
+}
+
+// 考试相关API
+export const examApi = {
+  getList: () => get('/exams'),
+  create: (data) => post('/exams', data),
+  update: (id, data) => put(`/exams/${id}`, data),
+  delete: (id) => del(`/exams/${id}`)
+}
+
+// 学习资料相关API
+export const materialApi = {
+  getList: (params) => get('/materials', params),
+  getById: (id) => get(`/materials/${id}`),
+  upload: (formData) => post('/materials', formData),
+  update: (id, data) => put(`/materials/${id}`, data),
+  delete: (id) => del(`/materials/${id}`),
+  toggleFavorite: (id) => post(`/materials/${id}/favorite`)
 }
