@@ -10,6 +10,7 @@ import com.studycompanion.entity.StudyRecord;
 import com.studycompanion.entity.Subject;
 import com.studycompanion.entity.User;
 import com.studycompanion.mapper.AiAnalysisMapper;
+import com.studycompanion.mapper.AiChatHistoryMapper;
 import com.studycompanion.mapper.MissRecordMapper;
 import com.studycompanion.mapper.StudyRecordMapper;
 import com.studycompanion.mapper.SubjectMapper;
@@ -45,6 +46,9 @@ class AiServiceTest {
     
     @Mock
     private MissRecordMapper missRecordMapper;
+    
+    @Mock
+    private AiChatHistoryMapper aiChatHistoryMapper;
     
     @Mock
     private UserMapper userMapper;
