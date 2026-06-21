@@ -82,8 +82,22 @@ public class AiClient {
                 throw new BusinessException(ErrorCode.AI_REQUEST_FAILED, "AI响应为空");
             }
 
-            Map<String, Object> message = (Map<String, Object>) choices.get(0).get("message");
-            return (String) message.get("content");
+            Map<String, Object> firstChoice = choices.get(0);
+            if (firstChoice == null) {
+                throw new BusinessException(ErrorCode.AI_REQUEST_FAILED, "AI响应选项为空");
+            }
+            
+            Map<String, Object> message = (Map<String, Object>) firstChoice.get("message");
+            if (message == null) {
+                throw new BusinessException(ErrorCode.AI_REQUEST_FAILED, "AI响应消息为空");
+            }
+            
+            String content = (String) message.get("content");
+            if (content == null) {
+                throw new BusinessException(ErrorCode.AI_REQUEST_FAILED, "AI响应内容为空");
+            }
+            
+            return content;
 
         } catch (BusinessException e) {
             throw e;

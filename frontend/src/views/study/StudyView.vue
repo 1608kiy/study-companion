@@ -179,6 +179,7 @@ const startTimer = async () => {
     ElMessage.success('计时开始')
   } catch (error) {
     console.error('开始计时失败:', error)
+    ElMessage.error(error.message || '开始计时失败')
   }
 }
 
@@ -189,6 +190,7 @@ const pauseTimer = async () => {
     ElMessage.info('计时已暂停')
   } catch (error) {
     console.error('暂停计时失败:', error)
+    ElMessage.error(error.message || '暂停计时失败')
   }
 }
 
@@ -199,6 +201,7 @@ const resumeTimer = async () => {
     ElMessage.success('计时已继续')
   } catch (error) {
     console.error('继续计时失败:', error)
+    ElMessage.error(error.message || '继续计时失败')
   }
 }
 
