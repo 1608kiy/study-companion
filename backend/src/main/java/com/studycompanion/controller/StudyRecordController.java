@@ -5,6 +5,7 @@ import com.studycompanion.common.Result;
 import com.studycompanion.dto.StartTimerRequest;
 import com.studycompanion.dto.UpdateStudyRecordRequest;
 import com.studycompanion.service.StudyRecordService;
+import com.studycompanion.vo.EfficiencyAnalysisVO;
 import com.studycompanion.vo.PageResponse;
 import com.studycompanion.vo.StudyRecordVO;
 import com.studycompanion.vo.StudyStatsVO;
@@ -139,5 +140,13 @@ public class StudyRecordController extends BaseController {
         Long userId = getUserIdFromRequest(request);
         StudyStatsVO stats = studyRecordService.getStudyStats(userId);
         return Result.success(stats);
+    }
+
+    @Operation(summary = "获取学习效率分析")
+    @GetMapping("/efficiency")
+    public Result<EfficiencyAnalysisVO> getEfficiencyAnalysis(HttpServletRequest request) {
+        Long userId = getUserIdFromRequest(request);
+        EfficiencyAnalysisVO analysis = studyRecordService.getEfficiencyAnalysis(userId);
+        return Result.success(analysis);
     }
 }

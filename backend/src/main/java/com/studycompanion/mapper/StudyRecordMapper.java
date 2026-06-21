@@ -99,4 +99,45 @@ public interface StudyRecordMapper extends BaseMapper<StudyRecord> {
     Integer getMaxDailyDuration(@Param("userId") Long userId,
                                 @Param("startDate") LocalDate startDate,
                                 @Param("endDate") LocalDate endDate);
+
+    /**
+     * 获取每小时学习时长分布（用于分析最佳学习时段）
+     */
+    @Select("SELECT HOUR(start_time) as hour, COALESCE(SUM(duration), 0) as totalDuration " +
+            "FROM study_record " +
+            "WHERE user_id = #{userId} AND start_time IS NOT NULL " +
+            "AND study_date BETWEEN #{startDate} AND #{endDate} " +
+            "GROUP BY HOUR(start_time) ORDER BY hour")
+    List<Map<String, Object>> getHourlyDistribution(@Param("userId") Long userId,
+                                                     @Param("startDate") LocalDate startDate,
+                                                     @Param("endDate") LocalDate endDate);
+
+    /**
+     * 获取专注度趋势（按日期）
+     */
+    @Select("SELECT study_date as studyDate, " +
+            "COALESCE(AVG(focus_level), 0) as avgFocus, " +
+            "COALESCE(AVG(ai_focus_level), 0) as avgAiFocus " +
+            "FROM study_record " +
+            "WHERE user_id = #{userId} AND study_date BETWEEN #{startDate} AND #{endDate} " +
+            "AND focus_level IS NOT NULL " +
+            "GROUP BY study_date ORDER BY study_date")
+    List<Map<String, Object>> getFocusTrend(@Param("userId") Long userId,
+                                            @Param("startDate") LocalDate startDate,
+                                            @Param("endDate") LocalDate endDate);
+
+    /**
+     * 获取科目专注度分布
+     */
+    @Select("SELECT s.name as subjectName, " +
+            "COALESCE(AVG(sr.focus_level), 0) as avgFocus, " +
+            "COUNT(*) as sessionCount " +
+            "FROM study_record sr " +
+            "LEFT JOIN subject s ON sr.subject_id = s.id " +
+            "WHERE sr.user_id = #{userId} AND sr.focus_level IS NOT NULL " +
+            "AND sr.study_date BETWEEN #{startDate} AND #{endDate} " +
+            "GROUP BY s.name")
+    List<Map<String, Object>> getSubjectFocusStats(@Param("userId") Long userId,
+                                                    @Param("startDate") LocalDate startDate,
+                                                    @Param("endDate") LocalDate endDate);
 }

@@ -224,6 +224,50 @@ CREATE TABLE `ai_chat_history` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='AI聊天历史表';
 
 -- ================================================
+-- 12. 考试表 (exam)
+-- ================================================
+CREATE TABLE `exam` (
+  `id` BIGINT NOT NULL AUTO_INCREMENT,
+  `user_id` BIGINT NOT NULL COMMENT '用户ID',
+  `name` VARCHAR(100) NOT NULL COMMENT '考试名称',
+  `exam_date` DATE NOT NULL COMMENT '考试日期',
+  `location` VARCHAR(200) DEFAULT NULL COMMENT '考试地点',
+  `description` TEXT DEFAULT NULL COMMENT '考试描述',
+  `is_target` TINYINT(1) DEFAULT 0 COMMENT '是否目标考试(0否 1是)',
+  `sort_order` INT DEFAULT 0 COMMENT '排序顺序',
+  `create_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `update_time` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  PRIMARY KEY (`id`),
+  KEY `idx_user_id` (`user_id`),
+  KEY `idx_exam_date` (`exam_date`),
+  FOREIGN KEY (`user_id`) REFERENCES `user`(`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='考试表';
+
+-- ================================================
+-- 13. 学习资料表 (learning_material)
+-- ================================================
+CREATE TABLE `learning_material` (
+  `id` BIGINT NOT NULL AUTO_INCREMENT,
+  `user_id` BIGINT NOT NULL COMMENT '用户ID',
+  `subject_id` BIGINT DEFAULT NULL COMMENT '科目ID',
+  `title` VARCHAR(200) NOT NULL COMMENT '资料标题',
+  `description` TEXT DEFAULT NULL COMMENT '资料描述',
+  `file_url` VARCHAR(500) NOT NULL COMMENT '文件URL',
+  `file_name` VARCHAR(200) NOT NULL COMMENT '原始文件名',
+  `file_size` BIGINT DEFAULT NULL COMMENT '文件大小(字节)',
+  `file_type` VARCHAR(20) DEFAULT NULL COMMENT '文件类型(pdf,doc等)',
+  `tags` VARCHAR(500) DEFAULT NULL COMMENT '标签(逗号分隔)',
+  `is_favorite` TINYINT(1) DEFAULT 0 COMMENT '是否收藏(0否 1是)',
+  `create_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `update_time` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  PRIMARY KEY (`id`),
+  KEY `idx_user_id` (`user_id`),
+  KEY `idx_subject_id` (`subject_id`),
+  FOREIGN KEY (`user_id`) REFERENCES `user`(`id`) ON DELETE CASCADE,
+  FOREIGN KEY (`subject_id`) REFERENCES `subject`(`id`) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='学习资料表';
+
+-- ================================================
 -- 初始化数据：预设科目模板
 -- ================================================
 -- 注意：预设科目在用户注册时自动创建，这里只是记录预设模板

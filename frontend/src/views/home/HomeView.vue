@@ -129,6 +129,13 @@
       </el-col>
     </el-row>
     
+    <!-- 考试倒计时 -->
+    <el-row :gutter="20" class="content-row">
+      <el-col :span="24">
+        <ExamCountdown />
+      </el-col>
+    </el-row>
+    
     <!-- 补卡对话框 -->
     <ReplenishDialog v-model="showReplenish" @success="loadCheckInStatus" />
     
@@ -170,6 +177,7 @@ import { checkInApi, studyRecordApi, diaryApi } from '@/api/modules'
 import { ElMessage } from 'element-plus'
 import ChartView from '@/components/ChartView.vue'
 import ReplenishDialog from '@/components/ReplenishDialog.vue'
+import ExamCountdown from '@/components/ExamCountdown.vue'
 import dayjs from 'dayjs'
 
 const userStore = useUserStore()

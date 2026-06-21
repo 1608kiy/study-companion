@@ -38,6 +38,7 @@ export const studyRecordApi = {
   aiJudge: (recordId, reason) => api.post(`/study-records/${recordId}/ai-judge`, { reason }),
   update: (id, data) => api.put(`/study-records/${id}`, data),
   getStats: () => api.get('/study-records/stats'),
+  getEfficiency: () => api.get('/study-records/efficiency'),
 }
 
 // 打卡相关API
@@ -92,4 +93,24 @@ export const aiApi = {
   getShareImage: () => api.get('/ai/share'),
   getChatHistory: (limit = 20) => api.get('/ai/chat/history', { params: { limit } }),
   clearChatHistory: () => api.delete('/ai/chat/history'),
+}
+
+// 考试相关API
+export const examApi = {
+  getList: () => api.get('/exams'),
+  create: (data) => api.post('/exams', data),
+  update: (id, data) => api.put(`/exams/${id}`, data),
+  delete: (id) => api.delete(`/exams/${id}`),
+}
+
+// 学习资料相关API
+export const materialApi = {
+  getList: (params) => api.get('/materials', { params }),
+  getById: (id) => api.get(`/materials/${id}`),
+  upload: (formData) => api.post('/materials', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  }),
+  update: (id, data) => api.put(`/materials/${id}`, data),
+  delete: (id) => api.delete(`/materials/${id}`),
+  toggleFavorite: (id) => api.post(`/materials/${id}/favorite`),
 }

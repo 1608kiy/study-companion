@@ -14,6 +14,7 @@ import com.studycompanion.mapper.CheckInMapper;
 import com.studycompanion.mapper.StudyRecordMapper;
 import com.studycompanion.mapper.SubjectMapper;
 import com.studycompanion.service.StudyRecordService;
+import com.studycompanion.vo.EfficiencyAnalysisVO;
 import com.studycompanion.vo.PageResponse;
 import com.studycompanion.vo.StudyRecordVO;
 import com.studycompanion.vo.StudyStatsVO;
@@ -508,6 +509,111 @@ public class StudyRecordServiceImpl implements StudyRecordService {
     private boolean isTimerRunning(Long userId) {
         String key = TIMER_PREFIX + userId;
         return "true".equals(redisTemplate.opsForValue().get(key + TIMER_RUNNING_SUFFIX));
+    }
+
+    @Override
+    public EfficiencyAnalysisVO getEfficiencyAnalysis(Long userId) {
+        EfficiencyAnalysisVO vo = new EfficiencyAnalysisVO();
+        LocalDate today = LocalDate.now();
+        LocalDate thirtyDaysAgo = today.minusDays(29);
+
+        // 1. 每小时学习分布
+        List<Map<String, Object>> hourlyList = studyRecordMapper.getHourlyDistribution(userId, thirtyDaysAgo, today);
+        Map<Integer, Integer> hourlyDistribution = new HashMap<>();
+        for (Map<String, Object> row : hourlyList) {
+            int hour = ((Number) row.get("hour")).intValue();
+            int duration = ((Number) row.get("totalDuration")).intValue();
+            hourlyDistribution.put(hour, duration);
+        }
+        vo.setHourlyDistribution(hourlyDistribution);
+
+        // 找出最佳学习时段（前3个）
+        List<Integer> bestHours = hourlyDistribution.entrySet().stream()
+                .sorted(Map.Entry.<Integer, Integer>comparingByValue().reversed())
+                .limit(3)
+                .map(Map.Entry::getKey)
+                .sorted()
+                .collect(java.util.stream.Collectors.toList());
+        vo.setBestHours(bestHours);
+
+        // 2. 科目分布
+        List<Map<String, Object>> subjectList = studyRecordMapper.getSubjectStatsBetween(userId, thirtyDaysAgo, today);
+        Map<String, Integer> subjectDistribution = new HashMap<>();
+        for (Map<String, Object> row : subjectList) {
+            String name = (String) row.get("subjectName");
+            int duration = ((Number) row.get("totalDuration")).intValue();
+            if (name != null) {
+                subjectDistribution.put(name, duration);
+            }
+        }
+        vo.setSubjectDistribution(subjectDistribution);
+
+        // 3. 科目专注度
+        List<Map<String, Object>> subjectFocusList = studyRecordMapper.getSubjectFocusStats(userId, thirtyDaysAgo, today);
+        Map<String, Double> subjectFocus = new HashMap<>();
+        for (Map<String, Object> row : subjectFocusList) {
+            String name = (String) row.get("subjectName");
+            double avgFocus = ((Number) row.get("avgFocus")).doubleValue();
+            if (name != null) {
+                subjectFocus.put(name, Math.round(avgFocus * 10) / 10.0);
+            }
+        }
+        vo.setSubjectFocus(subjectFocus);
+
+        // 4. 专注度趋势
+        List<Map<String, Object>> focusList = studyRecordMapper.getFocusTrend(userId, thirtyDaysAgo, today);
+        List<EfficiencyAnalysisVO.FocusTrendItem> focusTrend = new ArrayList<>();
+        for (Map<String, Object> row : focusList) {
+            EfficiencyAnalysisVO.FocusTrendItem item = new EfficiencyAnalysisVO.FocusTrendItem();
+            java.sql.Date date = (java.sql.Date) row.get("studyDate");
+            item.setDate(date.toString());
+            item.setFocusLevel(Math.round(((Number) row.get("avgFocus")).doubleValue() * 10) / 10.0);
+            item.setAiFocusLevel(Math.round(((Number) row.get("avgAiFocus")).doubleValue() * 10) / 10.0);
+            focusTrend.add(item);
+        }
+        vo.setFocusTrend(focusTrend);
+
+        // 5. 总体统计
+        LambdaQueryWrapper<StudyRecord> countWrapper = new LambdaQueryWrapper<>();
+        countWrapper.eq(StudyRecord::getUserId, userId)
+                .ge(StudyRecord::getStudyDate, thirtyDaysAgo);
+        Long totalSessions = studyRecordMapper.selectCount(countWrapper);
+        vo.setTotalSessions(totalSessions.intValue());
+
+        // 平均专注度
+        double avgFocus = focusTrend.stream()
+                .mapToDouble(EfficiencyAnalysisVO.FocusTrendItem::getFocusLevel)
+                .average()
+                .orElse(0);
+        vo.setAvgFocusLevel(Math.round(avgFocus * 10) / 10.0);
+
+        // 最佳星期几
+        Map<Integer, Long> dayOfWeekCount = new HashMap<>();
+        LambdaQueryWrapper<StudyRecord> dayWrapper = new LambdaQueryWrapper<>();
+        dayWrapper.eq(StudyRecord::getUserId, userId)
+                .ge(StudyRecord::getStudyDate, thirtyDaysAgo)
+                .isNotNull(StudyRecord::getStartTime);
+        List<StudyRecord> records = studyRecordMapper.selectList(dayWrapper);
+        for (StudyRecord r : records) {
+            if (r.getStartTime() != null) {
+                int dayOfWeek = r.getStartTime().getDayOfWeek().getValue();
+                dayOfWeekCount.merge(dayOfWeek, 1L, Long::sum);
+            }
+        }
+        int bestDay = dayOfWeekCount.entrySet().stream()
+                .max(Map.Entry.comparingByValue())
+                .map(Map.Entry::getKey)
+                .orElse(1);
+        vo.setBestDayOfWeek(bestDay);
+
+        // 最佳小时
+        int bestHour = hourlyDistribution.entrySet().stream()
+                .max(Map.Entry.comparingByValue())
+                .map(Map.Entry::getKey)
+                .orElse(9);
+        vo.setBestHourOfDay(bestHour);
+
+        return vo;
     }
 
     private StudyRecordVO convertToVO(StudyRecord record) {

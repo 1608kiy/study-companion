@@ -2,6 +2,7 @@ package com.studycompanion.service;
 
 import com.studycompanion.dto.StartTimerRequest;
 import com.studycompanion.dto.UpdateStudyRecordRequest;
+import com.studycompanion.vo.EfficiencyAnalysisVO;
 import com.studycompanion.vo.PageResponse;
 import com.studycompanion.vo.StudyRecordVO;
 import com.studycompanion.vo.StudyStatsVO;
@@ -35,4 +36,6 @@ public interface StudyRecordService {
     void deleteStudyRecord(Long userId, Long recordId, String approveToken);
 
     StudyStatsVO getStudyStats(Long userId);
+
+    EfficiencyAnalysisVO getEfficiencyAnalysis(Long userId);
 }

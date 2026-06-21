@@ -81,10 +81,10 @@ describe('路由配置', () => {
     expect(registerRoute.meta.requiresAuth).toBe(false)
   })
 
-  it('子路由包含 6 个页面', async () => {
+  it('子路由包含 8 个页面', async () => {
     const { routes } = await import('@/router/index.js')
     const rootRoute = routes.find(r => r.path === '/')
-    expect(rootRoute.children).toHaveLength(6)
+    expect(rootRoute.children).toHaveLength(8)
   })
 
   it('存在 404 兜底路由', async () => {

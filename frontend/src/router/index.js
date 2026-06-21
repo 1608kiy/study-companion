@@ -57,6 +57,18 @@ const routes = [
         meta: { title: 'AI助手', icon: 'ChatDotRound' },
       },
       {
+        path: 'efficiency',
+        name: 'Efficiency',
+        component: () => import('@/views/efficiency/EfficiencyView.vue'),
+        meta: { title: '效率分析', icon: 'TrendCharts' },
+      },
+      {
+        path: 'materials',
+        name: 'Materials',
+        component: () => import('@/views/materials/MaterialsView.vue'),
+        meta: { title: '学习资料', icon: 'Folder' },
+      },
+      {
         path: 'settings',
         name: 'Settings',
         component: () => import('@/views/settings/SettingsView.vue'),
