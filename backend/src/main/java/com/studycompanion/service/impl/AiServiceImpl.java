@@ -7,11 +7,13 @@ import com.studycompanion.common.BusinessException;
 import com.studycompanion.common.ErrorCode;
 import com.studycompanion.dto.AiChatRequest;
 import com.studycompanion.entity.AiAnalysis;
+import com.studycompanion.entity.AiChatHistory;
 import com.studycompanion.entity.MissRecord;
 import com.studycompanion.entity.StudyRecord;
 import com.studycompanion.entity.Subject;
 import com.studycompanion.entity.User;
 import com.studycompanion.mapper.AiAnalysisMapper;
+import com.studycompanion.mapper.AiChatHistoryMapper;
 import com.studycompanion.mapper.MissRecordMapper;
 import com.studycompanion.mapper.StudyRecordMapper;
 import com.studycompanion.mapper.SubjectMapper;
@@ -40,6 +42,7 @@ public class AiServiceImpl implements AiService {
     private final StudyRecordMapper studyRecordMapper;
     private final SubjectMapper subjectMapper;
     private final MissRecordMapper missRecordMapper;
+    private final AiChatHistoryMapper aiChatHistoryMapper;
     private final UserMapper userMapper;
     private final AiClient aiClient;
 
@@ -121,11 +124,24 @@ public class AiServiceImpl implements AiService {
 
         List<Map<String, String>> messages = new java.util.ArrayList<>();
 
-        // 添加历史对话（最多保留最近10轮）
+        // 添加历史对话（优先使用客户端发送的，否则从DB读取）
         if (request.getHistory() != null && !request.getHistory().isEmpty()) {
             List<Map<String, String>> history = request.getHistory();
-            int start = Math.max(0, history.size() - 20); // 最多20条消息（10轮）
+            int start = Math.max(0, history.size() - 20);
             messages.addAll(history.subList(start, history.size()));
+        } else {
+            // 从 DB 读取最近的历史记录
+            LambdaQueryWrapper<AiChatHistory> wrapper = new LambdaQueryWrapper<>();
+            wrapper.eq(AiChatHistory::getUserId, userId)
+                   .orderByDesc(AiChatHistory::getCreateTime)
+                   .last("LIMIT 20");
+            List<AiChatHistory> dbHistory = aiChatHistoryMapper.selectList(wrapper);
+            
+            // 反转为时间正序
+            for (int i = dbHistory.size() - 1; i >= 0; i--) {
+                AiChatHistory h = dbHistory.get(i);
+                messages.add(Map.of("role", h.getRole(), "content", h.getContent()));
+            }
         }
 
         // 添加当前问题

@@ -113,6 +113,32 @@
         </el-card>
       </el-col>
     </el-row>
+    
+    <!-- 隐藏的分享卡片（用于生成图片） -->
+    <div v-if="currentShareData" class="share-card-overlay" @click="currentShareData = null">
+      <div ref="shareCardRef" class="share-card" @click.stop>
+        <div class="share-card-header">
+          <div class="share-logo">📚</div>
+          <div class="share-title">智学伴 · 学习打卡</div>
+        </div>
+        <div class="share-content">
+          <div class="share-stats">
+            <div class="share-stat">
+              <div class="share-stat-value">{{ currentShareData.content?.split('\n')[2]?.match(/\d+/)?.[0] || 0 }}</div>
+              <div class="share-stat-label">学习天数</div>
+            </div>
+            <div class="share-stat">
+              <div class="share-stat-value">{{ currentShareData.content?.split('\n')[3]?.match(/\d+ 小时 \d+ 分钟/)?.[0] || '0小时' }}</div>
+              <div class="share-stat-label">累计学习</div>
+            </div>
+          </div>
+          <div class="share-motto">每天进步一点点 💪</div>
+        </div>
+        <div class="share-footer">
+          <div class="share-qr">扫码加入学习</div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -127,11 +153,13 @@ import html2canvas from 'html2canvas'
 const MAX_HISTORY = 20
 const chatContainer = ref(null)
 const reportContentRef = ref(null)
+const shareCardRef = ref(null)
 const inputMessage = ref('')
 const loading = ref(false)
 const actionLoading = ref(false)
 const messages = ref([])
 const currentReport = ref(null)
+const currentShareData = ref(null)
 
 const scrollToBottom = async () => {
   await nextTick()
@@ -264,12 +292,28 @@ const generateShareImage = async () => {
   actionLoading.value = true
   try {
     const res = await aiApi.getShareImage()
-    messages.value.push({
-      role: 'assistant',
-      content: '分享图片已生成！\n\n' + res.data.content,
-      time: dayjs().format('HH:mm'),
-    })
-    await scrollToBottom()
+    const shareData = res.data
+    
+    // 显示分享卡片
+    currentShareData.value = shareData
+    await nextTick()
+    
+    // 使用 html2canvas 生成图片
+    if (shareCardRef.value) {
+      const canvas = await html2canvas(shareCardRef.value, {
+        backgroundColor: '#ffffff',
+        scale: 2,
+      })
+      
+      // 转为图片并下载
+      const link = document.createElement('a')
+      link.download = `学习打卡_${dayjs().format('YYYY-MM-DD')}.png`
+      link.href = canvas.toDataURL('image/png')
+      link.click()
+      
+      ElMessage.success('图片已保存')
+      currentShareData.value = null
+    }
   } catch (error) {
     ElMessage.error('分享图片生成失败')
   } finally {
@@ -481,6 +525,78 @@ onMounted(async () => {
 .report-ai-content :deep(h3) {
   font-size: 14px;
   margin-bottom: 6px;
+}
+
+/* 分享卡片样式 */
+.share-card-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+}
+
+.share-card {
+  width: 360px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 16px;
+  padding: 32px;
+  color: white;
+  text-align: center;
+}
+
+.share-card-header {
+  margin-bottom: 24px;
+}
+
+.share-logo {
+  font-size: 48px;
+  margin-bottom: 8px;
+}
+
+.share-title {
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.share-content {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 24px;
+}
+
+.share-stats {
+  display: flex;
+  justify-content: space-around;
+  margin-bottom: 16px;
+}
+
+.share-stat {
+  text-align: center;
+}
+
+.share-stat-value {
+  font-size: 28px;
+  font-weight: 700;
+}
+
+.share-stat-label {
+  font-size: 12px;
+  opacity: 0.8;
+  margin-top: 4px;
+}
+
+.share-motto {
+  font-size: 14px;
+  opacity: 0.9;
+}
+
+.share-footer {
+  opacity: 0.7;
+  font-size: 12px;
 }
 
 @media (max-width: 767px) {
