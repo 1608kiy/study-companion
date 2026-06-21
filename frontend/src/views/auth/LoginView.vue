@@ -22,7 +22,12 @@
         </el-form-item>
       </el-form>
       <div class="auth-footer">
-        还没有账号？<router-link to="/register">立即注册</router-link>
+        <div class="auth-links">
+          <span class="forgot-password">忘记密码？请联系管理员</span>
+        </div>
+        <div class="auth-register">
+          还没有账号？<router-link to="/register">立即注册</router-link>
+        </div>
       </div>
     </div>
   </div>
@@ -144,13 +149,22 @@ const handleLogin = async () => {
   font-size: 14px;
 }
 
-.auth-footer a {
+.auth-links {
+  margin-bottom: 12px;
+}
+
+.forgot-password {
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.auth-register a {
   color: var(--primary);
   text-decoration: none;
   font-weight: 500;
 }
 
-.auth-footer a:hover {
+.auth-register a:hover {
   text-decoration: underline;
 }
 </style>

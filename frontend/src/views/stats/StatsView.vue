@@ -140,7 +140,7 @@ const calendarHeatmapOption = computed(() => {
     visualMap: {
       show: false,
       min: 0,
-      max: 180,
+      max: Math.max(...data.map(d => d[1]), 60),
       inRange: {
         color: ['#ebedf0', '#9be9a8', '#40c463', '#30a14e', '#216e39']
       }

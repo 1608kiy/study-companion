@@ -119,6 +119,34 @@
         </el-card>
       </el-col>
     </el-row>
+    
+    <!-- 快捷操作 -->
+    <el-row :gutter="20" class="quick-actions-row">
+      <el-col :xs="12" :md="6">
+        <el-card class="quick-action-card" @click="goStudy">
+          <el-icon size="28" color="#6366f1"><Timer /></el-icon>
+          <span>开始学习</span>
+        </el-card>
+      </el-col>
+      <el-col :xs="12" :md="6">
+        <el-card class="quick-action-card" @click="goDiary">
+          <el-icon size="28" color="#10b981"><Notebook /></el-icon>
+          <span>写日记</span>
+        </el-card>
+      </el-col>
+      <el-col :xs="12" :md="6">
+        <el-card class="quick-action-card" @click="generateAIDiary" :loading="diaryLoading">
+          <el-icon size="28" color="#f59e0b"><MagicStick /></el-icon>
+          <span>AI写日记</span>
+        </el-card>
+      </el-col>
+      <el-col :xs="12" :md="6">
+        <el-card class="quick-action-card" @click="goStats">
+          <el-icon size="28" color="#8b5cf6"><DataAnalysis /></el-icon>
+          <span>查看统计</span>
+        </el-card>
+      </el-col>
+    </el-row>
     </div>
   </div>
 </template>
@@ -135,6 +163,7 @@ const userStore = useUserStore()
 const userInfo = computed(() => userStore.userInfo)
 const dailyGoal = computed(() => userStore.userInfo?.dailyGoal || 120)
 const loading = ref(true)
+const diaryLoading = ref(false)
 
 const todayStats = ref({
   duration: 0,
@@ -202,6 +231,30 @@ const handleCheckIn = async () => {
     await loadCheckInStatus()
   } catch (error) {
     console.error('打卡失败:', error)
+  }
+}
+
+const goStudy = () => {
+  window.location.href = '/study'
+}
+
+const goDiary = () => {
+  window.location.href = '/diary'
+}
+
+const goStats = () => {
+  window.location.href = '/stats'
+}
+
+const generateAIDiary = async () => {
+  diaryLoading.value = true
+  try {
+    await diaryApi.generate()
+    ElMessage.success('AI日记生成成功！')
+  } catch (error) {
+    ElMessage.error(error.message || '生成失败')
+  } finally {
+    diaryLoading.value = false
   }
 }
 
@@ -296,6 +349,32 @@ onMounted(async () => {
 
 .checkin-btn { width: 120px; height: 40px; border-radius: 10px; font-weight: 600; }
 .checked-tag { height: 40px; padding: 0 20px; font-size: 14px; border-radius: 10px; }
+
+/* 快捷操作 */
+.quick-actions-row {
+  margin-bottom: 20px;
+}
+
+.quick-action-card {
+  cursor: pointer;
+  text-align: center;
+  padding: 20px;
+  transition: background 0.2s;
+}
+
+.quick-action-card:hover {
+  background: var(--bg-page);
+}
+
+.quick-action-card .el-icon {
+  margin-bottom: 8px;
+}
+
+.quick-action-card span {
+  display: block;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
 
 /* 骨架屏 */
 .skeleton-wrapper { animation: pulse 1.5s ease-in-out infinite; }
