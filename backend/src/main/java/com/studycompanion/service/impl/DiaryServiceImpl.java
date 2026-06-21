@@ -1,6 +1,7 @@
 package com.studycompanion.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.studycompanion.common.AiClient;
 import com.studycompanion.common.BusinessException;
 import com.studycompanion.common.ErrorCode;
 import com.studycompanion.dto.CreateDiaryRequest;
@@ -35,6 +36,7 @@ public class DiaryServiceImpl implements DiaryService {
     private final StudyRecordMapper studyRecordMapper;
     private final SubjectMapper subjectMapper;
     private final DiaryImageService diaryImageService;
+    private final AiClient aiClient;
 
     private static final int MAX_AI_GENERATE_COUNT = 3;
 
@@ -212,24 +214,44 @@ public class DiaryServiceImpl implements DiaryService {
                 : subjectMapper.selectBatchIds(subjectIds).stream()
                         .collect(Collectors.toMap(Subject::getId, s -> s));
 
-        StringBuilder content = new StringBuilder();
-        content.append("# 今日学习日记\n\n");
+        // 构建学习数据摘要
+        StringBuilder dataSummary = new StringBuilder();
+        dataSummary.append("日期：").append(date).append("\n");
 
         if (records.isEmpty()) {
-            content.append("今天没有学习记录。\n");
+            dataSummary.append("今天没有学习记录。\n");
         } else {
-            content.append("## 学习情况\n\n");
+            dataSummary.append("学习科目：\n");
             int totalDuration = 0;
             for (StudyRecord record : records) {
                 Subject subject = subjectMap.get(record.getSubjectId());
                 String subjectName = subject != null ? subject.getName() : "未知科目";
-                content.append("- **").append(subjectName).append("**: ").append(record.getDuration()).append("分钟\n");
+                dataSummary.append("- ").append(subjectName).append("：").append(record.getDuration()).append("分钟\n");
                 totalDuration += record.getDuration();
             }
-            content.append("\n**总学习时长**: ").append(totalDuration).append("分钟\n");
+            dataSummary.append("总学习时长：").append(totalDuration).append("分钟\n");
         }
 
-        return content.toString();
+        // 调用 AI 生成日记
+        String systemPrompt = "你是一个考公学习陪伴助手。根据用户今天的学习数据，生成一篇温暖、鼓励的学习日记。\n\n" +
+                "要求：\n" +
+                "1. 使用 Markdown 格式\n" +
+                "2. 包含今日学习总结\n" +
+                "3. 如果有学习记录，分析学习情况，给出建议\n" +
+                "4. 如果没有学习记录，鼓励用户明天开始\n" +
+                "5. 语气温暖积极，像朋友一样\n" +
+                "6. 字数控制在 200-400 字";
+
+        try {
+            return aiClient.chat(systemPrompt, "请根据以下学习数据生成日记：\n\n" + dataSummary);
+        } catch (Exception e) {
+            log.warn("AI日记生成失败，使用模板: {}", e.getMessage());
+            // 降级到模板
+            if (records.isEmpty()) {
+                return "# 今日学习日记\n\n今天没有学习记录。休息一下，明天继续加油！\n\n记住，坚持就是胜利。";
+            }
+            return "# 今日学习日记\n\n" + dataSummary + "\n\n继续努力，每天进步一点点！";
+        }
     }
 
     @Override
