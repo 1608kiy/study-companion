@@ -3,9 +3,11 @@ package com.studycompanion.common;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -25,7 +27,15 @@ public class AiClient {
     @Value("${ai.enabled}")
     private boolean enabled;
 
-    private final RestTemplate restTemplate = new RestTemplate();
+    private final RestTemplate restTemplate;
+
+    public AiClient() {
+        // 配置超时
+        SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
+        factory.setConnectTimeout(5000);  // 连接超时 5 秒
+        factory.setReadTimeout(60000);    // 读取超时 60 秒（AI 响应较慢）
+        this.restTemplate = new RestTemplate(factory);
+    }
 
     public boolean isEnabled() {
         return enabled;
@@ -46,7 +56,7 @@ public class AiClient {
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.setBearerAuth(apiKey);
 
-        List<Map<String, String>> allMessages = new java.util.ArrayList<>();
+        List<Map<String, String>> allMessages = new ArrayList<>();
         allMessages.add(Map.of("role", "system", "content", systemPrompt));
         allMessages.addAll(messages);
 

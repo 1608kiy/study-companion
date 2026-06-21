@@ -58,7 +58,13 @@ public class AiServiceImpl implements AiService {
                 "4. 如果没有断签，要表扬用户的坚持\n" +
                 "5. 使用Markdown格式，语气温暖积极\n" +
                 "6. 在报告末尾给出下周的学习建议";
-        String content = aiClient.chat(systemPrompt, "请根据以下学习数据生成周报：\n\n" + dataSummary);
+        String content;
+        try {
+            content = aiClient.chat(systemPrompt, "请根据以下学习数据生成周报：\n\n" + dataSummary);
+        } catch (Exception e) {
+            log.warn("AI周报生成失败，使用模板生成: {}", e.getMessage());
+            content = generateTemplateReport(dataSummary, "周");
+        }
 
         AiAnalysis analysis = new AiAnalysis();
         analysis.setUserId(userId);
@@ -85,7 +91,14 @@ public class AiServiceImpl implements AiService {
                 "5. 如果断签次数少或没有，要给予肯定和鼓励\n" +
                 "6. 使用Markdown格式，语气温暖鼓励\n" +
                 "7. 在报告末尾给出下月的学习计划建议";
-        String content = aiClient.chat(systemPrompt, "请根据以下学习数据生成月报：\n\n" + dataSummary);
+
+        String content;
+        try {
+            content = aiClient.chat(systemPrompt, "请根据以下学习数据生成月报：\n\n" + dataSummary);
+        } catch (Exception e) {
+            log.warn("AI月报生成失败，使用模板生成: {}", e.getMessage());
+            content = generateTemplateReport(dataSummary, "月");
+        }
 
         AiAnalysis analysis = new AiAnalysis();
         analysis.setUserId(userId);
@@ -268,6 +281,20 @@ public class AiServiceImpl implements AiService {
         return subjects.stream()
                 .map(Subject::getName)
                 .collect(Collectors.joining("、"));
+    }
+
+    /**
+     * 模板报告（AI 不可用时的降级方案）
+     */
+    private String generateTemplateReport(String dataSummary, String period) {
+        return "# 学习" + period + "报\n\n" +
+                "## 学习数据\n\n" + dataSummary + "\n\n" +
+                "## 总结\n\n" +
+                "以上是您本" + period + "的学习数据汇总。请继续保持学习节奏，每天进步一点点！\n\n" +
+                "## 建议\n\n" +
+                "1. 保持每日学习习惯\n" +
+                "2. 合理分配各科学习时间\n" +
+                "3. 注意劳逸结合，保持良好状态";
     }
 
     private AiAnalysisVO convertToVO(AiAnalysis analysis) {
