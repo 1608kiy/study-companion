@@ -57,7 +57,7 @@ DevContainer provides MySQL 8.0 and Redis 7 via docker-compose. Forwarded ports:
 - **Soft delete**: MyBatis-Plus logical delete on `deleted` field (0/1)
 - **Logical delete value**: 1=deleted, 0=not deleted
 - **AI integration**: MiMo via `AiClient.java` (generic OpenAI-compatible HTTP client)
-- **API endpoints**: Auth, User, Subject, StudyRecord, Goal, Diary, CheckIn, AI
+- **API endpoints**: Auth, User, Subject, StudyRecord, Goal, Diary, CheckIn, AI, Exam, Material
 
 ## Frontend conventions
 
@@ -78,7 +78,7 @@ DevContainer provides MySQL 8.0 and Redis 7 via docker-compose. Forwarded ports:
 - **State management**: Pinia (`store/user.js`, `store/study.js`)
 - **API layer**: `api/index.js` (uni.request wrapper) + `api/modules.js` (all endpoints)
 - **Config**: `config/index.js` — environment-based BASE_URL (H5 proxy vs production)
-- **Pages**: 9 pages (5 tabs + 4 sub-pages) in `pages/` directory
+- **Pages**: 12 pages (5 tabs + 7 sub-pages) in `pages/` directory
 - **Components**: Custom `tab-bar.vue` + `main-layout.vue` (replaces native tabBar)
 - **Styling**: Shared styles in `uni.scss`, all pages use global classes
 - **Error handling**: `utils/error-handler.js` — Vue errors, unhandled rejections, page not found
@@ -91,14 +91,16 @@ DevContainer provides MySQL 8.0 and Redis 7 via docker-compose. Forwarded ports:
 
 | Module | Endpoints | Description |
 |--------|-----------|-------------|
-| Auth | POST `/api/v1/auth/login`, `/api/v1/auth/register` | JWT authentication |
+| Auth | POST `/api/v1/auth/login`, `/api/v1/auth/register`, `/api/v1/auth/forgot-password`, `/api/v1/auth/reset-password` | JWT authentication + password reset |
 | User | GET/PUT `/api/v1/user/profile`, DELETE `/api/v1/user/delete` | User management |
 | Subject | CRUD `/api/v1/subjects`, GET `/api/v1/subjects/preset` | Study subjects |
-| StudyRecord | CRUD `/api/v1/study-records`, timer endpoints, GET `/api/v1/study-records/stats` | Study tracking |
+| StudyRecord | CRUD `/api/v1/study-records`, timer endpoints, GET `/api/v1/study-records/stats`, `/api/v1/study-records/efficiency` | Study tracking + efficiency analysis |
 | Goal | CRUD `/api/v1/goals`, daily/weekly/monthly stats, calendar stats | Goal management |
 | Diary | CRUD `/api/v1/diaries`, generate, regenerate, images | AI diary |
 | CheckIn | POST `/api/v1/check-in`, history, miss, replenish | Attendance |
 | AI | POST `/api/v1/ai/chat`, focus-judge, weekly/monthly report, chat/history | AI features |
+| Exam | CRUD `/api/v1/exams` | Exam countdown |
+| Material | CRUD `/api/v1/materials`, upload, favorite | Learning materials |
 
 ## Data authenticity
 

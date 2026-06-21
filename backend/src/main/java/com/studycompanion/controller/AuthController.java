@@ -39,7 +39,8 @@ public class AuthController {
     @PostMapping("/forgot-password")
     public Result<String> forgotPassword(@Valid @RequestBody ForgotPasswordRequest request) {
         String code = userService.forgotPassword(request);
-        return Result.success("验证码已发送", code);
+        // TODO: 生产环境应通过邮件发送验证码，而非直接返回
+        return Result.success("验证码已发送（开发环境直接返回）", code);
     }
 
     @Operation(summary = "重置密码")

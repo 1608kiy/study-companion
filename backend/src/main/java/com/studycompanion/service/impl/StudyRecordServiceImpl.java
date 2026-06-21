@@ -258,6 +258,11 @@ public class StudyRecordServiceImpl implements StudyRecordService {
 
     @Override
     public PageResponse<StudyRecordVO> getStudyRecordsPaged(Long userId, String startDate, String endDate, int page, int size) {
+        // 参数验证
+        if (page < 1) page = 1;
+        if (size < 1) size = 10;
+        if (size > 100) size = 100; // 限制最大每页数量
+        
         LambdaQueryWrapper<StudyRecord> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(StudyRecord::getUserId, userId);
 
@@ -485,24 +490,28 @@ public class StudyRecordServiceImpl implements StudyRecordService {
     }
 
     private int calculateCurrentStreak(Long userId, LocalDate today) {
+        // 优化：一次查询获取最近的打卡记录，然后在内存中计算连续天数
+        LambdaQueryWrapper<CheckIn> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(CheckIn::getUserId, userId)
+               .eq(CheckIn::getIsCompleted, 1)
+               .le(CheckIn::getCheckDate, today)
+               .orderByDesc(CheckIn::getCheckDate)
+               .last("LIMIT 366"); // 最多查一年
+        List<CheckIn> checkIns = checkInMapper.selectList(wrapper);
+        
         int streak = 0;
-        LocalDate checkDate = today;
-
-        while (true) {
-            LambdaQueryWrapper<CheckIn> wrapper = new LambdaQueryWrapper<>();
-            wrapper.eq(CheckIn::getUserId, userId)
-                   .eq(CheckIn::getCheckDate, checkDate)
-                   .eq(CheckIn::getIsCompleted, 1);
-            CheckIn checkIn = checkInMapper.selectOne(wrapper);
-
-            if (checkIn == null) {
+        LocalDate expectedDate = today;
+        
+        for (CheckIn checkIn : checkIns) {
+            if (checkIn.getCheckDate().equals(expectedDate)) {
+                streak++;
+                expectedDate = expectedDate.minusDays(1);
+            } else if (checkIn.getCheckDate().isBefore(expectedDate)) {
+                // 有中断
                 break;
             }
-
-            streak++;
-            checkDate = checkDate.minusDays(1);
         }
-
+        
         return streak;
     }
 

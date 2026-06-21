@@ -172,6 +172,7 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
 import { checkInApi, studyRecordApi, diaryApi } from '@/api/modules'
 import { ElMessage } from 'element-plus'
@@ -180,6 +181,7 @@ import ReplenishDialog from '@/components/ReplenishDialog.vue'
 import ExamCountdown from '@/components/ExamCountdown.vue'
 import dayjs from 'dayjs'
 
+const router = useRouter()
 const userStore = useUserStore()
 const userInfo = computed(() => userStore.userInfo)
 const dailyGoal = computed(() => userStore.userInfo?.dailyGoal || 120)
@@ -257,15 +259,15 @@ const handleCheckIn = async () => {
 }
 
 const goStudy = () => {
-  window.location.href = '/study'
+  router.push('/study')
 }
 
 const goDiary = () => {
-  window.location.href = '/diary'
+  router.push('/diary')
 }
 
 const goStats = () => {
-  window.location.href = '/stats'
+  router.push('/stats')
 }
 
 const generateAIDiary = async () => {

@@ -60,6 +60,11 @@ public class DiaryServiceImpl implements DiaryService {
 
     @Override
     public PageResponse<DiaryVO> getDiaryListPaged(Long userId, String month, int page, int size) {
+        // 参数验证
+        if (page < 1) page = 1;
+        if (size < 1) size = 10;
+        if (size > 100) size = 100;
+        
         YearMonth yearMonth = month != null ? YearMonth.parse(month) : YearMonth.now();
         LocalDate startDate = yearMonth.atDay(1);
         LocalDate endDate = yearMonth.atEndOfMonth();

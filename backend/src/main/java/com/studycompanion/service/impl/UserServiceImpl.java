@@ -23,9 +23,9 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
@@ -184,8 +184,8 @@ public class UserServiceImpl implements UserService {
             throw new BusinessException(ErrorCode.USER_NOT_FOUND);
         }
 
-        // 生成6位验证码
-        String code = String.format("%06d", new Random().nextInt(1000000));
+        // 生成6位验证码（使用安全随机数）
+        String code = String.format("%06d", new SecureRandom().nextInt(1000000));
 
         // 存储到Redis，5分钟有效
         redisTemplate.opsForValue().set(

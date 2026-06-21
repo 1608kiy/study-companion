@@ -20,6 +20,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -55,7 +56,22 @@ public class MaterialServiceImpl implements MaterialService {
         wrapper.orderByDesc(LearningMaterial::getCreateTime);
         
         List<LearningMaterial> materials = materialMapper.selectList(wrapper);
-        return materials.stream().map(this::convertToVO).toList();
+        
+        // 批量加载科目，避免 N+1 查询
+        Set<Long> subjectIds = materials.stream()
+                .map(LearningMaterial::getSubjectId)
+                .filter(id -> id != null)
+                .collect(Collectors.toSet());
+        Map<Long, Subject> subjectMap = new HashMap<>();
+        if (!subjectIds.isEmpty()) {
+            List<Subject> subjects = subjectMapper.selectBatchIds(subjectIds);
+            subjectMap = subjects.stream().collect(Collectors.toMap(Subject::getId, s -> s));
+        }
+        
+        Map<Long, Subject> finalSubjectMap = subjectMap;
+        return materials.stream()
+                .map(m -> convertToVO(m, finalSubjectMap))
+                .toList();
     }
 
     @Override
@@ -175,6 +191,10 @@ public class MaterialServiceImpl implements MaterialService {
     }
 
     private MaterialVO convertToVO(LearningMaterial material) {
+        return convertToVO(material, new HashMap<>());
+    }
+    
+    private MaterialVO convertToVO(LearningMaterial material, Map<Long, Subject> subjectMap) {
         MaterialVO vo = new MaterialVO();
         vo.setId(material.getId());
         vo.setSubjectId(material.getSubjectId());
@@ -190,7 +210,10 @@ public class MaterialServiceImpl implements MaterialService {
         
         // 获取科目名称
         if (material.getSubjectId() != null) {
-            Subject subject = subjectMapper.selectById(material.getSubjectId());
+            Subject subject = subjectMap.get(material.getSubjectId());
+            if (subject == null) {
+                subject = subjectMapper.selectById(material.getSubjectId());
+            }
             if (subject != null) {
                 vo.setSubjectName(subject.getName());
             }

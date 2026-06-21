@@ -148,25 +148,28 @@ public class CheckInServiceImpl implements CheckInService {
     }
 
     private int calculateStreak(Long userId, LocalDate today) {
-        int streak = 1;
-        LocalDate checkDate = today.minusDays(1);
-
-        while (true) {
-            LambdaQueryWrapper<CheckIn> wrapper = new LambdaQueryWrapper<>();
-            wrapper.eq(CheckIn::getUserId, userId)
-                   .eq(CheckIn::getCheckDate, checkDate)
-                   .eq(CheckIn::getIsCompleted, 1);
-            CheckIn checkIn = checkInMapper.selectOne(wrapper);
-
-            if (checkIn == null) {
+        // 优化：一次查询获取最近的打卡记录
+        LambdaQueryWrapper<CheckIn> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(CheckIn::getUserId, userId)
+               .eq(CheckIn::getIsCompleted, 1)
+               .le(CheckIn::getCheckDate, today)
+               .orderByDesc(CheckIn::getCheckDate)
+               .last("LIMIT 366");
+        List<CheckIn> checkIns = checkInMapper.selectList(wrapper);
+        
+        int streak = 0;
+        LocalDate expectedDate = today;
+        
+        for (CheckIn checkIn : checkIns) {
+            if (checkIn.getCheckDate().equals(expectedDate)) {
+                streak++;
+                expectedDate = expectedDate.minusDays(1);
+            } else if (checkIn.getCheckDate().isBefore(expectedDate)) {
                 break;
             }
-
-            streak++;
-            checkDate = checkDate.minusDays(1);
         }
-
-        return streak;
+        
+        return Math.max(1, streak); // 至少返回1（当天已打卡）
     }
 
     private void updateUserStatistics(Long userId, LocalDate today, int streak) {

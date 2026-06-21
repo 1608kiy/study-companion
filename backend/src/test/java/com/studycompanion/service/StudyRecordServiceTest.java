@@ -185,7 +185,7 @@ class StudyRecordServiceTest {
             Map.of("subjectName", "行测", "totalDuration", 60)
         ));
         when(studyRecordMapper.getDailyDurationsBetween(eq(userId), any(), any())).thenReturn(Collections.emptyList());
-        when(checkInMapper.selectOne(any(LambdaQueryWrapper.class))).thenReturn(null);
+        when(checkInMapper.selectList(any(LambdaQueryWrapper.class))).thenReturn(Collections.emptyList());
         
         StudyStatsVO result = studyRecordService.getStudyStats(userId);
         
@@ -231,7 +231,7 @@ class StudyRecordServiceTest {
         when(studyRecordMapper.getDurationBetween(eq(userId), any(), any())).thenReturn(0);
         when(studyRecordMapper.getSubjectStats(userId)).thenReturn(Collections.emptyList());
         when(studyRecordMapper.getDailyDurationsBetween(eq(userId), any(), any())).thenReturn(Collections.emptyList());
-        when(checkInMapper.selectOne(any(LambdaQueryWrapper.class))).thenReturn(null);
+        when(checkInMapper.selectList(any(LambdaQueryWrapper.class))).thenReturn(Collections.emptyList());
         
         StudyStatsVO result = studyRecordService.getStudyStats(userId);
         
