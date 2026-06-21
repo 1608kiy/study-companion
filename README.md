@@ -8,13 +8,31 @@
 
 ## 核心功能
 
-- **番茄钟计时**：精确记录每次学习的时长
+### 学习管理
+- **番茄钟计时**：精确记录每次学习的时长，支持暂停/恢复
 - **学习打卡**：每日打卡，记录连续学习天数
 - **强制日记**：写完日记才能打卡成功，促进深度反思
-- **AI智能分析**：根据学习数据给出个性化建议、周报/月报
-- **数据可视化**：日历热力图、统计图表，让努力看得见
-- **深色模式**：支持深色/浅色主题切换
-- **移动端适配**：底部导航栏、响应式布局
+- **学习效率分析**：最佳学习时段、科目分布、专注度趋势
+
+### AI 功能
+- **AI智能对话**：考公问题解答，支持上下文记忆
+- **AI日记生成**：根据学习数据自动生成日记
+- **AI周报/月报**：定期学习报告，发现问题与进步
+- **AI专注度评估**：分析学习专注度，提供改进建议
+
+### 考试管理
+- **考试倒计时**：设置考试日期，首页显示倒计时
+- **目标管理**：每日/每周/每月学习目标
+- **补卡申请**：断签后可申请补签，AI判断是否允许
+
+### 学习资料
+- **资料上传**：支持 PDF、Word、Excel、PPT、图片等格式
+- **资料管理**：搜索、分类、收藏功能
+- **跨端同步**：Web 和小程序数据实时同步
+
+### 跨平台
+- **Web 端**：Vue3 + Element Plus，响应式设计
+- **小程序**：Uniapp 3.x，支持微信/支付宝/百度/抖音/QQ
 
 ## 技术栈
 
@@ -22,6 +40,7 @@
 |------|------|
 | 后端 | Spring Boot 3.2.5 + MyBatis-Plus 3.5.5 + Java 17 |
 | 前端 | Vue3 + Vite + Element Plus + Pinia |
+| 小程序 | Uniapp 3.x (Vue3) |
 | 数据库 | MySQL 8.0 + Redis 7 |
 | AI | MiMo (OpenAI兼容接口) |
 
@@ -36,8 +55,12 @@ study-companion/
 ├── frontend/              # 前端项目
 │   ├── src/               # Vue源码
 │   └── src/__tests__/     # 测试代码
-├── miniapp/               # 小程序项目（未开始）
+├── miniapp/               # 小程序项目
+│   ├── pages/             # 页面
+│   ├── api/               # API层
+│   └── store/             # 状态管理
 ├── AGENTS.md              # AI开发指南
+├── CHANGELOG.md           # 更新日志
 └── README.md              # 本文件
 ```
 
@@ -65,6 +88,13 @@ mysql -u root -p study_companion < backend/sql/init.sql
 ```bash
 # AI API Key（必填，否则AI功能不可用）
 export AI_API_KEY="your-mimo-api-key"
+
+# JWT密钥（可选，有默认值）
+export JWT_SECRET="your-jwt-secret"
+
+# 数据库配置（可选，有默认值）
+export DB_USERNAME="root"
+export DB_PASSWORD="root"
 ```
 
 ### 3. 后端启动
@@ -88,15 +118,24 @@ npm run dev
 
 前端启动在 http://localhost:3000
 
+### 5. 小程序启动
+
+```bash
+cd miniapp
+npm install
+npm run dev:mp-weixin  # 微信小程序
+npm run dev:h5         # H5预览
+```
+
 ## 环境变量
 
 | 变量名 | 说明 | 默认值 |
 |--------|------|--------|
 | `AI_API_KEY` | MiMo API密钥 | `your-api-key`（占位符） |
-| `SPRING_DATASOURCE_URL` | 数据库连接 | `jdbc:mysql://localhost:3306/study_companion` |
-| `SPRING_DATASOURCE_USERNAME` | 数据库用户名 | `root` |
-| `SPRING_DATASOURCE_PASSWORD` | 数据库密码 | `root` |
-| `SPRING_DATA_REDIS_HOST` | Redis地址 | `localhost` |
+| `JWT_SECRET` | JWT签名密钥 | `study-companion-default-secret` |
+| `DB_USERNAME` | 数据库用户名 | `root` |
+| `DB_PASSWORD` | 数据库密码 | `root` |
+| `REDIS_PASSWORD` | Redis密码 | 空 |
 
 ## API 端点
 
@@ -106,6 +145,8 @@ npm run dev
 |------|------|------|
 | POST | `/api/v1/auth/register` | 注册 |
 | POST | `/api/v1/auth/login` | 登录 |
+| POST | `/api/v1/auth/forgot-password` | 忘记密码 |
+| POST | `/api/v1/auth/reset-password` | 重置密码 |
 
 ### 用户
 
@@ -114,6 +155,7 @@ npm run dev
 | GET | `/api/v1/user/profile` | 获取个人信息 |
 | PUT | `/api/v1/user/profile` | 更新个人信息 |
 | DELETE | `/api/v1/user/delete` | 注销账号 |
+| POST | `/api/v1/user/logout` | 登出 |
 
 ### 科目
 
@@ -137,6 +179,7 @@ npm run dev
 | GET | `/api/v1/study-records` | 获取记录列表 |
 | GET | `/api/v1/study-records/paged` | 获取记录列表（分页） |
 | GET | `/api/v1/study-records/stats` | 获取学习统计 |
+| GET | `/api/v1/study-records/efficiency` | 获取效率分析 |
 | PUT | `/api/v1/study-records/{id}` | 更新记录 |
 | DELETE | `/api/v1/study-records/{id}` | 删除记录 |
 
@@ -159,8 +202,6 @@ npm run dev
 | GET | `/api/v1/diaries/paged` | 获取日记列表（分页） |
 | GET | `/api/v1/diaries/date/{date}` | 获取指定日期日记 |
 | POST | `/api/v1/diaries` | 创建日记 |
-| PUT | `/api/v1/diaries/{id}` | 更新日记 |
-| DELETE | `/api/v1/diaries/{id}` | 删除日记 |
 | POST | `/api/v1/diaries/generate` | AI生成日记 |
 | POST | `/api/v1/diaries/{id}/regenerate` | 重新生成日记 |
 
@@ -178,6 +219,26 @@ npm run dev
 | GET | `/api/v1/goals/stats/monthly` | 每月统计 |
 | GET | `/api/v1/goals/stats/calendar` | 月历统计 |
 
+### 考试
+
+| 方法 | 路径 | 说明 |
+|------|------|------|
+| GET | `/api/v1/exams` | 获取考试列表 |
+| POST | `/api/v1/exams` | 创建考试 |
+| PUT | `/api/v1/exams/{id}` | 更新考试 |
+| DELETE | `/api/v1/exams/{id}` | 删除考试 |
+
+### 学习资料
+
+| 方法 | 路径 | 说明 |
+|------|------|------|
+| GET | `/api/v1/materials` | 获取资料列表 |
+| GET | `/api/v1/materials/{id}` | 获取资料详情 |
+| POST | `/api/v1/materials` | 上传资料 |
+| PUT | `/api/v1/materials/{id}` | 更新资料 |
+| DELETE | `/api/v1/materials/{id}` | 删除资料 |
+| POST | `/api/v1/materials/{id}/favorite` | 切换收藏 |
+
 ### AI
 
 | 方法 | 路径 | 说明 |
@@ -187,6 +248,8 @@ npm run dev
 | POST | `/api/v1/ai/monthly-report` | 生成月报 |
 | POST | `/api/v1/ai/focus-judge` | 专注度评估 |
 | GET | `/api/v1/ai/share` | 生成分享图 |
+| GET | `/api/v1/ai/chat/history` | 获取聊天历史 |
+| DELETE | `/api/v1/ai/chat/history` | 清空聊天历史 |
 
 ## 开发命令
 
@@ -208,15 +271,45 @@ npm test                         # 运行测试
 npm run build                    # 生产构建
 ```
 
+### 小程序
+
+```bash
+cd miniapp
+npm install                      # 安装依赖
+npm run dev:mp-weixin            # 微信小程序开发
+npm run dev:mp-alipay            # 支付宝小程序开发
+npm run dev:h5                   # H5预览
+npm run build:mp-weixin          # 微信小程序构建
+```
+
 ## 测试
 
-- 后端：78个单元测试（Mockito + JUnit5）
-- 前端：49个单元测试（Vitest）
+- 后端：85个单元测试（Mockito + JUnit5）
+- 前端：58个单元测试（Vitest）
 
 ```bash
 # 运行所有测试
 mvn test -f backend/pom.xml && cd frontend && npm test
 ```
+
+## 数据真实性
+
+**核心原则**：学习数据一旦创建，不可修改。所有修改需要AI审批。
+
+- **日记**：不可编辑删除，只能AI重新生成
+- **学习记录**：不可删除，修改需要AI审批（Redis Token，10分钟有效）
+- **补卡**：需要AI判断是否允许
+
+## 跨端同步
+
+- Web 和小程序共享同一后端API
+- 数据存储在MySQL，实时同步
+- AI对话历史跨端共享
+- 计时器状态通过Redis同步
+
+## 更新日志
+
+详见 [CHANGELOG.md](CHANGELOG.md)
 
 ## 许可证
 

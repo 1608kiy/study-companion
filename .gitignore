@@ -12,6 +12,11 @@ frontend/node_modules/
 frontend/dist/
 frontend/.env.local
 
+# Miniapp
+miniapp/node_modules/
+miniapp/dist/
+miniapp/unpackage/
+
 # IDE
 .idea/
 .vscode/
@@ -31,3 +36,6 @@ Thumbs.db
 *.log
 npm-debug.log*
 dump.rdb
+
+# Uploads
+uploads/
