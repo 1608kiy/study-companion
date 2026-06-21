@@ -93,6 +93,7 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
+import { onShareAppMessage, onShareTimeline } from '@dcloudio/uni-app'
 import { useUserStore } from '../../store/user'
 import { checkInApi, studyRecordApi, diaryApi } from '../../api/modules'
 import MainLayout from '../../components/main-layout.vue'
@@ -119,7 +120,18 @@ const checkInStatusData = ref({
 })
 
 const weeklyData = ref([0, 0, 0, 0, 0, 0, 0])
-const weekDays = ['一', '二', '三', '四', '五', '六', '日']
+
+// 动态生成最近7天的标签
+const weekDays = computed(() => {
+  const days = []
+  const dayNames = ['日', '一', '二', '三', '四', '五', '六']
+  for (let i = 6; i >= 0; i--) {
+    const date = new Date()
+    date.setDate(date.getDate() - i)
+    days.push(dayNames[date.getDay()])
+  }
+  return days
+})
 
 const maxWeeklyValue = computed(() => {
   return Math.max(...weeklyData.value, 1)
@@ -194,13 +206,14 @@ const onRefresh = async () => {
   }
 }
 
-const onShareAppMessage = () => {
+// 注册分享回调
+onShareAppMessage(() => {
   return generateCheckInShare(todayStats.value)
-}
+})
 
-const onShareTimeline = () => {
+onShareTimeline(() => {
   return generateCheckInShare(todayStats.value)
-}
+})
 
 onMounted(() => {
   loadData()

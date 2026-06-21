@@ -116,8 +116,8 @@ class DiaryServiceTest {
         subject.setName("行测");
 
         when(diaryMapper.selectOne(any(LambdaQueryWrapper.class))).thenReturn(null);
-        when(subjectMapper.selectById(1L)).thenReturn(subject);
         when(studyRecordMapper.selectList(any())).thenReturn(Arrays.asList(record));
+        when(subjectMapper.selectBatchIds(anyCollection())).thenReturn(Arrays.asList(subject));
         when(diaryMapper.insert(any(Diary.class))).thenReturn(1);
 
         DiaryVO result = diaryService.generateDiary(1L);

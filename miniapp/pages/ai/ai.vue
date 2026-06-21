@@ -84,6 +84,7 @@
 
 <script setup>
 import { ref, onMounted, nextTick } from 'vue'
+import { onShareAppMessage, onShareTimeline } from '@dcloudio/uni-app'
 import { aiApi } from '../../api/modules'
 import { renderMarkdown } from '../../utils/markdown'
 import MainLayout from '../../components/main-layout.vue'
@@ -198,19 +199,20 @@ const handleFocusJudge = async () => {
   }
 }
 
-const onShareAppMessage = () => {
+// 注册分享回调
+onShareAppMessage(() => {
   return {
     title: '智学伴 AI 助手 - 智能学习分析',
     path: '/pages/ai/ai'
   }
-}
+})
 
-const onShareTimeline = () => {
+onShareTimeline(() => {
   return {
     title: '智学伴 AI 助手 - 智能学习分析',
     path: '/pages/ai/ai'
   }
-}
+})
 
 onMounted(async () => {
   const hasHistory = await loadHistory()

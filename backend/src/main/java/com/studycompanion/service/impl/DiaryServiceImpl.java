@@ -23,7 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.YearMonth;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -174,18 +174,44 @@ public class DiaryServiceImpl implements DiaryService {
             if (existingDiary.getAiGenerateCount() >= MAX_AI_GENERATE_COUNT) {
                 throw new BusinessException(ErrorCode.DIARY_AI_COUNT_EXCEEDED);
             }
+            // 重新生成内容
+            String newContent = generateDiaryContent(userId, today);
+            existingDiary.setContent(newContent);
             existingDiary.setAiGenerateCount(existingDiary.getAiGenerateCount() + 1);
             diaryMapper.updateById(existingDiary);
             return convertToVO(existingDiary, userId);
         }
 
-        // 获取今日学习记录
+        // 获取今日学习记录并生成内容
+        String content = generateDiaryContent(userId, today);
+
+        Diary diary = new Diary();
+        diary.setUserId(userId);
+        diary.setDiaryDate(today);
+        diary.setContent(content);
+        diary.setAiGenerated(1);
+        diary.setAiGenerateCount(1);
+
+        diaryMapper.insert(diary);
+        return convertToVO(diary, userId);
+    }
+
+    private String generateDiaryContent(Long userId, LocalDate date) {
+        // 获取学习记录
         LambdaQueryWrapper<StudyRecord> recordWrapper = new LambdaQueryWrapper<>();
         recordWrapper.eq(StudyRecord::getUserId, userId)
-                     .eq(StudyRecord::getStudyDate, today);
+                     .eq(StudyRecord::getStudyDate, date);
         List<StudyRecord> records = studyRecordMapper.selectList(recordWrapper);
 
-        // 生成日记内容
+        // 批量查询科目
+        Set<Long> subjectIds = records.stream()
+                .map(StudyRecord::getSubjectId)
+                .collect(Collectors.toSet());
+        Map<Long, Subject> subjectMap = subjectIds.isEmpty()
+                ? Collections.emptyMap()
+                : subjectMapper.selectBatchIds(subjectIds).stream()
+                        .collect(Collectors.toMap(Subject::getId, s -> s));
+
         StringBuilder content = new StringBuilder();
         content.append("# 今日学习日记\n\n");
 
@@ -195,7 +221,7 @@ public class DiaryServiceImpl implements DiaryService {
             content.append("## 学习情况\n\n");
             int totalDuration = 0;
             for (StudyRecord record : records) {
-                Subject subject = subjectMapper.selectById(record.getSubjectId());
+                Subject subject = subjectMap.get(record.getSubjectId());
                 String subjectName = subject != null ? subject.getName() : "未知科目";
                 content.append("- **").append(subjectName).append("**: ").append(record.getDuration()).append("分钟\n");
                 totalDuration += record.getDuration();
@@ -203,15 +229,7 @@ public class DiaryServiceImpl implements DiaryService {
             content.append("\n**总学习时长**: ").append(totalDuration).append("分钟\n");
         }
 
-        Diary diary = new Diary();
-        diary.setUserId(userId);
-        diary.setDiaryDate(today);
-        diary.setContent(content.toString());
-        diary.setAiGenerated(1);
-        diary.setAiGenerateCount(1);
-
-        diaryMapper.insert(diary);
-        return convertToVO(diary, userId);
+        return content.toString();
     }
 
     @Override
@@ -223,31 +241,9 @@ public class DiaryServiceImpl implements DiaryService {
             throw new BusinessException(ErrorCode.DIARY_AI_COUNT_EXCEEDED);
         }
 
-        // 获取当日学习记录
-        LambdaQueryWrapper<StudyRecord> recordWrapper = new LambdaQueryWrapper<>();
-        recordWrapper.eq(StudyRecord::getUserId, userId)
-                     .eq(StudyRecord::getStudyDate, diary.getDiaryDate());
-        List<StudyRecord> records = studyRecordMapper.selectList(recordWrapper);
-
         // 重新生成日记内容
-        StringBuilder content = new StringBuilder();
-        content.append("# 今日学习日记\n\n");
-
-        if (records.isEmpty()) {
-            content.append("今天没有学习记录。\n");
-        } else {
-            content.append("## 学习情况\n\n");
-            int totalDuration = 0;
-            for (StudyRecord record : records) {
-                Subject subject = subjectMapper.selectById(record.getSubjectId());
-                String subjectName = subject != null ? subject.getName() : "未知科目";
-                content.append("- **").append(subjectName).append("**: ").append(record.getDuration()).append("分钟\n");
-                totalDuration += record.getDuration();
-            }
-            content.append("\n**总学习时长**: ").append(totalDuration).append("分钟\n");
-        }
-
-        diary.setContent(content.toString());
+        String content = generateDiaryContent(userId, diary.getDiaryDate());
+        diary.setContent(content);
         diary.setAiGenerateCount(diary.getAiGenerateCount() + 1);
         diaryMapper.updateById(diary);
 

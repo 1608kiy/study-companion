@@ -6,13 +6,16 @@ import com.studycompanion.common.AiResponseParser;
 import com.studycompanion.common.BusinessException;
 import com.studycompanion.common.ErrorCode;
 import com.studycompanion.dto.MissRecordRequest;
+import com.studycompanion.entity.CheckIn;
 import com.studycompanion.entity.MissRecord;
+import com.studycompanion.mapper.CheckInMapper;
 import com.studycompanion.mapper.MissRecordMapper;
 import com.studycompanion.service.MissRecordService;
 import com.studycompanion.vo.MissRecordVO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -25,6 +28,7 @@ import java.util.stream.Collectors;
 public class MissRecordServiceImpl implements MissRecordService {
 
     private final MissRecordMapper missRecordMapper;
+    private final CheckInMapper checkInMapper;
     private final AiClient aiClient;
 
     @Override
@@ -87,6 +91,7 @@ public class MissRecordServiceImpl implements MissRecordService {
     }
 
     @Override
+    @Transactional
     public MissRecordVO replenish(Long userId, Long missRecordId) {
         MissRecord missRecord = getMissRecordById(userId, missRecordId);
 
@@ -98,8 +103,18 @@ public class MissRecordServiceImpl implements MissRecordService {
             throw new BusinessException(ErrorCode.REPLENISH_ALREADY_COMPLETED);
         }
 
+        // 标记已补签
         missRecord.setIsReplenished(1);
         missRecordMapper.updateById(missRecord);
+
+        // 创建打卡记录
+        CheckIn checkIn = new CheckIn();
+        checkIn.setUserId(userId);
+        checkIn.setCheckDate(missRecord.getMissDate());
+        checkIn.setIsCompleted(1);
+        checkIn.setTotalDuration(0);
+        checkIn.setStreak(0); // streak 会在下次打卡时重新计算
+        checkInMapper.insert(checkIn);
 
         return convertToVO(missRecord);
     }

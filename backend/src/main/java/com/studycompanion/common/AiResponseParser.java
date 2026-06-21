@@ -48,14 +48,26 @@ public class AiResponseParser {
         boolean allow = false;
         String reason = "";
         
-        if (json.containsKey("level")) {
-            level = ((Number) json.get("level")).intValue();
+        // 安全的类型转换
+        Object levelObj = json.get("level");
+        if (levelObj instanceof Number) {
+            level = ((Number) levelObj).intValue();
+        } else if (levelObj instanceof String) {
+            try { level = Integer.parseInt((String) levelObj); } catch (NumberFormatException ignored) {}
         }
-        if (json.containsKey("allow")) {
-            allow = (Boolean) json.get("allow");
+        
+        Object allowObj = json.get("allow");
+        if (allowObj instanceof Boolean) {
+            allow = (Boolean) allowObj;
+        } else if (allowObj instanceof String) {
+            allow = "true".equalsIgnoreCase((String) allowObj);
+        } else if (allowObj instanceof Number) {
+            allow = ((Number) allowObj).intValue() != 0;
         }
-        if (json.containsKey("reason")) {
-            reason = (String) json.get("reason");
+        
+        Object reasonObj = json.get("reason");
+        if (reasonObj instanceof String) {
+            reason = (String) reasonObj;
         }
         
         return new AiJudgmentResult(level, allow, reason);

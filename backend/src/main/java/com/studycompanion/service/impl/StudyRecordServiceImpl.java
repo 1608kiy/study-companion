@@ -158,9 +158,10 @@ public class StudyRecordServiceImpl implements StudyRecordService {
         StudyRecord record = new StudyRecord();
         record.setUserId(userId);
         record.setSubjectId(subjectId);
-        record.setStudyDate(LocalDate.now());
         record.setStartTime(LocalDateTime.now().minusSeconds(elapsed));
         record.setEndTime(LocalDateTime.now());
+        // 使用开始时间的日期，而不是当前日期（处理跨午夜情况）
+        record.setStudyDate(record.getStartTime().toLocalDate());
         record.setDuration(duration);
         studyRecordMapper.insert(record);
 
