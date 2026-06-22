@@ -83,10 +83,6 @@ const routes = [
     ],
   },
   {
-    path: '/',
-    redirect: '/landing',
-  },
-  {
     path: '/:pathMatch(.*)*',
     redirect: '/landing',
   },
