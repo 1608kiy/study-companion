@@ -44,7 +44,7 @@ jobs:
       - name: Build Android App
         run: |
           cd miniapp
-          npm run build:app
+          npx uni build -p app
         env:
           UNI_PLATFORM: app
 
