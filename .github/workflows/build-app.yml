@@ -42,15 +42,69 @@ jobs:
           path: frontend/dist
           retention-days: 30
 
+  build-android:
+    name: Build Android APK
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Accept Android SDK licenses
+        run: yes | sdkmanager --licenses
+
+      - name: Install Android SDK components
+        run: |
+          sdkmanager "platforms;android-34" "build-tools;34.0.0"
+
+      - name: Install dependencies
+        run: |
+          cd miniapp
+          npm install
+
+      - name: Build Android App
+        run: |
+          cd miniapp
+          npx uni build -p app
+        env:
+          UNI_PLATFORM: app
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-apk
+          path: miniapp/dist/**/*.apk
+          retention-days: 30
+
   release:
     name: Create Release
-    needs: [build-web]
+    needs: [build-web, build-android]
     runs-on: ubuntu-latest
     if: startsWith(github.ref, 'refs/tags/')
     
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
+      - name: Download APK
+        uses: actions/download-artifact@v4
+        with:
+          name: android-apk
+          path: ./artifacts/apk
 
       - name: Download Web build
         uses: actions/download-artifact@v4
@@ -65,38 +119,15 @@ jobs:
             ## 智学伴 ${{ github.ref_name }}
             
             ### Web 端部署
-            1. 下载 `web-dist.zip` 解压
-            2. 部署到 Web 服务器（Nginx/Apache）
-            3. 配置反向代理到后端 API
+            下载 `web-dist.zip` 解压部署到 Web 服务器
             
             ### 微信小程序
-            1. 克隆仓库 `miniapp/` 目录
-            2. 使用微信开发者工具导入项目
-            3. 配置后端 API 地址
-            4. 上传并提交审核
+            克隆 `miniapp/` 目录，使用微信开发者工具导入
             
             ### Android App
-            1. 下载 `miniapp/` 目录
-            2. 使用 HBuilderX 打开项目
-            3. 点击"发行" → "原生App-云打包"
-            4. 选择 Android，打包生成 APK
-            
-            ### 后端部署
-            ```bash
-            # 1. 安装依赖
-            apt install openjdk-17-jdk mysql-server redis-server
-            
-            # 2. 初始化数据库
-            mysql -u root -p study_companion < backend/sql/init.sql
-            
-            # 3. 配置环境变量
-            export AI_API_KEY="your-api-key"
-            export JWT_SECRET="your-jwt-secret"
-            
-            # 4. 启动后端
-            mvn spring-boot:run -f backend/pom.xml
-            ```
+            使用 HBuilderX 打开 `miniapp/` 目录，点击"发行" → "原生App-云打包"
           files: |
+            ./artifacts/apk/**/*.apk
             ./artifacts/web/**
           draft: false
           prerelease: false
