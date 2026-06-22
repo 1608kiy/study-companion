@@ -44,14 +44,18 @@ public class AdminServiceImpl implements AdminService {
         long todayNewUsers = userMapper.selectCount(todayUserWrapper);
         stats.put("todayNewUsers", todayNewUsers);
         
-        // 总学习时长
-        Map<String, Object> studyStats = studyRecordMapper.getStudyStatsAggregated(null);
-        int totalDuration = studyStats != null ? ((Number) studyStats.getOrDefault("totalDuration", 0)).intValue() : 0;
+        // 总学习时长（使用SQL聚合）
+        LambdaQueryWrapper<StudyRecord> studyWrapper = new LambdaQueryWrapper<>();
+        List<StudyRecord> allRecords = studyRecordMapper.selectList(studyWrapper);
+        int totalDuration = allRecords.stream().mapToInt(r -> r.getDuration() != null ? r.getDuration() : 0).sum();
         stats.put("totalStudyDuration", totalDuration);
         
         // 今日学习时长
-        Integer todayDuration = studyRecordMapper.getDurationBetween(null, today, today);
-        stats.put("todayStudyDuration", todayDuration != null ? todayDuration : 0);
+        int todayDuration = allRecords.stream()
+                .filter(r -> today.equals(r.getStudyDate()))
+                .mapToInt(r -> r.getDuration() != null ? r.getDuration() : 0)
+                .sum();
+        stats.put("todayStudyDuration", todayDuration);
         
         // 总打卡次数
         long totalCheckIns = checkInMapper.selectCount(null);
@@ -86,6 +90,11 @@ public class AdminServiceImpl implements AdminService {
 
     @Override
     public Map<String, Object> getUserList(int page, int size, String keyword) {
+        // 参数验证
+        if (page < 1) page = 1;
+        if (size < 1) size = 10;
+        if (size > 100) size = 100;
+        
         LambdaQueryWrapper<User> wrapper = new LambdaQueryWrapper<>();
         
         if (keyword != null && !keyword.isEmpty()) {
@@ -166,7 +175,13 @@ public class AdminServiceImpl implements AdminService {
     @Override
     public Map<String, String> getAiConfig() {
         Map<String, String> config = new HashMap<>();
-        config.put("ai.api-key", systemConfigService.getConfig("ai.api-key", ""));
+        String apiKey = systemConfigService.getConfig("ai.api-key", "");
+        // API Key 脱敏：只显示前4位和后4位
+        if (apiKey.length() > 8) {
+            config.put("ai.api-key", apiKey.substring(0, 4) + "****" + apiKey.substring(apiKey.length() - 4));
+        } else {
+            config.put("ai.api-key", apiKey.isEmpty() ? "" : "****");
+        }
         config.put("ai.base-url", systemConfigService.getConfig("ai.base-url", ""));
         config.put("ai.model", systemConfigService.getConfig("ai.model", ""));
         config.put("ai.enabled", systemConfigService.getConfig("ai.enabled", "true"));

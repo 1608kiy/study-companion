@@ -109,6 +109,7 @@
             </el-form-item>
             <el-form-item label="API Key">
               <el-input v-model="aiConfig['ai.api-key']" type="password" show-password placeholder="请输入 API Key" />
+              <div class="form-hint">留空表示不修改，直接保存会更新为新值</div>
             </el-form-item>
             <el-form-item label="接口地址">
               <el-input v-model="aiConfig['ai.base-url']" placeholder="请输入接口地址" />
@@ -340,6 +341,12 @@ onMounted(() => {
 
 .recent-users-card {
   margin-bottom: 24px;
+}
+
+.form-hint {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: 4px;
 }
 
 @media (max-width: 768px) {
