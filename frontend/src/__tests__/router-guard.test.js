@@ -91,7 +91,7 @@ describe('路由配置', () => {
     const { routes } = await import('@/router/index.js')
     const catchAll = routes.find(r => r.path === '/:pathMatch(.*)*')
     expect(catchAll).toBeDefined()
-    expect(catchAll.redirect).toBe('/home')
+    expect(catchAll.redirect).toBe('/landing')
   })
 })
 

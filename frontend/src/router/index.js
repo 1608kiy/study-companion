@@ -2,6 +2,12 @@ import { createRouter, createWebHistory } from 'vue-router'
 
 const routes = [
   {
+    path: '/landing',
+    name: 'Landing',
+    component: () => import('@/views/landing/LandingView.vue'),
+    meta: { requiresAuth: false, title: '首页' },
+  },
+  {
     path: '/login',
     name: 'Login',
     component: () => import('@/views/auth/LoginView.vue'),
@@ -77,8 +83,12 @@ const routes = [
     ],
   },
   {
+    path: '/',
+    redirect: '/landing',
+  },
+  {
     path: '/:pathMatch(.*)*',
-    redirect: '/home',
+    redirect: '/landing',
   },
 ]
 
@@ -93,10 +103,19 @@ const router = createRouter({
 router.beforeEach((to, from, next) => {
   const token = localStorage.getItem('token')
   
-  if (to.matched.some(record => record.meta.requiresAuth) && !token) {
+  // 不需要登录的页面
+  const publicPages = ['/landing', '/login', '/register', '/forgot-password']
+  const isPublicPage = publicPages.includes(to.path) || to.path.startsWith('/landing')
+  
+  if (!isPublicPage && !token) {
+    // 需要登录但没有token，跳转到登录页
     next('/login')
   } else if ((to.path === '/login' || to.path === '/register') && token) {
-    next('/')
+    // 已登录但访问登录/注册页，跳转到首页
+    next('/home')
+  } else if (to.path === '/' && !token) {
+    // 访问根路径但没有token，跳转到landing
+    next('/landing')
   } else {
     next()
   }
