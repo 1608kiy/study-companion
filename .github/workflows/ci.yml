@@ -50,3 +50,24 @@ jobs:
       - name: 构建前端
         working-directory: frontend
         run: npm run build
+
+  miniapp:
+    name: 小程序构建检查
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: miniapp/package-lock.json
+
+      - name: 安装小程序依赖
+        working-directory: miniapp
+        run: npm install
+
+      - name: 构建小程序
+        working-directory: miniapp
+        run: npm run build:mp-weixin

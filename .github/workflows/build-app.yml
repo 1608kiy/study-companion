@@ -1,0 +1,127 @@
+name: Build App
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+jobs:
+  build-android:
+    name: Build Android APK
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: miniapp/package-lock.json
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Accept Android SDK licenses
+        run: yes | sdkmanager --licenses
+
+      - name: Install Android SDK components
+        run: |
+          sdkmanager "platforms;android-34" "build-tools;34.0.0"
+
+      - name: Install dependencies
+        run: |
+          cd miniapp
+          npm install
+
+      - name: Build Android App
+        run: |
+          cd miniapp
+          npm run build:app
+        env:
+          UNI_PLATFORM: app
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-apk
+          path: miniapp/dist/**/*.apk
+          retention-days: 30
+
+  build-web:
+    name: Build Web
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        run: |
+          cd frontend
+          npm install --legacy-peer-deps
+
+      - name: Run tests
+        run: |
+          cd frontend
+          npm test
+
+      - name: Build
+        run: |
+          cd frontend
+          npm run build
+
+      - name: Upload build
+        uses: actions/upload-artifact@v4
+        with:
+          name: web-dist
+          path: frontend/dist
+          retention-days: 30
+
+  release:
+    name: Create Release
+    needs: [build-android, build-web]
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/')
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download APK
+        uses: actions/download-artifact@v4
+        with:
+          name: android-apk
+          path: ./artifacts/apk
+
+      - name: Download Web build
+        uses: actions/download-artifact@v4
+        with:
+          name: web-dist
+          path: ./artifacts/web
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            ./artifacts/apk/**/*.apk
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
