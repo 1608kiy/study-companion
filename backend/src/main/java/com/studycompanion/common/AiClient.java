@@ -1,5 +1,6 @@
 package com.studycompanion.common;
 
+import com.studycompanion.service.SystemConfigService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
@@ -16,20 +17,23 @@ import java.util.Map;
 public class AiClient {
 
     @Value("${ai.base-url}")
-    private String baseUrl;
+    private String defaultBaseUrl;
 
     @Value("${ai.api-key}")
-    private String apiKey;
+    private String defaultApiKey;
 
     @Value("${ai.model}")
-    private String model;
+    private String defaultModel;
 
     @Value("${ai.enabled}")
-    private boolean enabled;
+    private boolean defaultEnabled;
+
+    private final SystemConfigService systemConfigService;
 
     private final RestTemplate restTemplate;
 
-    public AiClient() {
+    public AiClient(SystemConfigService systemConfigService) {
+        this.systemConfigService = systemConfigService;
         // 配置超时
         SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
         factory.setConnectTimeout(5000);  // 连接超时 5 秒
@@ -37,8 +41,26 @@ public class AiClient {
         this.restTemplate = new RestTemplate(factory);
     }
 
-    public boolean isEnabled() {
-        return enabled;
+    private String getBaseUrl() {
+        return systemConfigService.getConfig("ai.base-url", defaultBaseUrl);
+    }
+
+    private String getApiKey() {
+        String key = systemConfigService.getConfig("ai.api-key", "");
+        return key != null && !key.isEmpty() ? key : defaultApiKey;
+    }
+
+    private String getModel() {
+        return systemConfigService.getConfig("ai.model", defaultModel);
+    }
+
+    private boolean isEnabled() {
+        String enabled = systemConfigService.getConfig("ai.enabled", String.valueOf(defaultEnabled));
+        return "true".equalsIgnoreCase(enabled);
+    }
+
+    public boolean checkEnabled() {
+        return isEnabled();
     }
 
     public String chat(String systemPrompt, String userMessage) {
@@ -46,11 +68,17 @@ public class AiClient {
     }
 
     public String chat(String systemPrompt, List<Map<String, String>> messages) {
-        if (!enabled) {
+        if (!isEnabled()) {
             throw new BusinessException(ErrorCode.AI_SERVICE_ERROR, "AI服务未启用");
         }
 
-        String url = baseUrl.endsWith("/") ? baseUrl + "chat/completions" : baseUrl + "/chat/completions";
+        String apiKey = getApiKey();
+        if (apiKey == null || apiKey.isEmpty() || "your-api-key".equals(apiKey)) {
+            throw new BusinessException(ErrorCode.AI_SERVICE_ERROR, "AI API Key未配置");
+        }
+
+        String url = getBaseUrl();
+        url = url.endsWith("/") ? url + "chat/completions" : url + "/chat/completions";
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
@@ -61,7 +89,7 @@ public class AiClient {
         allMessages.addAll(messages);
 
         Map<String, Object> body = Map.of(
-                "model", model,
+                "model", getModel(),
                 "messages", allMessages,
                 "temperature", 0.7,
                 "max_tokens", 2048

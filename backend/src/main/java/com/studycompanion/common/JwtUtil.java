@@ -25,12 +25,17 @@ public class JwtUtil {
     }
 
     public String generateToken(Long userId, String email) {
+        return generateToken(userId, email, "user");
+    }
+
+    public String generateToken(Long userId, String email, String role) {
         Date now = new Date();
         Date expiryDate = new Date(now.getTime() + expiration);
 
         return Jwts.builder()
                 .subject(String.valueOf(userId))
                 .claim("email", email)
+                .claim("role", role)
                 .issuedAt(now)
                 .expiration(expiryDate)
                 .signWith(getSigningKey())
@@ -53,6 +58,12 @@ public class JwtUtil {
     public String getEmailFromToken(String token) {
         Claims claims = parseToken(token);
         return claims.get("email", String.class);
+    }
+
+    public String getRoleFromToken(String token) {
+        Claims claims = parseToken(token);
+        String role = claims.get("role", String.class);
+        return role != null ? role : "user";
     }
 
     public boolean isTokenExpired(String token) {

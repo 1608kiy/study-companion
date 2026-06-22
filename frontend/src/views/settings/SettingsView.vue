@@ -87,6 +87,11 @@
           </template>
           
           <div class="account-actions">
+            <el-button v-if="isAdmin" type="primary" plain @click="$router.push('/admin')" class="action-btn">
+              <el-icon><Setting /></el-icon>
+              管理后台
+            </el-button>
+            
             <el-button type="danger" plain @click="handleLogout" class="action-btn">
               <el-icon><SwitchButton /></el-icon>
               退出登录
@@ -118,6 +123,7 @@ onMounted(() => window.addEventListener('resize', handleResize))
 onUnmounted(() => window.removeEventListener('resize', handleResize))
 
 const userInfo = computed(() => userStore.userInfo)
+const isAdmin = computed(() => userStore.userInfo?.role === 'admin')
 const saving = ref(false)
 const uploadHeaders = computed(() => ({
   Authorization: `Bearer ${localStorage.getItem('token') || ''}`,

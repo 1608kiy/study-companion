@@ -18,6 +18,7 @@ CREATE TABLE `user` (
   `password` VARCHAR(255) NOT NULL COMMENT '密码(BCrypt加密)',
   `nickname` VARCHAR(50) DEFAULT NULL COMMENT '昵称',
   `avatar` VARCHAR(255) DEFAULT NULL COMMENT '头像URL',
+  `role` VARCHAR(20) DEFAULT 'user' COMMENT '用户角色(user/admin)',
   `daily_goal` INT DEFAULT 120 COMMENT '每日目标时长(分钟)',
   `weekly_goal` INT DEFAULT 840 COMMENT '每周目标时长(分钟)',
   `monthly_goal` INT DEFAULT 3600 COMMENT '每月目标时长(分钟)',
@@ -266,6 +267,29 @@ CREATE TABLE `learning_material` (
   FOREIGN KEY (`user_id`) REFERENCES `user`(`id`) ON DELETE CASCADE,
   FOREIGN KEY (`subject_id`) REFERENCES `subject`(`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='学习资料表';
+
+-- ================================================
+-- 14. 系统配置表 (system_config)
+-- ================================================
+CREATE TABLE `system_config` (
+  `id` BIGINT NOT NULL AUTO_INCREMENT,
+  `config_key` VARCHAR(100) NOT NULL COMMENT '配置键',
+  `config_value` TEXT COMMENT '配置值',
+  `description` VARCHAR(255) COMMENT '配置说明',
+  `create_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `update_time` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_config_key` (`config_key`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='系统配置表';
+
+-- 插入默认配置
+INSERT INTO `system_config` (`config_key`, `config_value`, `description`) VALUES
+('ai.api-key', '', 'AI API密钥'),
+('ai.base-url', 'https://token-plan-sgp.xiaomimimo.com/v1', 'AI接口地址'),
+('ai.model', 'mimo-v2.5-pro', 'AI模型名称'),
+('ai.enabled', 'true', 'AI功能开关'),
+('system.upload-max-size', '10485760', '上传文件大小限制(字节)'),
+('system.ai-generate-limit', '3', 'AI日记生成次数限制');
 
 -- ================================================
 -- 初始化数据：预设科目模板

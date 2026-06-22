@@ -22,4 +22,7 @@ public class LoginResponse {
 
     @Schema(description = "JWT Token")
     private String token;
+
+    @Schema(description = "用户角色")
+    private String role;
 }

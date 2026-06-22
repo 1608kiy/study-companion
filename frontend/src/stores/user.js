@@ -20,6 +20,7 @@ export const useUserStore = defineStore('user', () => {
     const res = await authApi.login(credentials)
     setToken(res.data.token)
     userInfo.value = res.data
+    localStorage.setItem('userInfo', JSON.stringify(res.data))
     return res
   }
 
@@ -27,12 +28,14 @@ export const useUserStore = defineStore('user', () => {
     const res = await authApi.register(userData)
     setToken(res.data.token)
     userInfo.value = res.data
+    localStorage.setItem('userInfo', JSON.stringify(res.data))
     return res
   }
 
   const getProfile = async () => {
     const res = await userApi.getProfile()
     userInfo.value = res.data
+    localStorage.setItem('userInfo', JSON.stringify(res.data))
     return res
   }
 
@@ -48,6 +51,7 @@ export const useUserStore = defineStore('user', () => {
     } finally {
       clearToken()
       userInfo.value = null
+      localStorage.removeItem('userInfo')
     }
   }
 

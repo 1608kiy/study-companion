@@ -66,7 +66,7 @@ class UserServiceTest {
     void register_Success() {
         when(userMapper.selectCount(any())).thenReturn(0L);
         when(userMapper.insert(any(User.class))).thenReturn(1);
-        when(jwtUtil.generateToken(any(), any())).thenReturn("jwt-token");
+        when(jwtUtil.generateToken(any(), any(), any())).thenReturn("jwt-token");
 
         LoginResponse response = userService.register(registerRequest);
 
@@ -88,7 +88,7 @@ class UserServiceTest {
     @Test
     void login_Success() {
         when(userMapper.selectOne(any())).thenReturn(testUser);
-        when(jwtUtil.generateToken(any(), any())).thenReturn("jwt-token");
+        when(jwtUtil.generateToken(any(), any(), any())).thenReturn("jwt-token");
 
         LoginResponse response = userService.login(loginRequest);
 

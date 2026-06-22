@@ -114,3 +114,13 @@ export const materialApi = {
   delete: (id) => api.delete(`/materials/${id}`),
   toggleFavorite: (id) => api.post(`/materials/${id}/favorite`),
 }
+
+// 管理员相关API
+export const adminApi = {
+  getDashboard: () => api.get('/admin/dashboard'),
+  getUsers: (params) => api.get('/admin/users', { params }),
+  updateUser: (id, data) => api.put(`/admin/users/${id}`, data),
+  deleteUser: (id) => api.delete(`/admin/users/${id}`),
+  getAiConfig: () => api.get('/admin/ai/config'),
+  updateAiConfig: (data) => api.put('/admin/ai/config', data),
+}

@@ -59,15 +59,16 @@ public class UserServiceImpl implements UserService {
         user.setEmail(request.getEmail());
         user.setPassword(passwordEncoder.encode(request.getPassword()));
         user.setNickname(request.getNickname() != null ? request.getNickname() : request.getEmail().split("@")[0]);
+        user.setRole("user");
         userMapper.insert(user);
 
         // 创建预设科目
         createPresetSubjects(user.getId());
 
         // 生成token
-        String token = jwtUtil.generateToken(user.getId(), user.getEmail());
+        String token = jwtUtil.generateToken(user.getId(), user.getEmail(), user.getRole());
 
-        return new LoginResponse(user.getId(), user.getEmail(), user.getNickname(), token);
+        return new LoginResponse(user.getId(), user.getEmail(), user.getNickname(), token, user.getRole());
     }
 
     @Override
@@ -87,9 +88,10 @@ public class UserServiceImpl implements UserService {
         }
 
         // 生成token
-        String token = jwtUtil.generateToken(user.getId(), user.getEmail());
+        String role = user.getRole() != null ? user.getRole() : "user";
+        String token = jwtUtil.generateToken(user.getId(), user.getEmail(), role);
 
-        return new LoginResponse(user.getId(), user.getEmail(), user.getNickname(), token);
+        return new LoginResponse(user.getId(), user.getEmail(), user.getNickname(), token, role);
     }
 
     @Override

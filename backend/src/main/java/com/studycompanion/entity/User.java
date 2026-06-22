@@ -38,6 +38,12 @@ public class User extends BaseEntity {
     private String avatar;
 
     /**
+     * 用户角色(user/admin)
+     */
+    @TableField("role")
+    private String role;
+
+    /**
      * 每日目标时长(分钟)
      */
     @TableField("daily_goal")

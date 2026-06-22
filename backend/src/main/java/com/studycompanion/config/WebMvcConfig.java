@@ -12,12 +12,14 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 public class WebMvcConfig implements WebMvcConfigurer {
 
     private final JwtInterceptor jwtInterceptor;
+    private final AdminInterceptor adminInterceptor;
 
     @Value("${upload.path}")
     private String uploadPath;
 
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
+        // 普通用户接口
         registry.addInterceptor(jwtInterceptor)
                 .addPathPatterns("/api/v1/user/**", "/api/v1/subjects/**",
                         "/api/v1/study-records/**", "/api/v1/check-in/**",
@@ -25,6 +27,10 @@ public class WebMvcConfig implements WebMvcConfigurer {
                         "/api/v1/ai/**", "/api/v1/exams/**",
                         "/api/v1/materials/**")
                 .excludePathPatterns("/api/v1/auth/**");
+
+        // 管理员接口
+        registry.addInterceptor(adminInterceptor)
+                .addPathPatterns("/api/v1/admin/**");
     }
 
     @Override

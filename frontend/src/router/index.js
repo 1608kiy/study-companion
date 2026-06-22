@@ -26,6 +26,12 @@ const routes = [
     meta: { requiresAuth: false },
   },
   {
+    path: '/admin',
+    name: 'Admin',
+    component: () => import('@/views/admin/AdminView.vue'),
+    meta: { requiresAuth: true, requiresAdmin: true },
+  },
+  {
     path: '/',
     name: 'Layout',
     component: () => import('@/views/layout/MainLayout.vue'),
@@ -98,6 +104,7 @@ const router = createRouter({
 // 路由守卫
 router.beforeEach((to, from, next) => {
   const token = localStorage.getItem('token')
+  const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}')
   
   // 不需要登录的页面
   const publicPages = ['/landing', '/login', '/register', '/forgot-password']
@@ -112,6 +119,9 @@ router.beforeEach((to, from, next) => {
   } else if (to.path === '/' && !token) {
     // 访问根路径但没有token，跳转到landing
     next('/landing')
+  } else if (to.meta.requiresAdmin && userInfo.role !== 'admin') {
+    // 需要管理员权限但不是管理员，跳转到首页
+    next('/home')
   } else {
     next()
   }
