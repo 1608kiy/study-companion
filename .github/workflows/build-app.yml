@@ -42,39 +42,9 @@ jobs:
           path: frontend/dist
           retention-days: 30
 
-  build-miniapp:
-    name: Build Miniapp
-    runs-on: ubuntu-latest
-    
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-
-      - name: Install dependencies
-        run: |
-          cd miniapp
-          npm install
-
-      - name: Build WeChat Miniapp
-        run: |
-          cd miniapp
-          npx uni build -p mp-weixin
-
-      - name: Upload miniapp
-        uses: actions/upload-artifact@v4
-        with:
-          name: miniapp-weixin
-          path: miniapp/dist/build/mp-weixin
-          retention-days: 30
-
   release:
     name: Create Release
-    needs: [build-web, build-miniapp]
+    needs: [build-web]
     runs-on: ubuntu-latest
     if: startsWith(github.ref, 'refs/tags/')
     
@@ -88,33 +58,46 @@ jobs:
           name: web-dist
           path: ./artifacts/web
 
-      - name: Download Miniapp build
-        uses: actions/download-artifact@v4
-        with:
-          name: miniapp-weixin
-          path: ./artifacts/miniapp-weixin
-
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
           body: |
             ## 智学伴 ${{ github.ref_name }}
             
-            ### Web 端
-            - 下载 `web-dist.zip` 解压部署到 Web 服务器
+            ### Web 端部署
+            1. 下载 `web-dist.zip` 解压
+            2. 部署到 Web 服务器（Nginx/Apache）
+            3. 配置反向代理到后端 API
             
             ### 微信小程序
-            - 下载 `miniapp-weixin.zip`
-            - 使用微信开发者工具导入项目
-            - 上传并提交审核
+            1. 克隆仓库 `miniapp/` 目录
+            2. 使用微信开发者工具导入项目
+            3. 配置后端 API 地址
+            4. 上传并提交审核
             
             ### Android App
-            - 使用 HBuilderX 打开 miniapp 项目
-            - 点击"发行" -> "原生App-云打包"
-            - 选择 Android，打包生成 APK
+            1. 下载 `miniapp/` 目录
+            2. 使用 HBuilderX 打开项目
+            3. 点击"发行" → "原生App-云打包"
+            4. 选择 Android，打包生成 APK
+            
+            ### 后端部署
+            ```bash
+            # 1. 安装依赖
+            apt install openjdk-17-jdk mysql-server redis-server
+            
+            # 2. 初始化数据库
+            mysql -u root -p study_companion < backend/sql/init.sql
+            
+            # 3. 配置环境变量
+            export AI_API_KEY="your-api-key"
+            export JWT_SECRET="your-jwt-secret"
+            
+            # 4. 启动后端
+            mvn spring-boot:run -f backend/pom.xml
+            ```
           files: |
             ./artifacts/web/**
-            ./artifacts/miniapp-weixin/**
           draft: false
           prerelease: false
         env:
